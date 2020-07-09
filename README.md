@@ -1,5 +1,9 @@
 # Wild Vaccines
 
+## Objective
+
+***Why do individuals vary in their response to immunisation?***
+
 ## Setup
 
 To set the julia environment up follow the steps below (taken from <https://julialang.github.io/Pkg.jl/v1/environments/>):
