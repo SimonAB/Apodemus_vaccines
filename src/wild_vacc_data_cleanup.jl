@@ -9,3 +9,7 @@ raw_data = CSV.read("./data/elisa_data_subset_for_analysis.csv"; missingstrings=
 describe(raw_data)
 countmap(raw_data.sex)
 proportionmap(raw_data.sex)
+
+# Remove missing pittag number
+missing_pittag = ismissing.(raw_data.pittag)
+raw_data = raw_data[.!missing_pittag, :];
