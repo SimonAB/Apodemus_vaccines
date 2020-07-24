@@ -11,5 +11,4 @@ countmap(raw_data.sex)
 proportionmap(raw_data.sex)
 
 # Remove missing pittag number
-missing_pittag = ismissing.(raw_data.pittag)
-raw_data = raw_data[.!missing_pittag, :];
+dropmissing(raw_data, :pittag)
