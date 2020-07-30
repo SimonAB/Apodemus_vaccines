@@ -2,8 +2,9 @@ using DataFrames, Query
 using CSV
 using StatsBase
 
-# Import data
+# Import & filter data
 raw_data = CSV.read("./data/elisa_data_subset_for_analysis.csv"; missingstrings=["NA"], pool=true, copycols=true)
+dropmissing!(raw_data, :pittag) # remove blank wells and positive controls
 
 # Check data
 describe(raw_data)
