@@ -13,4 +13,4 @@ proportionmap(raw_data.sex)
 # Remove missing pittag number
 data = dropmissing(raw_data, :pittag)
 
-CSV.write("./data/clean_data.csv")
+CSV.write("./data/clean_data.csv", data)
