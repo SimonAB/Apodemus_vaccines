@@ -10,3 +10,6 @@ dropmissing!(raw_data, :pittag) # remove blank wells and positive controls
 describe(raw_data)
 countmap(raw_data.sex)
 proportionmap(raw_data.sex)
+
+# Remove missing pittag number
+raw_data = dropmissing(raw_data, :pittag)
