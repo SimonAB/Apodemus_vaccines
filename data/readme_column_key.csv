@@ -1,0 +1,33 @@
+Column,
+Plate,
+Measure,
+Row,
+Col.5,
+Col.6,
+Col.7,
+Blank,
+ID,Individual ID
+Block,Only for lab data
+Sex,"factor (M, F)"
+Diet,"factor (High, Low)"
+Treatment,
+Weight,
+Fat.Scores.Dorsal,
+Fat.Scores.Pelvic,
+days.since.1st.trt,
+days.since.2nd.trt,
+trt.history,"factor (A, D, AD, DA, DD)"
+blank.avg,
+blank.sd,
+cutoff.new,
+Env,"factor(Lab, Wild)"
+grid,Only for wild data
+body.length.mm,Only for wild data
+Col.5.bcen,"OD. avg is average of blank centered OD values of these three columns (5,6,7)"
+Col.6.bcen,
+Col.7.bcen,
+Col.5.avg,
+Col.6.avg,
+Col.7.avg,
+OD.avg,Variable used for plotting and analysis
+days.since.1st.D.inj,
