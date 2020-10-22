@@ -13,3 +13,15 @@ proportionmap(raw_data.sex)
 
 # Remove missing pittag number
 raw_data = dropmissing(raw_data, :pittag)
+
+
+# import OD data
+data = CSV.read(".data/joint_dataset_4analysis.csv"; missingstrings=["NA"], pool=true, copycols=true)
+
+#remove positive controls
+dropmissing!(data, :ID)
+categorical!(data, :ID)
+
+#remove lab mice
+dropmissing!(data, :grid)
+countmap(data.ID)
