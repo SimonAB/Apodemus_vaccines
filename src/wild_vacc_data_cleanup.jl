@@ -22,8 +22,10 @@ data = CSV.read(".data/joint_dataset_4analysis.csv"; missingstrings=["NA"], pool
 dropmissing!(data, :ID)
 categorical!(data, :ID)
 
-#remove lab mice
+#remove lab mice & unvaccinated wild mice
 wild = data |>
   @filter(_.:Env=="Wild") |>
-  @map({_.:Env, _.:OD_avg}) |>
+  @dropna(:days_since_1st_D_inj) |>
+  @orderby(:ID) |>
+  @thenby(:days_since_1st_D_inj) |>
   DataFrame
