@@ -23,5 +23,7 @@ dropmissing!(data, :ID)
 categorical!(data, :ID)
 
 #remove lab mice
-dropmissing!(data, :grid)
-countmap(data.ID)
+wild = data |>
+  @filter(_.:Env=="Wild") |>
+  @map({_.:Env, _.:OD_avg}) |>
+  DataFrame
