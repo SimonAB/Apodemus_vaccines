@@ -29,3 +29,9 @@ wild = data |>
   @orderby(:ID) |>
   @thenby(:days_since_1st_D_inj) |>
   DataFrame
+
+# add boost column
+wild.Boost = ["No","Yes","No","No","Yes","No","No","No","Yes","No","No","No","No","No","No","No","No","No","No","Yes","No","No","No",
+"No","No","No","No","No","No","Yes","No","No","No","Yes","No","No","No","No","No","No","No","No","No","No","No","Yes","No","Yes",
+"No","Yes","No","No","Yes","Yes","No","No","Yes","No","No","Yes","No","Yes","Yes","No","No","No","No","No","Yes","No","No","No","No",
+"No","No","No","Yes","Yes","No","No","No","Yes","No"]
