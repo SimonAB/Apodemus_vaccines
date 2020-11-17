@@ -8,7 +8,6 @@ Pkg.add("RCall")
 using RCall
 
 #import data & filter for just lab mice
-
 data = CSV.read(
   "/Users/ewanwsmith/github/Apodemus_vaccines/data/OD_data.csv";
   missingstrings = ["NA"],
@@ -22,12 +21,11 @@ lab =
   DataFrame
 
 #test independences of current DAG
-
+@rput lab
 m1 = lm(@formula(Weight ~ days_since_1st_D_inj), lab)
 m2 = lm(@formula(Weight ~ Fat_Scores_Sum + Diet + Sex), lab)
 m3 = lm(@formula(days_since_1st_D_inj ~ Fat_Scores_Sum), lab)
-m4 = lm(@formula(days_since_1st_D_inj ~ Diet), lab)
-@rput lab
+m4 = R"t.test(lab$days_since_1st_D_inj ~ lab$Diet)"
 m5 = R"chisq.test(lab$Diet, lab$Sex)"
 
 #weight and fat not independent given diet and sex, need to rework DAG
