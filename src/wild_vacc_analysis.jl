@@ -1,2 +1,33 @@
-using DataFrames, GLM, MixedModels
+using DataFrames, Query
+using CSV
+using StatsBase
+using GLM, MixedModels
 using Gadfly
+using Cairo
+Pkg.add("RCall")
+using RCall
+
+#import data & filter for just lab mice
+
+data = CSV.read(
+  "/Users/ewanwsmith/github/Apodemus_vaccines/data/OD_data.csv";
+  missingstrings = ["NA"],
+  pool = true,
+  copycols = true,
+)
+
+lab =
+  data |>
+  @filter(_.:Env == "Lab") |>
+  DataFrame
+
+#test independences of current DAG
+
+m1 = lm(@formula(Weight ~ days_since_1st_D_inj), lab)
+m2 = lm(@formula(Weight ~ Fat_Scores_Sum + Diet + Sex), lab)
+m3 = lm(@formula(days_since_1st_D_inj ~ Fat_Scores_Sum), lab)
+m4 = lm(@formula(days_since_1st_D_inj ~ Diet), lab)
+@rput lab
+m5 = R"chisq.test(lab$Diet, lab$Sex)"
+
+#weight and fat not independent given diet and sex, need to rework DAG
