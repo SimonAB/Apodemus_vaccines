@@ -3,15 +3,16 @@ bb="-3.876,-5.339,4.06,4.203"
 "anti-diphtheria toxoid antibody" [outcome,pos="2.128,2.770"]
 "body mass" [pos="0.213,-1.219"]
 "days since vaccination" [exposure,pos="-0.658,2.634"]
-"dorsal+pelvic fat score" [pos="3.552,1.038"]
+"dorsal+pelvic fat score" [pos="3.702,-0.214"]
 "immune system (without diphtheria toxoid antibody response)" [latent,pos="0.351,1.347"]
 age [latent,pos="-2.069,-1.649"]
-diet [exposure,pos="1.862,0.011"]
+diet [exposure,pos="1.528,-0.129"]
 ectoparasites [latent,pos="-1.478,0.334"]
 helminths [latent,pos="-0.403,-0.610"]
-sex [pos="1.920,-1.697"]
+sex [pos="2.136,-2.569"]
 "body mass" -> "immune system (without diphtheria toxoid antibody response)"
 "days since vaccination" -> "immune system (without diphtheria toxoid antibody response)"
+"dorsal+pelvic fat score" -> "body mass"
 "dorsal+pelvic fat score" -> "immune system (without diphtheria toxoid antibody response)"
 "immune system (without diphtheria toxoid antibody response)" -> "anti-diphtheria toxoid antibody"
 age -> "body mass"
