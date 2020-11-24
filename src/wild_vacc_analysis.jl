@@ -21,12 +21,13 @@ lab =
   DataFrame
 
 #test independences of current DAG
-@rput lab
-m1 = lm(@formula(Weight ~ days_since_1st_D_inj), lab)
-m2 = lm(@formula(days_since_1st_D_inj ~ Fat_Scores_Sum), lab)
-m3 = R"t.test(lab$days_since_1st_D_inj ~ lab$Diet)"
-m4 = R"t.test(lab$days_since_1st_D_inj ~ lab$Sex)"
-m5 = R"chisq.test(lab$Diet, lab$Sex)"
+@rput lab 
+t1 = R"cor.test(lab$Weight, lab$days_since_1st_D_inj)"
+t2 = R"cor.test(lab$days_since_1st_D_inj, lab$Fat_Scores_Sum)"
+t3 = R"t.test(lab$days_since_1st_D_inj ~ lab$Diet)"
+t4 = R"t.test(lab$days_since_1st_D_inj ~ lab$Sex)"
+t5 = R"t.test(lab$Fat_Scores_Sum ~ lab$Diet)"
+t6 = R"chisq.test(lab$Diet, lab$Sex)"
 
 #get model coefficients
 w1 = lm(@formula(Weight ~ Sex + Fat_Scores_Sum + Diet), lab)
