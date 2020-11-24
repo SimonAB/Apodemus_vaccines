@@ -3,6 +3,6 @@ Weight,Diet (low),"Fat Score, Sex",1-.81705±0.87466,<1e-4
 Weight,Fat Score,"Diet, Sex",2.66938±0.48377,<1e-19
 Weight,Sex (M),Diet,5.51255±0.99679,<1e-21
 Fat Score,Sex (M),,0.729256±0.297575,<1e-5
-Antibody OD,Diet (low),"Sex, Fat Scores, Days since vax",0.304305±0.156457,0.00
+Antibody OD,Diet (low),"Sex, Fat Scores, Days since vax",0.304305±0.156457,0.0002
 Antibody OD,Days since vax,"Diet, Sex, Fat Scores",0.0873322±0.0129855,<1e-23
 Antibody OD,Sex (M),"Diet, Days since vax",-0.283422±0.134415,<1e-4
