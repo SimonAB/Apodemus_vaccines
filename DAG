@@ -1,16 +1,15 @@
 dag {
 bb="-3.876,-5.339,4.06,4.203"
 "anti-diphtheria toxoid antibody" [outcome,pos="2.128,2.770"]
-"body mass" [pos="0.213,-1.219"]
+"body mass" [pos="1.004,-2.489"]
 "days since vaccination" [exposure,pos="-0.658,2.634"]
-"dorsal+pelvic fat score" [pos="3.702,-0.214"]
+"dorsal+pelvic fat score" [pos="2.869,0.049"]
 "immune system (without diphtheria toxoid antibody response)" [latent,pos="0.351,1.347"]
-age [latent,pos="-2.069,-1.649"]
-diet [exposure,pos="1.528,-0.129"]
+age [latent,pos="-1.753,-1.142"]
+diet [exposure,pos="0.263,-1.185"]
 ectoparasites [latent,pos="-1.478,0.334"]
 helminths [latent,pos="-0.403,-0.610"]
-sex [pos="2.136,-2.569"]
-"body mass" -> "immune system (without diphtheria toxoid antibody response)"
+sex [pos="1.495,-0.646"]
 "days since vaccination" -> "immune system (without diphtheria toxoid antibody response)"
 "dorsal+pelvic fat score" -> "body mass"
 "dorsal+pelvic fat score" -> "immune system (without diphtheria toxoid antibody response)"
@@ -20,7 +19,6 @@ age -> "immune system (without diphtheria toxoid antibody response)"
 age -> ectoparasites
 age -> helminths
 diet -> "body mass"
-diet -> "dorsal+pelvic fat score"
 diet -> "immune system (without diphtheria toxoid antibody response)"
 ectoparasites -> "immune system (without diphtheria toxoid antibody response)"
 helminths -> "immune system (without diphtheria toxoid antibody response)"
@@ -28,3 +26,4 @@ sex -> "body mass"
 sex -> "dorsal+pelvic fat score"
 sex -> "immune system (without diphtheria toxoid antibody response)"
 }
+
