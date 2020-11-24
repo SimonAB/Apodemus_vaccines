@@ -1,0 +1,11 @@
+﻿Y,X,W,coef,p
+Weight,Sex (M),"Fat Scores, Diet",3.70004±0.93871,<1e-11
+Weight,Fat Scores,"Sex, Diet",2.66938±0.48377,<1e-19
+Weight,Diet (low),Sex,-2.47035±0.99697,<1e-5
+Fat Scores,Diet (low),,0.197059±0.320029,0.23
+Fat Scores,Sex (M),,0.729256±0.297575,<1e-5
+Antibody OD,days since vax,"Sex, Diet",0.0663667±0.0068023,<1e-44
+Antibody OD,Diet (low),"Sex, days since vax",0.275334±0.134571,<1e-4
+Antibody OD,Sex (M),"Diet, days since vax",-0.283422±0.134416,<1e-4
+Antibody OD,Weight,"Diet, days since vax, Sex, Fat Scores",-0.0211964±0.0291434,0.1522
+Antibody OD,Fat Scores,"Diet, days since vax, Sex",-0.204112±0.08932,<1e-4
