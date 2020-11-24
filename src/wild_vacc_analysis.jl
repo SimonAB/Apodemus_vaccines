@@ -30,10 +30,8 @@ t5 = R"t.test(lab$Fat_Scores_Sum ~ lab$Diet)"
 t6 = R"chisq.test(lab$Diet, lab$Sex)"
 
 #get model coefficients
-w1 = lm(@formula(Weight ~ Sex + Fat_Scores_Sum + Diet), lab)
+w1 = lm(@formula(Weight ~ Diet + Fat_Scores_Sum + Sex), lab)
 w2 = lm(@formula(Weight ~ Sex + Diet), lab)
-w3 = lm(@formula(Fat_Scores_Sum ~ Diet), lab)
-w4 = lm(@formula(Fat_Scores_Sum ~ Sex), lab)
-w5 = lm(@formula(OD ~ days_since_1st_D_inj + Sex + Diet), lab)
-w6 = lm(@formula(OD ~ Weight + Diet + days_since_1st_D_inj + Sex + Fat_Scores_Sum), lab)
-w7  = lm(@formula(OD ~ Fat_Scores_Sum + Diet + Sex + days_since_1st_D_inj), lab)
+w3 = lm(@formula(Fat_Scores_Sum ~ Sex), lab)
+w4 = lm(@formula(OD ~ Diet + Sex + Fat_Scores_Sum + days_since_1st_D_inj), lab)
+w5 = lm(@formula(OD ~ Sex + Diet + days_since_1st_D_inj), lab)
