@@ -22,54 +22,61 @@ lab =
   @filter(_.:Env == "Lab") |>
   DataFrame
 
-#test independences of current DAG
-@rput lab
-m1 = lm(@formula(Weight ~ days_since_1st_D_inj), lab)
-m2 = lm(@formula(days_since_1st_D_inj ~ Fat_Scores_Sum), lab)
-m3 = R"t.test(lab$days_since_1st_D_inj ~ lab$Diet)"
-m4 = R"t.test(lab$days_since_1st_D_inj ~ lab$Sex)"
-m5 = R"chisq.test(lab$Diet, lab$Sex)"
-
 #get model coefficients
-w1 = lm(@formula(Weight ~ Sex + Fat_Scores_Sum + Diet), lab)
-w2 = lm(@formula(Weight ~ Sex + Diet), lab)
-w3 = lm(@formula(Fat_Scores_Sum ~ Diet), lab)
-w4 = lm(@formula(Fat_Scores_Sum ~ Sex), lab)
-w5 = lm(@formula(OD ~ days_since_1st_D_inj + Sex + Diet), lab)
-w6 = lm(@formula(OD ~ Weight + Diet + days_since_1st_D_inj + Sex + Fat_Scores_Sum), lab)
-w7  = lm(@formula(OD ~ Fat_Scores_Sum + Diet + Sex + days_since_1st_D_inj), lab)
+w1 = lm(@formula(Weight ~ Diet + Sex), lab)
+w2 = lm(@formula(Weight ~ Fat_Scores_Sum + Diet + Sex), lab)
+w3 = lm(@formula(Fat_Scores_Sum ~ Sex + Diet), lab)
+w4 = lm(@formula(OD ~ days_since_1st_D_inj + Weight + Fat_Scores_Sum + Diet), lab)
 
-#fit some curves to wild data
-linear(x, p) = @.(p[1] * x + p[2])
+#wild mice OD over time curves
+wild =
+  data |>
+  @filter(_.:Env == "Wild") |>
+  @dropna(:OD) |>
+  @dropna(:days_since_1st_D_inj) |>
+  DataFrame
+
+@. linear(x, p) = @. (p[1]*x + p[2])
 p0 = [0.5, 0.5]
 fit = curve_fit(linear, wild.days_since_1st_D_inj, wild.OD, p0)
 fit.param
+standard_errors(fit)
 
-binom(x, p) = @.(p[1] * x^2 + p[2] * x + p[3])
+@. binomial(x, p) = @. (p[1]*x^2 + p[2]*x + p[3])
 p0 = [0.5, 0.5, 0.5]
-fit = curve_fit(binom, wild.days_since_1st_D_inj, wild.OD, p0)
+fit = curve_fit(binomial, wild.days_since_1st_D_inj, wild.OD, p0)
 fit.param
+standard_errors(fit)
 
-poly3(x, p) = @.(p[1] * x^3 + p[2] * x^2 + p[3] * x + p[4])
+@. trinomial(x, p) = @. (p[1]*x^3 + p[2]*x^2 + p[3]*x + p[4])
 p0 = [0.5, 0.5, 0.5, 0.5]
-fit = curve_fit(poly3, wild.days_since_1st_D_inj, wild.OD, p0)
+fit = curve_fit(trinomial, wild.days_since_1st_D_inj, wild.OD, p0)
 fit.param
+standard_errors(fit)
 
-poly4(x, p) = @.(p[1] * x^4 + p[2] * x^3 + p[3] * x^2 + p[4] * x + p[5])
-p0 = [0.5, 0.5, 0.5, 0.5, 0.5]
-fit = curve_fit(poly3, wild.days_since_1st_D_inj, wild.OD, p0)
+#lab mice OD over time curves
+lab =
+  data |>
+  @filter(_.:Env == "Lab") |>
+  @dropna(:OD) |>
+  @dropna(:days_since_1st_D_inj) |>
+  DataFrame
+
+@. linear(x, p) = @. (p[1]*x + p[2])
+p0 = [0.5, 0.5]
+fit = curve_fit(linear, lab.days_since_1st_D_inj, lab.OD, p0)
 fit.param
+standard_errors(fit)
 
-poly5(x, p) =
-  @.(p[1] * x^5 + p[2] * x^4 + p[3] * x^3 + p[4] * x^2 + p[5] * x + p[6])
-p0 = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-fit = curve_fit(poly3, wild.days_since_1st_D_inj, wild.OD, p0)
+@. binomial(x, p) = @. (p[1]*x^2 + p[2]*x + p[3])
+p0 = [0.5, 0.5, 0.5]
+fit = curve_fit(binomial, lab.days_since_1st_D_inj, lab.OD, p0)
 fit.param
+standard_errors(fit)
 
-poly6(x, p) =
-  @.(p[1] * x^6 + p[2] * x^5 + p[3] * x^4 + p[4] * x^3 + p[5] * x^2 + p[6] * x + p[7])
-p0 = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-fit = curve_fit(poly3, wild.days_since_1st_D_inj, wild.OD, p0)
+@. trinomial(x, p) = @. (p[1]*x^3 + p[2]*x^2 + p[3]*x + p[4])
+p0 = [0.5, 0.5, 0.5, 0.5]
+fit = curve_fit(trinomial, lab.days_since_1st_D_inj, lab.OD, p0)
 fit.param
+standard_errors(fit)
 
-#best fit is binomial (I think?)

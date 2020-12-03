@@ -1,0 +1,8 @@
+#independence checks
+
+@rput lab
+R"cor.test(lab$days_since_1st_D_inj, lab$Fat_Scores_Sum)"
+R"t.test(lab$days_since_1st_D_inj ~ lab$Diet)"
+R"t.test(lab$days_since_1st_D_inj ~ lab$Sex)"
+R"cor.test(lab$days_since_1st_D_inj, lab$Weight)"
+R"chisq.test(lab$Diet, lab$Sex)"
