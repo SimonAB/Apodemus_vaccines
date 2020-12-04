@@ -23,15 +23,16 @@ lab =
   DataFrame
 
 #get model coefficients
-w1 = lm(@formula(Weight ~ Sex + Fat_Scores_Sum), lab)
-w2 = lm(@formula(Weight ~ Fat_Scores_Sum + Sex + Diet), lab)
-w3 = lm(@formula(Weight ~ Diet + Fat_Scores_Sum), lab)
-w4 = lm(@formula(Fat_Scores_Sum ~ Sex), lab)
-w5 = lm(@formula(Fat_Scores_Sum ~ Diet), lab)
-w6 = lm(@formula(OD ~ days_since_1st_D_inj), lab)
-w7 = lm(@formula(OD ~ Weight + Diet + Sex + days_since_1st_D_inj), lab)
-w8 = lm(@formula(OD ~ Diet + Sex + days_since_1st_D_inj), lab)
-w9 = lm(@formula(OD ~ Fat_Scores_Sum + Diet + Sex + days_since_1st_D_inj), lab)
+w1 = lm(@formula(Weight ~ Sex), lab)
+w2 = lm(@formula(Weight ~ Fat_Scores_Sum + Sex), lab)
+w3 = lm(@formula(Weight ~ Diet), lab)
+w4 = lm(@formula(Weight ~ age_lab), lab)
+w5 = lm(@formula(Fat_Scores_Sum ~ Sex), lab)
+w6 = lm(@formula(OD ~ Weight + Diet + age_lab + Sex + days_since_1st_D_inj), lab)
+w7 = lm(@formula(OD ~ Diet + days_since_1st_D_inj), lab)
+w8 = lm(@formula(OD ~ Fat_Scores_Sum + Sex), lab)
+w9 = lm(@formula(OD ~ age_lab), lab)
+w10 = lm(@formula(OD ~ days_since_1st_D_inj), lab)
 
 
 #wild mice OD over time curves
