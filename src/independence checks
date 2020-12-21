@@ -13,14 +13,49 @@ data = CSV.read(
   copycols = true,
 )
 
-lab =
-  data |>
-  @filter(_.:Env == "Lab") |>
-  @dropna(:days_since_1st_D_inj) |>
-  DataFrame
+# randomly choose 20 lab mice 
+lab = raw_data |> @dropna(:ID) |> @filter(_.:Env == "Lab") |> DataFrame
+labset = rand(lab.ID, 20)
+unique(labset)
+sort!(labset)
+# chose mice 5,6, 9, 12, 15, 18, 27, 29, 31, 34, 35, and 37
 
-@rput lab
-R"cor.test(lab$days_since_1st_D_inj, lab$Fat_Scores_Sum)"
-R"t.test(lab$days_since_1st_D_inj ~ lab$Diet)"
-R"t.test(lab$days_since_1st_D_inj ~ lab$Sex)"
-R"chisq.test(lab$Diet, lab$Sex)"
+# filter out positive controls
+both = raw_data |> @dropna(:ID) |> DataFrame
+@rput both #forgot R hates variables called "data"
+
+#independence checks
+R"chisq.test(both$Env, both$Diet)"
+R"chisq.test(both$Env, both$Sex)"
+R"t.test(both$days_since_1st_trt ~ both$Env)"
+lm(
+  @formula(OD ~ Sex + Env + Weight + isadult + Diet + ticks_total + Fat_Scores_Sum + isrepro + days_since_1st_D_inj),
+  both,
+)
+lm(
+  @formula(Weight ~ H_poly + Env + isadult + Diet + isrepro + days_since_1st_trt),
+  both,
+)
+R"chisq.test(both$isadult, both$Diet)"
+lm(@formula(isadult ~ Fat_Scores_Sum + Env + days_since_1st_trt), both)
+R"chisq.test(both$isadult, both$Sex)"
+R"t.test(both$ticks_total ~ both$Diet)"
+lm(@formula(ticks_total ~ Fat_Scores_Sum + Env + days_since_1st_trt), both)
+lm(@formula(ticks_total ~ H_poly + Env + isadult + days_since_1st_trt), both)
+lm(@formula(ticks_total ~ isrepro + Env + isadult), both)
+R"t.test(both$ticks_total ~ both$Sex)"
+lm(
+  @formula(
+    Fat_Scores_Sum ~ H_poly + Env + isadult + Diet + Sex + days_since_1st_trt
+  ),
+  both,
+)
+lm(
+  @formula(Fat_Scores_Sum ~ H_poly + Env + Diet + Sex + days_since_1st_trt),
+  both,
+)
+lm(@formula(Fat_Scores_Sum ~ isrepro + Env + isadult + Diet + Sex), both)
+lm(@formula(Fat_Scores_Sum ~ isrepro + Env + Diet + Sex + days_since_1st_trt), both)
+lm(@formula(H_poly ~ Sex + Env + isadult + Diet + isrepro), both)
+R"t.test(both$days_since_1st_trt ~ both$Sex)"
+
