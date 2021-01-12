@@ -10,80 +10,41 @@ Pkg.add("LsqFit")
 using LsqFit
 
 #import data & filter for just lab mice
-data = CSV.read(
-  "/Users/ewanwsmith/github/Apodemus_vaccines/data/OD_data.csv";
+raw_data = CSV.read(
+  "/Users/ewanwsmith/Documents/joint_dataset_4analysis.csv";
   missingstrings = ["NA"],
   pool = true,
   copycols = true,
 )
 
-lab =
-  data |>
-  @filter(_.:Env == "Lab") |>
-  DataFrame
-
-#get model coefficients
-w1 = lm(@formula(Weight ~ Sex), lab)
-w2 = lm(@formula(Weight ~ Fat_Scores_Sum + Sex), lab)
-w3 = lm(@formula(Weight ~ Diet), lab)
-w4 = lm(@formula(Weight ~ age_lab), lab)
-w5 = lm(@formula(Fat_Scores_Sum ~ Sex), lab)
-w6 = lm(@formula(OD ~ Weight + Diet + age_lab + Sex + days_since_1st_D_inj), lab)
-w7 = lm(@formula(OD ~ Diet + days_since_1st_D_inj), lab)
-w8 = lm(@formula(OD ~ Fat_Scores_Sum + Sex), lab)
-w9 = lm(@formula(OD ~ age_lab), lab)
-w10 = lm(@formula(OD ~ days_since_1st_D_inj), lab)
+lab = raw_data |> @filter(_.Env == "Lab") |> @dropna(:ID) |> DataFrame
+vax = lab |> @filter(_.boost == 0) |> @dropna(:days_since_1st_D_inj) |> DataFrame
 
 
-#wild mice OD over time curves
-wild =
-  data |>
-  @filter(_.:Env == "Wild") |>
-  @dropna(:OD) |>
-  @dropna(:days_since_1st_D_inj) |>
-  DataFrame
+# lab DAG independence tests
+@rput lab
+R"t.test(lab$age_lab ~ lab$Diet)"
+lm(@formula(age_lab ~ OD + Fat_Scores_Sum + days_since_1st_D_inj), vax)
+lm(@formula(age_lab ~ OD + Sex + days_since_1st_D_inj), vax)
+lm(@formula(age_lab ~ Fat_Scores_Sum + Sex), lab)
+lm(@formula(age_lab ~ Weight + Sex), lab)
+R"chisq.test(lab$Diet, lab$Sex)"
+R"t.test(lab$days_since_1st_trt ~ lab$Diet)"
+R"t.test(lab$Fat_Scores_Sum ~ lab$Diet)"
+lm(@formula(ismale ~ OD + Fat_Scores_Sum), vax)
+R"t.test(lab$days_since_1st_trt ~ lab$Sex)"
+lm(@formula(OD ~ Weight + Diet + Fat_Scores_Sum), vax)
+R"cor.test(lab$days_since_1st_trt, lab$Fat_Scores_Sum)"
+R"cor.test(lab$days_since_1st_trt, lab$Weight)"
 
-@. linear(x, p) = @. (p[1]*x + p[2])
-p0 = [0.5, 0.5]
-fit = curve_fit(linear, wild.days_since_1st_D_inj, wild.OD, p0)
-fit.param
-standard_errors(fit)
 
-@. binomial(x, p) = @. (p[1]*x^2 + p[2]*x + p[3])
-p0 = [0.5, 0.5, 0.5]
-fit = curve_fit(binomial, wild.days_since_1st_D_inj, wild.OD, p0)
-fit.param
-standard_errors(fit)
-
-@. trinomial(x, p) = @. (p[1]*x^3 + p[2]*x^2 + p[3]*x + p[4])
-p0 = [0.5, 0.5, 0.5, 0.5]
-fit = curve_fit(trinomial, wild.days_since_1st_D_inj, wild.OD, p0)
-fit.param
-standard_errors(fit)
-
-#lab mice OD over time curves
-lab =
-  data |>
-  @filter(_.:Env == "Lab") |>
-  @dropna(:OD) |>
-  @dropna(:days_since_1st_D_inj) |>
-  DataFrame
-
-@. linear(x, p) = @. (p[1]*x + p[2])
-p0 = [0.5, 0.5]
-fit = curve_fit(linear, lab.days_since_1st_D_inj, lab.OD, p0)
-fit.param
-standard_errors(fit)
-
-@. binomial(x, p) = @. (p[1]*x^2 + p[2]*x + p[3])
-p0 = [0.5, 0.5, 0.5]
-fit = curve_fit(binomial, lab.days_since_1st_D_inj, lab.OD, p0)
-fit.param
-standard_errors(fit)
-
-@. trinomial(x, p) = @. (p[1]*x^3 + p[2]*x^2 + p[3]*x + p[4])
-p0 = [0.5, 0.5, 0.5, 0.5]
-fit = curve_fit(trinomial, lab.days_since_1st_D_inj, lab.OD, p0)
-fit.param
-standard_errors(fit)
-
+# lab DAG weights
+lm(@formula(age_lab ~ Sex), lab)
+lm(@formula(Weight ~ Sex), lab)
+lm(@formula(Fat_Scores_Sum ~ Sex), lab)
+lm(@formula(Weight ~ Fat_Scores_Sum + Sex), lab)
+lm(@formula(Weight ~ Diet), lab)
+lm(@formula(OD ~ Diet), vax)
+lm(@formula(OD ~ Fat_Scores_Sum), vax)
+lm(@formula(OD ~ days_since_1st_D_inj), vax)
+lm(@formula(age_lab ~ days_since_1st_trt), lab)
