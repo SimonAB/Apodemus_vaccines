@@ -1,49 +1,24 @@
 dag {
-bb="-3.876,-5.339,4.06,4.203"
-Env [exposure,pos="-1.192,3.044"]
-OD [outcome,pos="0.184,3.253"]
-Weight [pos="1.154,-2.105"]
-age [pos="-2.634,-1.369"]
-diet [exposure,pos="1.276,0.318"]
-ectoparasites [pos="-1.075,-0.137"]
-fat [pos="3.352,0.774"]
-helminths [pos="-0.091,-0.208"]
-repro [pos="2.343,0.033"]
-sex [pos="3.343,-2.971"]
-time [exposure,pos="0.909,-4.420"]
+bb="-4.044,-3.934,3.136,4.59"
+Env [exposure,pos="-1.837,-3.896"]
+OD [outcome,pos="-0.850,2.019"]
+Weight [pos="1.308,-2.604"]
+diet [exposure,pos="-0.571,-1.008"]
+fat [pos="1.452,-0.514"]
+sex [pos="1.931,-1.547"]
+time [exposure,pos="3.076,-1.089"]
 Env -> OD
 Env -> Weight
-Env -> age
-Env -> ectoparasites
+Env -> diet
 Env -> fat
-Env -> helminths
-Env -> repro
 Weight -> OD
-age -> OD
-age -> Weight
-age -> ectoparasites
-age -> helminths
-age -> repro
 diet -> OD
 diet -> Weight
-diet -> fat
-diet -> helminths
-diet -> repro
-ectoparasites -> OD
-ectoparasites -> Weight
 fat -> OD
 fat -> Weight
-helminths -> OD
-repro -> OD
-repro -> Weight
-repro -> helminths
 sex -> Weight
 sex -> fat
-sex -> repro
 time -> OD
 time -> Weight
-time -> age
-time -> ectoparasites
 time -> fat
-time -> helminths
 }

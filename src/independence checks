@@ -20,42 +20,44 @@ unique(labset)
 sort!(labset)
 # chose mice 5,6, 9, 12, 15, 18, 27, 29, 31, 34, 35, and 37
 
-# filter out positive controls
-both = raw_data |> @dropna(:ID) |> DataFrame
-@rput both #forgot R hates variables called "data"
+# lab DAG independence tests
+@rput lab
+R"t.test(lab$age_lab ~ lab$Diet)"
+lm(@formula(age_lab ~ OD + Fat_Scores_Sum + days_since_1st_D_inj), vax)
+lm(@formula(age_lab ~ OD + Sex + days_since_1st_D_inj), vax)
+lm(@formula(age_lab ~ Fat_Scores_Sum + Sex), lab)
+lm(@formula(age_lab ~ Weight + Sex), lab)
+R"chisq.test(lab$Diet, lab$Sex)"
+R"t.test(lab$days_since_1st_trt ~ lab$Diet)"
+R"t.test(lab$Fat_Scores_Sum ~ lab$Diet)"
+lm(@formula(ismale ~ OD + Fat_Scores_Sum), vax)
+R"t.test(lab$days_since_1st_trt ~ lab$Sex)"
+lm(@formula(OD ~ Weight + Diet + Fat_Scores_Sum), vax)
+R"cor.test(lab$days_since_1st_trt, lab$Fat_Scores_Sum)"
+R"cor.test(lab$days_since_1st_trt, lab$Weight)"
 
-#independence checks
-R"chisq.test(both$Env, both$Diet)"
-R"chisq.test(both$Env, both$Sex)"
-R"t.test(both$days_since_1st_trt ~ both$Env)"
-lm(
-  @formula(OD ~ Sex + Env + Weight + isadult + Diet + ticks_total + Fat_Scores_Sum + isrepro + days_since_1st_D_inj),
-  both,
+both = raw_data |> @dropna(:ID) |> DataFrame
+categorical(both.Env)
+p = plot(
+    both,
+    y = :OD,
+    x = :days_since_1st_D_inj,
+    Geom.point,
+    Guide.xlabel("days since vaccination"),
+    Guide.ylabel("antibody OD"), color = :Env,
 )
-lm(
-  @formula(Weight ~ H_poly + Env + isadult + Diet + isrepro + days_since_1st_trt),
-  both,
-)
-R"chisq.test(both$isadult, both$Diet)"
-lm(@formula(isadult ~ Fat_Scores_Sum + Env + days_since_1st_trt), both)
-R"chisq.test(both$isadult, both$Sex)"
-R"t.test(both$ticks_total ~ both$Diet)"
-lm(@formula(ticks_total ~ Fat_Scores_Sum + Env + days_since_1st_trt), both)
-lm(@formula(ticks_total ~ H_poly + Env + isadult + days_since_1st_trt), both)
-lm(@formula(ticks_total ~ isrepro + Env + isadult), both)
-R"t.test(both$ticks_total ~ both$Sex)"
-lm(
-  @formula(
-    Fat_Scores_Sum ~ H_poly + Env + isadult + Diet + Sex + days_since_1st_trt
-  ),
-  both,
-)
-lm(
-  @formula(Fat_Scores_Sum ~ H_poly + Env + Diet + Sex + days_since_1st_trt),
-  both,
-)
-lm(@formula(Fat_Scores_Sum ~ isrepro + Env + isadult + Diet + Sex), both)
-lm(@formula(Fat_Scores_Sum ~ isrepro + Env + Diet + Sex + days_since_1st_trt), both)
-lm(@formula(H_poly ~ Sex + Env + isadult + Diet + isrepro), both)
+both = raw_data |> @dropna(:ID) |> @filter(_.days_since_1st_D_inj < 40) |> DataFrame
+vax = both |> @filter(_.boost == 0) |> @dropna(:days_since_1st_D_inj) |> DataFrame
+
+# combined DAG independence checks
+lm(@formula(OD ~ Sex + Env + Weight + Diet + Fat_Scores_Sum + days_since_1st_trt), vax)
+lm(@formula(ishigh ~ Fat_Scores_Sum + Env), both)
+@rput both
+R"chisq.test(both$Diet, both$Sex)"
+R"t.test(both$days_since_1st_trt ~ both$Diet)"
+R"t.test(both$Fat_Scores_Sum ~ both$Sex)"
 R"t.test(both$days_since_1st_trt ~ both$Sex)"
+R"chisq.test(both$Sex, both$Env)"
+R"t.test(both$days_since_1st_trt ~ both$Env)"
+
 
