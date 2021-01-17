@@ -36,6 +36,19 @@ lm(@formula(OD ~ Weight + Diet + Fat_Scores_Sum), vax)
 R"cor.test(lab$days_since_1st_trt, lab$Fat_Scores_Sum)"
 R"cor.test(lab$days_since_1st_trt, lab$Weight)"
 
+both = raw_data |> @dropna(:ID) |> DataFrame
+categorical(both.Env)
+p = plot(
+    both,
+    y = :OD,
+    x = :days_since_1st_D_inj,
+    Geom.point,
+    Guide.xlabel("days since vaccination"),
+    Guide.ylabel("antibody OD"), color = :Env,
+)
+both = raw_data |> @dropna(:ID) |> @filter(_.days_since_1st_D_inj < 40) |> DataFrame
+vax = both |> @filter(_.boost == 0) |> @dropna(:days_since_1st_D_inj) |> DataFrame
+
 # combined DAG independence checks
 lm(@formula(OD ~ Sex + Env + Weight + Diet + Fat_Scores_Sum + days_since_1st_trt), vax)
 lm(@formula(ishigh ~ Fat_Scores_Sum + Env), both)
