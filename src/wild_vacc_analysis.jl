@@ -48,3 +48,33 @@ lm(@formula(OD ~ Diet), vax)
 lm(@formula(OD ~ Fat_Scores_Sum), vax)
 lm(@formula(OD ~ days_since_1st_D_inj), vax)
 lm(@formula(age_lab ~ days_since_1st_trt), lab)
+
+
+both = raw_data |> @dropna(:ID) |> DataFrame
+categorical(both.Env)
+p = plot(
+    both,
+    y = :OD,
+    x = :days_since_1st_D_inj,
+    Geom.point,
+    Guide.xlabel("days since vaccination"),
+    Guide.ylabel("antibody OD"), color = :Env,
+)
+both = raw_data |> @dropna(:ID) |> @filter(_.days_since_1st_D_inj < 40) |> DataFrame
+vax = both |> @filter(_.boost == 0) |> @dropna(:days_since_1st_D_inj) |> DataFrame
+
+
+# combined DAG weights
+lm(@formula(OD ~ Env), both)
+lm(@formula(OD ~ Diet + Env), vax)
+lm(@formula(OD ~ Weight + Env + Fat_Scores_Sum), vax)
+lm(@formula(OD ~ Fat_Scores_Sum + Env + days_since_1st_D_inj), vax)
+lm(@formula(OD ~ days_since_1st_D_inj), vax)
+lm(@formula(Weight ~ Fat_Scores_Sum + Sex + Env + days_since_1st_trt), both)
+lm(@formula(Weight ~ Diet + Env), both)
+lm(@formula(Weight ~ Env), both)
+lm(@formula(Weight ~ days_since_1st_trt), both)
+lm(@formula(Weight ~ Sex), both)
+lm(@formula(Fat_Scores_Sum ~ Sex + Env), both)
+lm(@formula(Fat_Scores_Sum ~ days_since_1st_trt), both)
+lm(@formula(Fat_Scores_Sum ~ Env), both)
