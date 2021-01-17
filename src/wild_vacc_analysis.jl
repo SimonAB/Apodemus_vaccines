@@ -46,18 +46,6 @@ p = plot(
 both = raw_data |> @dropna(:ID) |> @filter(_.days_since_1st_D_inj < 40) |> DataFrame
 vax = both |> @filter(_.boost == 0) |> @dropna(:days_since_1st_D_inj) |> DataFrame
 
-# combined DAG independence checks
-lm(@formula(OD ~ Sex + Env + Weight + Diet + Fat_Scores_Sum + days_since_1st_trt), vax)
-lm(@formula(ishigh ~ Fat_Scores_Sum + Env), both)
-@rput both
-R"chisq.test(both$Diet, both$Sex)"
-R"t.test(both$days_since_1st_trt ~ both$Diet)"
-R"t.test(both$Fat_Scores_Sum ~ both$Sex)"
-R"t.test(both$days_since_1st_trt ~ both$Sex)"
-R"chisq.test(both$Sex, both$Env)"
-R"t.test(both$days_since_1st_trt ~ both$Env)"
-
-
 # combined DAG weights
 lm(@formula(OD ~ Env), both)
 lm(@formula(OD ~ Diet + Env), vax)
