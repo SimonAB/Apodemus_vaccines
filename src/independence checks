@@ -20,6 +20,22 @@ unique(labset)
 sort!(labset)
 # chose mice 5,6, 9, 12, 15, 18, 27, 29, 31, 34, 35, and 37
 
+# lab DAG independence tests
+@rput lab
+R"t.test(lab$age_lab ~ lab$Diet)"
+lm(@formula(age_lab ~ OD + Fat_Scores_Sum + days_since_1st_D_inj), vax)
+lm(@formula(age_lab ~ OD + Sex + days_since_1st_D_inj), vax)
+lm(@formula(age_lab ~ Fat_Scores_Sum + Sex), lab)
+lm(@formula(age_lab ~ Weight + Sex), lab)
+R"chisq.test(lab$Diet, lab$Sex)"
+R"t.test(lab$days_since_1st_trt ~ lab$Diet)"
+R"t.test(lab$Fat_Scores_Sum ~ lab$Diet)"
+lm(@formula(ismale ~ OD + Fat_Scores_Sum), vax)
+R"t.test(lab$days_since_1st_trt ~ lab$Sex)"
+lm(@formula(OD ~ Weight + Diet + Fat_Scores_Sum), vax)
+R"cor.test(lab$days_since_1st_trt, lab$Fat_Scores_Sum)"
+R"cor.test(lab$days_since_1st_trt, lab$Weight)"
+
 # combined DAG independence checks
 lm(@formula(OD ~ Sex + Env + Weight + Diet + Fat_Scores_Sum + days_since_1st_trt), vax)
 lm(@formula(ishigh ~ Fat_Scores_Sum + Env), both)
