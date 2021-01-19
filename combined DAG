@@ -5,8 +5,8 @@ OD [outcome,pos="-0.850,2.019"]
 Weight [pos="1.308,-2.604"]
 diet [exposure,pos="-0.571,-1.008"]
 fat [pos="1.452,-0.514"]
-sex [pos="1.931,-1.547"]
-time [exposure,pos="3.076,-1.089"]
+sex [pos="1.878,-1.503"]
+time [exposure,pos="3.046,-0.729"]
 Env -> OD
 Env -> Weight
 Env -> diet
@@ -22,3 +22,4 @@ time -> OD
 time -> Weight
 time -> fat
 }
+
