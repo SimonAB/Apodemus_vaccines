@@ -22,15 +22,16 @@ vax = lab |> @filter(_.boost == 0) |> @dropna(:days_since_1st_D_inj) |> DataFram
 
 
 # lab DAG weights
-lm(@formula(age_lab ~ Sex), lab)
-lm(@formula(Weight ~ Sex), lab)
-lm(@formula(Fat_Scores_Sum ~ Sex), lab)
-lm(@formula(Weight ~ Fat_Scores_Sum + Sex), lab)
-lm(@formula(Weight ~ Diet), lab)
-lm(@formula(OD ~ Diet), vax)
-lm(@formula(OD ~ Fat_Scores_Sum), vax)
-lm(@formula(OD ~ days_since_1st_D_inj), vax)
-lm(@formula(age_lab ~ days_since_1st_trt), lab)
+categorical!(lab, :ID)
+categorical!(vax, :ID)
+
+fit(MixedModel, @formula(Fat_Scores_Sum ~ Sex + (1|ID)), lab)
+fit(MixedModel, @formula(Weight ~ Sex + (1|ID)), lab)
+fit(MixedModel, @formula(Weight ~ Fat_Scores_Sum + Sex + (1|ID)), lab)
+fit(MixedModel, @formula(Weight ~ Diet + (1|ID)), lab)
+fit(MixedModel, @formula(OD ~ Diet + (1|ID)), vax)
+fit(MixedModel, @formula(OD ~ days_since_1st_D_inj + (1|ID)), vax)
+fit(MixedModel, @formula(OD ~ Fat_Scores_Sum + (1|ID)), vax)
 
 
 both = raw_data |> @dropna(:ID) |> DataFrame
