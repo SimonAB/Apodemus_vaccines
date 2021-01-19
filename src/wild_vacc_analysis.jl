@@ -33,7 +33,7 @@ fit(MixedModel, @formula(OD ~ Diet + (1|ID)), vax)
 fit(MixedModel, @formula(OD ~ days_since_1st_D_inj + (1|ID)), vax)
 fit(MixedModel, @formula(OD ~ Fat_Scores_Sum + (1|ID)), vax)
 
-
+# combined DAG weights
 both = raw_data |> @dropna(:ID) |> DataFrame
 categorical(both.Env)
 p = plot(
@@ -47,17 +47,17 @@ p = plot(
 both = raw_data |> @dropna(:ID) |> @filter(_.days_since_1st_D_inj < 40) |> DataFrame
 vax = both |> @filter(_.boost == 0) |> @dropna(:days_since_1st_D_inj) |> DataFrame
 
-# combined DAG weights
 categorical!(both, :ID)
 categorical!(vax, :ID)
 
-fit(MixedModel, @formula(Weight ~ Fat_Scores_Sum + Sex + Env + days_since_1st_D_inj + (1|ID)), both)
+fit(MixedModel, @formula(Weight ~ Fat_Scores_Sum + Sex + Env + days_since_1st_trt + (1|ID)), both)
 fit(MixedModel, @formula(Weight ~ Diet + Env + (1|ID)), both)
 fit(MixedModel, @formula(Weight ~ Env + (1|ID)), both)
-fit(MixedModel, @formula(Weight ~ days_since_1st_D_inj + Env + (1|ID)), both)
+fit(MixedModel, @formula(Weight ~ days_since_1st_trt + Env + (1|ID)), both)
 fit(MixedModel, @formula(Weight ~ Sex + Env + (1|ID)), both)
 fit(MixedModel, @formula(Fat_Scores_Sum ~ Env + (1|ID)), both)
 fit(MixedModel, @formula(Fat_Scores_Sum ~ Sex + Env + (1|ID)), both)
+fit(MixedModel, @formula(Fat_Scores_Sum ~ days_since_1st_trt + (1|ID)), both)
 fit(MixedModel, @formula(OD ~ Env + (1|ID)), vax)
 fit(MixedModel, @formula(OD ~ Diet + Env + (1|ID)), vax)
 fit(MixedModel, @formula(OD ~ Weight + Env + Fat_Scores_Sum + (1|ID)), vax)
