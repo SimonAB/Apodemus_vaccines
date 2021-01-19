@@ -13,7 +13,8 @@ data = CSV.read(
   copycols = true,
 )
 
-# randomly choose 20 lab mice 
+# randomly choose 20 lab mice
+
 lab = raw_data |> @dropna(:ID) |> @filter(_.:Env == "Lab") |> DataFrame
 labset = rand(lab.ID, 20)
 unique(labset)
@@ -21,6 +22,7 @@ sort!(labset)
 # chose mice 5,6, 9, 12, 15, 18, 27, 29, 31, 34, 35, and 37
 
 # lab DAG independence tests
+
 @rput lab
 R"t.test(lab$age_lab ~ lab$Diet)"
 lm(@formula(age_lab ~ OD + Fat_Scores_Sum + days_since_1st_D_inj), vax)
@@ -36,6 +38,9 @@ lm(@formula(OD ~ Weight + Diet + Fat_Scores_Sum), vax)
 R"cor.test(lab$days_since_1st_trt, lab$Fat_Scores_Sum)"
 R"cor.test(lab$days_since_1st_trt, lab$Weight)"
 
+
+# combined DAG independence checks
+
 both = raw_data |> @dropna(:ID) |> DataFrame
 categorical(both.Env)
 p = plot(
@@ -44,10 +49,20 @@ p = plot(
     x = :days_since_1st_D_inj,
     Geom.point,
     Guide.xlabel("days since vaccination"),
-    Guide.ylabel("antibody OD"), color = :Env,
+    Guide.ylabel("antibody OD"),
+    color = :Env,
 )
 both = raw_data |> @dropna(:ID) |> @filter(_.days_since_1st_D_inj < 40) |> DataFrame
 vax = both |> @filter(_.boost == 0) |> @dropna(:days_since_1st_D_inj) |> DataFrame
+
+@rput both vax
+R"chisq.test(both$Env, both$Sex)"
+R"t.test(both$days_since_1st_trt ~ both$Sex)"
+lm(@formula(OD ~ Sex + Env + Weight + Diet + Fat_Scores_Sum + days_since_1st_D_inj), vax)
+lm(@formula(ishigh ~ Fat_Scores_Sum + Env), both)
+R"chisq.test(both$Diet, both$Sex)"
+R"t.test(both$days_since_1st_trt ~ both$Diet)"
+R"t.test(both$days_since_1st_trt ~ both$Sex)"
 
 # combined DAG independence checks
 lm(@formula(OD ~ Sex + Env + Weight + Diet + Fat_Scores_Sum + days_since_1st_trt), vax)
