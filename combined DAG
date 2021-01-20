@@ -1,12 +1,12 @@
 dag {
-bb="-4.044,-3.934,3.136,4.59"
-Env [exposure,pos="-1.837,-3.896"]
-OD [outcome,pos="-0.850,2.019"]
-Weight [pos="1.308,-2.604"]
-diet [exposure,pos="-0.571,-1.008"]
-fat [pos="1.452,-0.514"]
-sex [pos="1.878,-1.503"]
-time [exposure,pos="3.046,-0.729"]
+bb="-2.852,-2.544,2.781,3.459"
+Env [exposure,pos="-1.179,-1.661"]
+OD [outcome,pos="-0.931,0.396"]
+Weight [pos="0.789,2.315"]
+diet [exposure,pos="-1.948,2.085"]
+fat [pos="1.392,0.342"]
+sex [pos="-0.848,1.548"]
+time [exposure,pos="0.641,0.849"]
 Env -> OD
 Env -> Weight
 Env -> diet
@@ -16,10 +16,11 @@ diet -> OD
 diet -> Weight
 fat -> OD
 fat -> Weight
+sex -> OD
 sex -> Weight
-sex -> fat
 time -> OD
 time -> Weight
 time -> fat
 }
+
 
