@@ -62,4 +62,6 @@ fit(MixedModel, @formula(OD ~ Sex + (1|ID)), vax)
 fit(MixedModel, @formula(OD ~ Weight + Diet + Fat_Scores_Sum + Env + days_since_1st_D_inj + (1|ID)), vax)
 fit(MixedModel, @formula(OD ~ Diet + Env + (1|ID)), vax)
 fit(MixedModel, @formula(OD ~ Fat_Scores_Sum + Env + days_since_1st_D_inj + (1|ID)), vax)
+fit(MixedModel, @formula(OD ~ Env + (1|ID)), vax)
+
 
