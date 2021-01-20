@@ -40,36 +40,14 @@ R"cor.test(lab$days_since_1st_trt, lab$Weight)"
 
 
 # combined DAG independence checks
-
-both = raw_data |> @dropna(:ID) |> DataFrame
-categorical(both.Env)
-p = plot(
-    both,
-    y = :OD,
-    x = :days_since_1st_D_inj,
-    Geom.point,
-    Guide.xlabel("days since vaccination"),
-    Guide.ylabel("antibody OD"),
-    color = :Env,
-)
-both = raw_data |> @dropna(:ID) |> @filter(_.days_since_1st_D_inj < 40) |> DataFrame
-vax = both |> @filter(_.boost == 0) |> @dropna(:days_since_1st_D_inj) |> DataFrame
-
-@rput both vax
-R"chisq.test(both$Env, both$Sex)"
-R"t.test(both$days_since_1st_trt ~ both$Sex)"
-lm(@formula(OD ~ Sex + Env + Weight + Diet + Fat_Scores_Sum + days_since_1st_D_inj), vax)
-lm(@formula(ishigh ~ Fat_Scores_Sum + Env), both)
-R"chisq.test(both$Diet, both$Sex)"
-R"t.test(both$days_since_1st_trt ~ both$Diet)"
-R"t.test(both$days_since_1st_trt ~ both$Sex)"
-
-# combined DAG independence checks
-lm(@formula(OD ~ Sex + Env + Weight + Diet + Fat_Scores_Sum + days_since_1st_trt), vax)
-lm(@formula(ishigh ~ Fat_Scores_Sum + Env), both)
-@rput both
-R"chisq.test(both$Diet, both$Sex)"
-R"t.test(both$days_since_1st_trt ~ both$Diet)"
+@rput vax
+R"chisq.test(vax$Env, vax$Sex)"
+R"t.test(vax$days_since_1st_trt ~ vax$Env)"
+lm(@formula(ishigh ~ Fat_Scores_Sum + Env), vax)
+R"chisq.test(vax$Diet, vax$Sex)"
+R"t.test(vax$days_since_1st_trt ~ vax$Diet)"
+R"t.test(vax$Fat_Scores_Sum ~ vax$Sex)"
+R"t.test(vax$days_since_1st_D_inj ~ vax$Sex)"
 R"t.test(both$Fat_Scores_Sum ~ both$Sex)"
 R"t.test(both$days_since_1st_trt ~ both$Sex)"
 R"chisq.test(both$Sex, both$Env)"
