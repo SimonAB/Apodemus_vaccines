@@ -1,0 +1,12 @@
+﻿Y,~ X,adjustment set,notes
+Weight,Fat,"Sex, Env, time, (1|ID)",
+Weight,Diet ,"Env, (1|ID)",
+Weight,Env,(1|ID),
+Weight,time,"Env, (1|ID)",Env not part of backdoor criteria but included to capture env differences
+Fat,Env,(1|ID),
+Fat,Sex,"Env, (1|ID)","Weak effect, Env not part of backdoor criteria but included to capture env differences"
+OD,Env,(1|ID),
+OD,Diet ,"Env, (1|ID)",
+OD ,Weight,"Fat, Env, (1|ID)",
+OD ,Fat,"time, Env, (1|ID)",
+OD,time,"Env, (1|ID)",Env not part of backdoor criteria but included to capture env differences
