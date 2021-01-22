@@ -57,11 +57,11 @@ fit(MixedModel, @formula(Weight ~ Env + (1|ID)), vax)
 fit(MixedModel, @formula(Fat_Scores_Sum ~ Env + (1|ID)), vax)
 fit(MixedModel, @formula(Fat_Scores_Sum ~ days_since_1st_trt + (1|ID)), vax)
 
-fit(MixedModel, @formula(OD ~ days_since_1st_D_inj + (1|ID)), vax)
-fit(MixedModel, @formula(OD ~ Sex + (1|ID)), vax)
+fit(MixedModel, @formula(OD ~ days_since_1st_D_inj + Weight + Fat_Scores_Sum + (1|ID)), vax)
+fit(MixedModel, @formula(OD ~ Sex + Weight + (1|ID)), vax)
 fit(MixedModel, @formula(OD ~ Weight + Diet + Fat_Scores_Sum + Env + days_since_1st_D_inj + (1|ID)), vax)
-fit(MixedModel, @formula(OD ~ Diet + Env + (1|ID)), vax)
+fit(MixedModel, @formula(OD ~ Diet + Weight + Env + (1|ID)), vax)
 fit(MixedModel, @formula(OD ~ Fat_Scores_Sum + Env + days_since_1st_D_inj + (1|ID)), vax)
-fit(MixedModel, @formula(OD ~ Env + (1|ID)), vax)
+fit(MixedModel, @formula(OD ~ Env + Fat_Scores_Sum + Weight + (1|ID)), vax)
 
 
