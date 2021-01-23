@@ -54,3 +54,17 @@ R"chisq.test(both$Sex, both$Env)"
 R"t.test(both$days_since_1st_trt ~ both$Env)"
 
 
+# repro combined DAG independence checks
+@rput both vax
+R"chisq.test(both$Env, both$Sex)"
+R"t.test(both$days_since_1st_trt ~ both$Env)"
+lm(@formula(OD ~ isrepro + Env + Weight + Diet + Fat_Scores_Sum + Sex + days_since_1st_D_inj), vax)
+lm(@formula(ishigh ~ Fat_Scores_Sum + Env), both)
+R"chisq.test(both$Diet, both$Sex)"
+R"t.test(both$days_since_1st_trt ~ both$Diet)"
+lm(@formula(ishigh ~ isrepro + Env), both)
+R"t.test(both$Fat_Scores_Sum ~ both$Sex)"
+lm(@formula(Fat_Scores_Sum ~ isrepro + Env), both)
+R"t.test(both$days_since_1st_trt ~ both$Sex)"
+R"chisq.test(both$Sex, both$isrepro)"
+R"t.test(both$days_since_1st_trt ~ both$isrepro)"
