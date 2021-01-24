@@ -11,7 +11,7 @@ using LsqFit
 
 #import data & filter for just lab mice
 raw_data = CSV.read(
-  "/Users/ewanwsmith/Documents/joint_dataset_4analysis.csv";
+  "data/joint_dataset_4analysis.csv";
   missingstrings = ["NA"],
   pool = true,
   copycols = true,
