@@ -7,7 +7,7 @@ using Cairo
 using RCall
 
 data = CSV.read(
-  "/Users/ewanwsmith/github/Apodemus_vaccines/data/OD_data.csv"; # turn this into relative path e.g. "./data/OD_data.csv"
+  "data/joint_dataset_4analysis.csv"; # turn this into relative path e.g. "./data/OD_data.csv"
   missingstrings = ["NA"],
   pool = true,
   copycols = true,
