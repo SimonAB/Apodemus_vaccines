@@ -34,18 +34,32 @@ fit(MixedModel, @formula(OD ~ days_since_1st_D_inj + (1|ID)), vax)
 fit(MixedModel, @formula(OD ~ Fat_Scores_Sum + (1|ID)), vax)
 
 # combined DAG weights
-both = raw_data |> @dropna(:ID) |> DataFrame
-categorical(both.Env)
+data = raw_data |> @dropna(:ID) |> DataFrame
+categorical(data.Env)
 p = plot(
-    both,
+    data,
     y = :OD,
     x = :days_since_1st_D_inj,
     Geom.point,
     Guide.xlabel("days since vaccination"),
-    Guide.ylabel("antibody OD"), color = :Env,
+    Guide.ylabel("antibody OD"),
+    color = :Env)
+
+data =
+    raw_data |>
+    @dropna(:ID) |>
+    @filter(_.days_since_1st_D_inj < 40) |>
+    @filter(_.boost == 0) |>
+    DataFrame
+
+weights, test = partition(
+    data.ID,
+    0.9,
+    shuffle = true,
+    rng = 551234,
 )
-both = raw_data |> @dropna(:ID) |> @filter(_.days_since_1st_D_inj < 40) |> DataFrame
-vax = both |> @filter(_.boost == 0) |> @dropna(:days_since_1st_D_inj) |> DataFrame
+
+both = data |> @filter(_.ID == weights) |> DataFrame
 
 
 # combined DAG weights
