@@ -1,6 +1,3 @@
-using DataFrames, Query
-using CSV
-using StatsBase
 using GLM, MixedModels
 using Gadfly
 using Cairo
