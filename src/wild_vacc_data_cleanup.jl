@@ -13,3 +13,23 @@ proportionmap(raw_data.sex)
 
 # Remove missing pittag number
 raw_data = dropmissing(raw_data, :pittag)
+
+
+#filter and partition data
+data =
+    raw_data |>
+    @dropna(:ID) |>
+    @filter(_.days_since_1st_D_inj < 40) |>
+    @filter(_.boost == 0) |>
+    DataFrame
+
+categorical(data.Env)
+
+fit, test = partition(
+    unique(data.ID),
+    0.9,
+    shuffle = true,
+    rng = 551234,
+)
+
+both = data |> @filter(_.ID == fit) |> DataFrame
