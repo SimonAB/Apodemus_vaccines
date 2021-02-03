@@ -3,13 +3,10 @@ using CSV
 using StatsBase
 
 # Import & filter data
-raw_data = CSV.read("./data/elisa_data_subset_for_analysis.csv"; missingstrings=["NA"], pool=true, copycols=true)
-dropmissing!(raw_data, :pittag) # remove blank wells and positive controls
 
-# Check data
-describe(raw_data)
-countmap(raw_data.sex)
-proportionmap(raw_data.sex)
+#import data & filter for just lab mice
+data = DataFrame!(CSV.File("./data/joint_dataset_4analysis.csv"; pool = true))
+
 
 # Remove missing pittag number
 raw_data = dropmissing(raw_data, :pittag)
@@ -33,3 +30,19 @@ fit, test = partition(
 )
 
 both = data |> @filter(_.ID == fit) |> DataFrame
+
+lab = data |>
+      @filter(_.Env == "Lab") |>
+      @dropna(:ID) |>
+      DataFrame
+
+vax = lab |>
+      @filter(_.boost == 0) |>
+      @dropna(:days_since_1st_D_inj) |>
+      DataFrame
+
+#   Specify how to correctly treat columns
+categorical!(data, [:ID, :Sex, :Diet, :Treatment])
+categorical!(lab, [:ID, :Sex, :Diet, :Treatment])
+categorical!(vax, [:ID, :Sex, :Diet, :Treatment])
+
