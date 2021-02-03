@@ -53,7 +53,7 @@ data =
     DataFrame
 
 weights, test = partition(
-    data.ID,
+    unique(data.ID),
     0.9,
     shuffle = true,
     rng = 551234,
