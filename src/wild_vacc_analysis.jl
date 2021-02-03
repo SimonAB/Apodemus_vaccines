@@ -8,6 +8,8 @@ Pkg.add("RCall")
 using RCall
 Pkg.add("LsqFit")
 using LsqFit
+Pkg.add("MLJ")
+using MLJ
 
 #import data & filter for just lab mice
 raw_data = CSV.read(
@@ -54,14 +56,14 @@ p = plot(
 
 
 
-weights, test = partition(
+fit, test = partition(
     unique(data.ID),
     0.9,
     shuffle = true,
     rng = 551234,
 )
 
-both = data |> @filter(_.ID == weights) |> DataFrame
+both = data |> @filter(_.ID == fit) |> DataFrame
 
 
 # combined DAG weights
