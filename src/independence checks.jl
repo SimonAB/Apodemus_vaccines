@@ -4,18 +4,12 @@ using StatsBase
 using GLM, MixedModels
 using Gadfly
 using Cairo
-using RCall
+# using RCall
 
-data = CSV.read(
-  "/Users/ewanwsmith/github/Apodemus_vaccines/data/OD_data.csv"; # turn this into relative path e.g. "./data/OD_data.csv"
-  missingstrings = ["NA"],
-  pool = true,
-  copycols = true,
-)
+# Import & filter data
+include("wild_vacc_data_cleanup.jl")
 
-# randomly choose 20 lab mice
-
-lab = raw_data |> @dropna(:ID) |> @filter(_.:Env == "Lab") |> DataFrame
+# Randomly subset data
 labset = rand(lab.ID, 20)
 unique(labset)
 sort!(labset)
