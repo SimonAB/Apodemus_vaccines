@@ -29,7 +29,8 @@ fit, test = partition(
     rng = 551234,
 )
 
-both = data |> @filter(_.ID == fit) |> DataFrame
+both = data |> @filter(_.ID == occursin.(fit)) |> DataFrame
+
 
 lab = data |>
       @filter(_.Env == "Lab") |>
