@@ -40,3 +40,5 @@ train, test = partition(unique(data.ID), 0.9, shuffle = true, rng = 793426)
 both = filter(:ID => in(Set(train)), data)
 
 validate = filter(:ID => in(Set(test)), data)
+validate = select(validate, ([:ID, :days_since_1st_D_inj, :Env, :Weight, :Diet, :Sex, :isvax]))
+validate = sort(validate, [:ID, :days_since_1st_D_inj])
