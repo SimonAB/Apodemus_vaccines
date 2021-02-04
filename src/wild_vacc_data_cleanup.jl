@@ -19,10 +19,8 @@ lab = data |>
       @dropna(:ID) |>
       DataFrame
 
-vax = lab |>
-      @filter(_.boost == 0) |>
-      @dropna(:days_since_1st_D_inj) |>
-      DataFrame
+vax = raw_data |> @dropna(:ID) |> @filter(_.boost == 0) |> DataFrame
+categorical!(vax, :ID)
 
 #   Specify how to correctly treat columns
 categorical!(data, [:ID, :Sex, :Diet, :Treatment])
@@ -30,9 +28,17 @@ categorical!(lab, [:ID, :Sex, :Diet, :Treatment])
 categorical!(vax, [:ID, :Sex, :Diet, :Treatment])
 
 # Partition dataset into train (fit) and test rows
-train, test = partition(unique(data.ID),
-                      0.9,
-                      shuffle = true,
-                      rng = 551234,)
+data =
+    raw_data |>
+    @dropna(:ID) |>
+    @filter(_.days_since_1st_D_inj < 40) |>
+    @filter(_.boost == 0) |>
+    DataFrame
+
+train, test = partition(unique(data.ID), 0.9, shuffle = true, rng = 793426)
 
 both = filter(:ID => in(Set(train)), data)
+
+validate = filter(:ID => in(Set(test)), data)
+validate = select(validate, ([:ID, :days_since_1st_D_inj, :Env, :Weight, :Diet, :Sex, :isvax]))
+validate = sort(validate, [:ID, :days_since_1st_D_inj])
