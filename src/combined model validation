@@ -8,7 +8,7 @@ using RCall
 
 # check the fit for validation set
 valid = CSV.read(
-  "./data/";
+  "./data/joint_dataset_4analysis.csv";
   missingstrings = ["NA"],
   pool = true,
   copycols = true,
