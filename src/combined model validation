@@ -8,14 +8,14 @@ using RCall
 
 # check the fit for validation set
 valid = CSV.read(
-  "/Users/ewanwsmith/Documents/validation set.csv";
+  "./data/";
   missingstrings = ["NA"],
   pool = true,
   copycols = true,
 )
 
 lines = CSV.read(
-  "/Users/ewanwsmith/Documents/lines.csv";
+  "./data/lines.csv";
   missingstrings = ["NA"],
   pool = true,
   copycols = true,
