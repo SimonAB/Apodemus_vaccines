@@ -27,3 +27,10 @@ end
 
 # merge placebo treatment into refute dataframe
 refute.placebo = placebo.placebo
+
+# generate random normal variable (common cause) and merge into refute dataframe
+commoncause = DataFrame(randn(rng, Float64, (nrow(both), 1)))
+rename!(commoncause,:x1 => :commoncause)
+
+# merge common cause variable into refute dataframe
+refute.commoncause = (commoncause.commoncause)
