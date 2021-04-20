@@ -2,6 +2,7 @@ using GLM, MixedModels
 using Gadfly
 using Cairo
 using Random
+import Missings
 
 # Import & filter data
 include("wild_vacc_data_cleanup.jl")
