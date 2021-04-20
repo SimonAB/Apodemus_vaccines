@@ -2,6 +2,7 @@ using GLM, MixedModels
 using Gadfly
 using Cairo
 using Random
+Pkg.add("Missings")
 import Missings
 
 # Import & filter data
