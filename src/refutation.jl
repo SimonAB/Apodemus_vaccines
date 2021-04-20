@@ -20,10 +20,10 @@ refute.randOD = (randnormalOD.randOD)
 
 # generate all-zero variable (placebo treatment) 
 placebo = DataFrame(Array{Union{Missing, Int}}(missing, nrow(both), 1))
-rename!(placebo,:x1 => :placebodiet)
+rename!(placebo,:x1 => :placebo)
 for col in names(placebo)
    placebo[col] = Missings.coalesce.(placebo[col], 0)
 end
 
 # merge placebo treatment into refute dataframe
-refute.placebodiet = placebo.placebodiet
+refute.placebo = placebo.placebo
