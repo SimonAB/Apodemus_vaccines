@@ -8,6 +8,9 @@ import Missings
 # Import & filter data
 include("wild_vacc_data_cleanup.jl")
 
+# categorical blocking vector
+categorical!(both, :ID)
+
 # generate random normal response variable (dummy response) 
 rng = MersenneTwister(820480);
 randnormalOD = DataFrame(randn(rng, Float64, (nrow(both), 1)))
