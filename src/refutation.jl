@@ -92,3 +92,144 @@ fit(
             days_since_1st_D_inj +
             (1 | ID)),
     refute,)
+
+# common cause in all adjustment sets 
+# fit weights models (w) and weights models with random normal common cause variable (c)
+categorical(both.ID)
+w1 = fit(MixedModel, @formula(Weight ~ isrepro + Env + (1 | ID)), both)
+c1 = fit(
+    MixedModel,
+    @formula(Weight ~ isrepro + Env + commoncause + (1 | ID)),
+    refute,
+)
+
+w2 = fit(MixedModel, @formula(Weight ~ Fat_Scores_Sum + Env + (1 | ID)), both)
+c2 = fit(
+    MixedModel,
+    @formula(Weight ~ Fat_Scores_Sum + Env + commoncause + (1 | ID)),
+    refute,
+)
+
+w3 = fit(MixedModel, @formula(Weight ~ Sex + Fat_Scores_Sum + (1 | ID)), both)
+c3 = fit(
+    MixedModel,
+    @formula(Weight ~ Sex + Fat_Scores_Sum + commoncause + (1 | ID)),
+    refute,
+)
+
+w4 = fit(MixedModel, @formula(Weight ~ Diet + Env + (1 | ID)), both)
+c4 = fit(
+    MixedModel,
+    @formula(Weight ~ Diet + Env + commoncause + (1 | ID)),
+    refute,
+)
+
+w5 = fit(MixedModel, @formula(isrepro ~ Env + (1 | ID)), both)
+c5 = fit(MixedModel, @formula(isrepro ~ Env + commoncause + (1 | ID)), refute)
+
+w6 = fit(MixedModel, @formula(Fat_Scores_Sum ~ Env + (1 | ID)), both)
+c6 = fit(
+    MixedModel,
+    @formula(Fat_Scores_Sum ~ Env + commoncause + (1 | ID)),
+    refute,
+)
+
+w7 = fit(MixedModel, @formula(Fat_Scores_Sum ~ Sex + Env + (1 | ID)), both)
+c7 = fit(
+    MixedModel,
+    @formula(Fat_Scores_Sum ~ Sex + Env + commoncause + (1 | ID)),
+    refute,
+)
+
+w8 = fit(
+    MixedModel,
+    @formula(Fat_Scores_Sum ~ days_since_1st_trt + Env + (1 | ID)),
+    both,
+)
+c8 = fit(
+    MixedModel,
+    @formula(
+        Fat_Scores_Sum ~ days_since_1st_trt + Env + commoncause + (1 | ID)
+    ),
+    refute,
+)
+
+w9 = fit(
+    MixedModel,
+    @formula(OD ~ Diet + Weight + days_since_1st_D_inj + Env + (1 | ID)),
+    both,
+)
+c9 = fit(
+    MixedModel,
+    @formula(
+        OD ~
+            Diet + Weight + days_since_1st_D_inj + Env + commoncause + (1 | ID)
+    ),
+    refute,
+)
+
+w10 = fit(
+    MixedModel,
+    @formula(OD ~ Weight + Diet + Sex + Env + days_since_1st_D_inj + (1 | ID)),
+    both,
+)
+c10 = fit(
+    MixedModel,
+    @formula(
+        OD ~
+            Weight +
+            Diet +
+            Sex +
+            Env +
+            days_since_1st_D_inj +
+            commoncause +
+            (1 | ID)
+    ),
+    refute,
+)
+
+w11 = fit(
+    MixedModel,
+    @formula(OD ~ Sex + Weight + days_since_1st_D_inj + (1 | ID)),
+    both,
+)
+c11 = fit(
+    MixedModel,
+    @formula(OD ~ Sex + Weight + days_since_1st_D_inj + commoncause + (1 | ID)),
+    refute,
+)
+
+w12 = fit(
+    MixedModel,
+    @formula(
+        OD ~
+            Env + Fat_Scores_Sum + isrepro + days_since_1st_D_inj + (1 | ID)
+    ),
+    both,
+)
+c12 = fit(
+    MixedModel,
+    @formula(
+        OD ~
+            Env +
+            Fat_Scores_Sum +
+            isrepro +
+            days_since_1st_D_inj +
+            commoncause +
+            (1 | ID)
+    ),
+    refute,
+)
+
+w13 = fit(
+    MixedModel,
+    @formula(OD ~ days_since_1st_D_inj + Fat_Scores_Sum + (1 | ID)),
+    both,
+)
+c13 = fit(
+    MixedModel,
+    @formula(
+        OD ~ days_since_1st_D_inj + Fat_Scores_Sum + commoncause + (1 | ID)
+    ),
+    refute,
+)
