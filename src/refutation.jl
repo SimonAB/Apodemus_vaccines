@@ -233,3 +233,156 @@ c13 = fit(
     ),
     refute,
 )
+
+# create fits dataframe with percentage difference in weights
+commoncausefits = DataFrame(
+    W = Float64[],
+    C = Float64[],
+    Diff = Float64[],
+    PcDiff = Float64[],
+    Edge = String[],
+)
+
+
+push!(
+    commoncausefits,
+    (
+        w1.β[2],
+        c1.β[2],
+        w1.β[2] - c1.β[2],
+        abs(((w1.β[2] - c1.β[2]) / w1.β[2]) * 100),
+        "repro -> weight",
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        w2.β[2],
+        c2.β[2],
+        w2.β[2] - c2.β[2],
+        abs(((w2.β[2] - c2.β[2]) / w2.β[2]) * 100),
+        "fat -> weight",
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        w3.β[2],
+        c3.β[2],
+        w3.β[2] - c3.β[2],
+        abs(((w3.β[2] - c3.β[2]) / w3.β[2]) * 100),
+        "sex -> weight",
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        w4.β[2],
+        c4.β[2],
+        w4.β[2] - c4.β[2],
+        abs(((w4.β[2] - c4.β[2]) / w4.β[2]) * 100),
+        "diet -> weight",
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        w5.β[2],
+        c5.β[2],
+        w5.β[2] - c5.β[2],
+        abs(((w5.β[2] - c5.β[2]) / w5.β[2]) * 100),
+        "env -> repro",
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        w6.β[2],
+        c6.β[2],
+        w6.β[2] - c6.β[2],
+        abs(((w6.β[2] - c6.β[2]) / w6.β[2]) * 100),
+        "env -> fat",
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        w7.β[2],
+        c7.β[2],
+        w7.β[2] - c7.β[2],
+        abs(((w7.β[2] - c7.β[2]) / w7.β[2]) * 100),
+        "sex -> fat",
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        w8.β[2],
+        c8.β[2],
+        w8.β[2] - c8.β[2],
+        abs(((w8.β[2] - c8.β[2]) / w8.β[2]) * 100),
+        "time -> fat",
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        w9.β[2],
+        c9.β[2],
+        w9.β[2] - c9.β[2],
+        abs(((w9.β[2] - c9.β[2]) / w9.β[2]) * 100),
+        "diet -> OD",
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        w10.β[2],
+        c10.β[2],
+        w10.β[2] - c10.β[2],
+        abs(((w10.β[2] - c10.β[2]) / w10.β[2]) * 100),
+        "weight -> OD",
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        w11.β[2],
+        c11.β[2],
+        w11.β[2] - c11.β[2],
+        abs(((w11.β[2] - c11.β[2]) / w11.β[2]) * 100),
+        "sex -> OD",
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        w12.β[2],
+        c12.β[2],
+        w12.β[2] - c12.β[2],
+        abs(((w12.β[2] - c12.β[2]) / w12.β[2]) * 100),
+        "env -> OD",
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        w13.β[2],
+        c13.β[2],
+        w13.β[2] - c13.β[2],
+        abs(((w13.β[2] - c13.β[2]) / w13.β[2]) * 100),
+        "time -> OD",
+    ),
+)
+
+p = plot(
+    commoncausefits,
+    x = :Edge,
+    y = :PcDiff,
+    Geom.bar,
+    Scale.x_discrete,
+    Guide.ylabel("% Difference in Effect Size"),
+)
+
+# plot effect size changes
+p |> PNG("/Users/ewanwsmith/Downloads/commoncauseplot.png", 6inch, 4inch)
