@@ -37,3 +37,58 @@ rename!(commoncause,:x1 => :commoncause)
 
 # merge common cause variable into refute dataframe
 refute.commoncause = (commoncause.commoncause)
+
+# random normal variable for OD
+fit(
+    MixedModel,
+    @formula(randOD ~ Diet + Weight + days_since_1st_D_inj + Env + (1 | ID)),
+    refute,)
+fit(
+    MixedModel,
+    @formula(
+        randOD ~ Weight + Diet + Sex + Env + days_since_1st_D_inj + (1 | ID)),
+    refute,)
+fit(
+    MixedModel,
+    @formula(randOD ~ Sex + Weight + days_since_1st_D_inj + (1 | ID)),
+    refute,)
+fit(
+    MixedModel,
+    @formula(
+        randOD ~
+            Env + Fat_Scores_Sum + isrepro + days_since_1st_D_inj + (1 | ID)),
+    refute,)
+fit(
+    MixedModel,
+    @formula(randOD ~ days_since_1st_D_inj + Fat_Scores_Sum + (1 | ID)),
+    refute,)
+
+# placebo treatment for diet
+categorical!(refute, :ID)
+fit(MixedModel, @formula(Weight ~ placebo + Env + (1 | ID)), refute)
+fit(
+    MixedModel,
+    @formula(OD ~ placebo + Weight + days_since_1st_D_inj + Env + (1 | ID)),
+    refute,)
+
+# placebo treatment for Sex 
+fit(MixedModel, @formula(Weight ~ placebo + Fat_Scores_Sum + (1 | ID)), refute)
+fit(MixedModel, @formula(Fat_Scores_Sum ~ placebo + Env + (1 | ID)), refute)
+fit(
+    MixedModel,
+    @formula(OD ~ placebo + Weight + days_since_1st_D_inj + (1 | ID)),
+    refute,)
+
+# placebo treatment for environment 
+fit(MixedModel, @formula(isrepro ~ placebo + (1 | ID)), refute)
+fit(MixedModel, @formula(Fat_Scores_Sum ~ placebo + (1 | ID)), refute)
+fit(
+    MixedModel,
+    @formula(
+        OD ~
+            placebo +
+            Fat_Scores_Sum +
+            isrepro +
+            days_since_1st_D_inj +
+            (1 | ID)),
+    refute,)
