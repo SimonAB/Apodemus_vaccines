@@ -232,7 +232,7 @@ c13 = fit(
     refute,
 )
 
-# create fits dataframe with percentage difference in weights
+# create fits dataframe with percentage difference in weights after common cause added to adjustment set
 commoncausefits = DataFrame(
     W = Float64[],
     C = Float64[],
