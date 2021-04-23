@@ -61,31 +61,6 @@ refute.randFat = (randnormalFat.randFat)
 lm(@formula(randOD ~ randFat), refute) #checking the random variables are different
 
 
-# random normal variable for OD
-fit(
-    MixedModel,
-    @formula(randOD ~ Diet + Weight + days_since_1st_D_inj + Env + (1 | ID)),
-    refute,)
-fit(
-    MixedModel,
-    @formula(
-        randOD ~ Weight + Diet + Sex + Env + days_since_1st_D_inj + (1 | ID)),
-    refute,)
-fit(
-    MixedModel,
-    @formula(randOD ~ Sex + Weight + days_since_1st_D_inj + (1 | ID)),
-    refute,)
-fit(
-    MixedModel,
-    @formula(
-        randOD ~
-            Env + Fat_Scores_Sum + isrepro + days_since_1st_D_inj + (1 | ID)),
-    refute,)
-fit(
-    MixedModel,
-    @formula(randOD ~ days_since_1st_D_inj + Fat_Scores_Sum + (1 | ID)),
-    refute,)
-
 # placebo treatment for diet
 categorical!(refute, :ID)
 fit(MixedModel, @formula(Weight ~ placebo + Env + (1 | ID)), refute)
@@ -429,4 +404,57 @@ p2 = plot(
 )
 
 
+# fit dummy outcome variables
+# random normal variable for weight
+d1 = fit(
+    MixedModel,
+    @formula(randWeight ~ isrepro + Env + (1 | ID)),
+    refute,
+)
+d2 = fit(MixedModel, @formula(randWeight ~ Fat_Scores_Sum + Env + (1 | ID)), refute)
+d3 = fit(MixedModel, @formula(randWeight ~ Sex + Fat_Scores_Sum + (1 | ID)), refute)
+d4 = fit(MixedModel, @formula(randWeight ~ Diet + Env + (1 | ID)), refute)
 
+# random normal variable for repro
+d5 = fit(MixedModel, @formula(randRepro ~ Env + (1 | ID)), refute)
+
+# random normal variable for fat scores
+d6 = fit(MixedModel, @formula(randFat ~ Env + (1 | ID)), refute)
+d7= fit(MixedModel, @formula(randFat ~ Sex + Env + (1 | ID)), refute)
+d8 = fit(
+    MixedModel,
+    @formula(randFat ~ days_since_1st_trt + Env + (1 | ID)),
+    refute,
+)
+
+# random normal variable for OD
+d9 = fit(
+    MixedModel,
+    @formula(randOD ~ Diet + Weight + days_since_1st_D_inj + Env + (1 | ID)),
+    refute,
+)
+d10 = fit(
+    MixedModel,
+    @formula(
+        randOD ~ Weight + Diet + Sex + Env + days_since_1st_D_inj + (1 | ID)
+    ),
+    refute,
+)
+d11 = fit(
+    MixedModel,
+    @formula(randOD ~ Sex + Weight + days_since_1st_D_inj + (1 | ID)),
+    refute,
+)
+d12 = fit(
+    MixedModel,
+    @formula(
+        randOD ~
+            Env + Fat_Scores_Sum + isrepro + days_since_1st_D_inj + (1 | ID)
+    ),
+    refute,
+)
+d13 = fit(
+    MixedModel,
+    @formula(randOD ~ days_since_1st_D_inj + Fat_Scores_Sum + (1 | ID)),
+    refute,
+)
