@@ -725,4 +725,5 @@ push!(
 )
 
 dummyfitjoin = innerjoin(dummyfits, dummyfitps, on = :Edge)
+dummyfitjoin.n = 1:nrow(dummyfitjoin)
 printstyled(dummyfitjoin)
