@@ -36,6 +36,7 @@ commoncause = DataFrame(randn(rng, Float64, (nrow(both), 1)))
 rename!(commoncause,:x1 => :commoncause)
 
 # merge common cause variable into refute dataframe
+refute.commoncause = (commoncause.commoncause)
 
 # generate Weight dummy response variable and merge into refute dataframe
 rng = MersenneTwister(729302);
@@ -44,6 +45,21 @@ rename!(randnormalWeight, :x1 => :randWeight)
 refute.randWeight = (randnormalWeight.randWeight)
 lm(@formula(randOD ~ randWeight), refute) #checking the random variables are different
 refute.commoncause = (commoncause.commoncause)
+
+# generate repro dummy response variable and merge into refute dataframe
+rng = MersenneTwister(194740);
+randnormalRepro = DataFrame(randn(rng, Float64, (nrow(both), 1)))
+rename!(randnormalRepro, :x1 => :randRepro)
+refute.randRepro = (randnormalRepro.randRepro)
+lm(@formula(randWeight ~ randRepro), refute) #checking the random variables are different
+
+# generate Fat dummy response variable and merge into refute dataframe
+rng = MersenneTwister(103840);
+randnormalFat = DataFrame(randn(rng, Float64, (nrow(both), 1)))
+rename!(randnormalFat, :x1 => :randFat)
+refute.randFat = (randnormalFat.randFat)
+lm(@formula(randOD ~ randFat), refute) #checking the random variables are different
+
 
 # random normal variable for OD
 fit(
