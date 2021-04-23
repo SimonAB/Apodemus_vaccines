@@ -406,13 +406,17 @@ p2 = plot(
 
 # fit dummy outcome variables
 # random normal variable for weight
-d1 = fit(
+d1 = fit(MixedModel, @formula(randWeight ~ isrepro + Env + (1 | ID)), refute)
+d2 = fit(
     MixedModel,
-    @formula(randWeight ~ isrepro + Env + (1 | ID)),
+    @formula(randWeight ~ Fat_Scores_Sum + Env + (1 | ID)),
     refute,
 )
-d2 = fit(MixedModel, @formula(randWeight ~ Fat_Scores_Sum + Env + (1 | ID)), refute)
-d3 = fit(MixedModel, @formula(randWeight ~ Sex + Fat_Scores_Sum + (1 | ID)), refute)
+d3 = fit(
+    MixedModel,
+    @formula(randWeight ~ Sex + Fat_Scores_Sum + (1 | ID)),
+    refute,
+)
 d4 = fit(MixedModel, @formula(randWeight ~ Diet + Env + (1 | ID)), refute)
 
 # random normal variable for repro
@@ -420,7 +424,7 @@ d5 = fit(MixedModel, @formula(randRepro ~ Env + (1 | ID)), refute)
 
 # random normal variable for fat scores
 d6 = fit(MixedModel, @formula(randFat ~ Env + (1 | ID)), refute)
-d7= fit(MixedModel, @formula(randFat ~ Sex + Env + (1 | ID)), refute)
+d7 = fit(MixedModel, @formula(randFat ~ Sex + Env + (1 | ID)), refute)
 d8 = fit(
     MixedModel,
     @formula(randFat ~ days_since_1st_trt + Env + (1 | ID)),
@@ -436,7 +440,8 @@ d9 = fit(
 d10 = fit(
     MixedModel,
     @formula(
-        randOD ~ Weight + Diet + Sex + Env + days_since_1st_D_inj + (1 | ID)
+        randOD ~
+            Weight + Diet + Sex + Env + days_since_1st_D_inj + (1 | ID)
     ),
     refute,
 )
