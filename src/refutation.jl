@@ -404,3 +404,11 @@ p2 = plot(
     intercept = [commoncauseps.model.pp.beta0[1]],
     Geom.abline(style = :dash, color = "red"),
 )
+
+# generate Weight dummy response variable and merge into refute dataframe
+rng = MersenneTwister(729302);
+randnormalWeight = DataFrame(randn(rng, Float64, (nrow(both), 1)))
+rename!(randnormalWeight, :x1 => :randWeight)
+refute.randWeight = (randnormalWeight.randWeight)
+lm(@formula(randOD ~ randWeight), refute) #checking the random variables are different
+
