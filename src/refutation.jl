@@ -463,3 +463,155 @@ d13 = fit(
     @formula(randOD ~ days_since_1st_D_inj + Fat_Scores_Sum + (1 | ID)),
     refute,
 )
+
+# create fits dataframe with percentage difference in weights after dummy response variable
+dummyfits = DataFrame(
+    W = Float64[],
+    D = Float64[],
+    Diff = Float64[],
+    PcDiff = Float64[],
+    Edge = String[],
+)
+
+
+push!(
+    dummyfits,
+    (
+        w1.β[2],
+        d1.β[2],
+        w1.β[2] - d1.β[2],
+        (((w1.β[2] - d1.β[2]) / w1.β[2]) * 100),
+        "repro -> weight",
+    ),
+)
+push!(
+    dummyfits,
+    (
+        w2.β[2],
+        d2.β[2],
+        w2.β[2] - d2.β[2],
+        (((w2.β[2] - d2.β[2]) / w2.β[2]) * 100),
+        "fat -> weight",
+    ),
+)
+push!(
+    dummyfits,
+    (
+        w3.β[2],
+        d3.β[2],
+        w3.β[2] - d3.β[2],
+        (((w3.β[2] - d3.β[2]) / w3.β[2]) * 100),
+        "sex -> weight",
+    ),
+)
+push!(
+    dummyfits,
+    (
+        w4.β[2],
+        d4.β[2],
+        w4.β[2] - d4.β[2],
+        (((w4.β[2] - d4.β[2]) / w4.β[2]) * 100),
+        "diet -> weight",
+    ),
+)
+push!(
+    dummyfits,
+    (
+        w5.β[2],
+        d5.β[2],
+        w5.β[2] - d5.β[2],
+        (((w5.β[2] - d5.β[2]) / w5.β[2]) * 100),
+        "env -> repro",
+    ),
+)
+push!(
+    dummyfits,
+    (
+        w6.β[2],
+        d6.β[2],
+        w6.β[2] - d6.β[2],
+        (((w6.β[2] - d6.β[2]) / w6.β[2]) * 100),
+        "env -> fat",
+    ),
+)
+push!(
+    dummyfits,
+    (
+        w7.β[2],
+        d7.β[2],
+        w7.β[2] - d7.β[2],
+        (((w7.β[2] - d7.β[2]) / w7.β[2]) * 100),
+        "sex -> fat",
+    ),
+)
+push!(
+    dummyfits,
+    (
+        w8.β[2],
+        d8.β[2],
+        w8.β[2] - d8.β[2],
+        (((w8.β[2] - d8.β[2]) / w8.β[2]) * 100),
+        "time -> fat",
+    ),
+)
+push!(
+    dummyfits,
+    (
+        w9.β[2],
+        d9.β[2],
+        w9.β[2] - d9.β[2],
+        (((w9.β[2] - d9.β[2]) / w9.β[2]) * 100),
+        "diet -> OD",
+    ),
+)
+push!(
+    dummyfits,
+    (
+        w10.β[2],
+        d10.β[2],
+        w10.β[2] - d10.β[2],
+        (((w10.β[2] - d10.β[2]) / w10.β[2]) * 100),
+        "weight -> OD",
+    ),
+)
+push!(
+    dummyfits,
+    (
+        w11.β[2],
+        d11.β[2],
+        w11.β[2] - d11.β[2],
+        (((w11.β[2] - d11.β[2]) / w11.β[2]) * 100),
+        "sex -> OD",
+    ),
+)
+push!(
+    dummyfits,
+    (
+        w12.β[2],
+        d12.β[2],
+        w12.β[2] - d12.β[2],
+        (((w12.β[2] - d12.β[2]) / w12.β[2]) * 100),
+        "env -> OD",
+    ),
+)
+push!(
+    dummyfits,
+    (
+        w13.β[2],
+        d13.β[2],
+        w13.β[2] - d13.β[2],
+        (((w13.β[2] - d13.β[2]) / w13.β[2]) * 100),
+        "time -> OD",
+    ),
+)
+
+p3 = plot(
+    dummyfits,
+    x = :Edge,
+    y = :PcDiff,
+    Geom.bar,
+    Scale.x_discrete,
+    Guide.ylabel("% Loss of Effect Size"),
+)
+
+p4 = plot(dummyfits, x = :W, y = :D, Geom.point, color = :Edge)
