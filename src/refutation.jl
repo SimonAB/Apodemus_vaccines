@@ -36,6 +36,13 @@ commoncause = DataFrame(randn(rng, Float64, (nrow(both), 1)))
 rename!(commoncause,:x1 => :commoncause)
 
 # merge common cause variable into refute dataframe
+
+# generate Weight dummy response variable and merge into refute dataframe
+rng = MersenneTwister(729302);
+randnormalWeight = DataFrame(randn(rng, Float64, (nrow(both), 1)))
+rename!(randnormalWeight, :x1 => :randWeight)
+refute.randWeight = (randnormalWeight.randWeight)
+lm(@formula(randOD ~ randWeight), refute) #checking the random variables are different
 refute.commoncause = (commoncause.commoncause)
 
 # random normal variable for OD
@@ -405,10 +412,5 @@ p2 = plot(
     Geom.abline(style = :dash, color = "red"),
 )
 
-# generate Weight dummy response variable and merge into refute dataframe
-rng = MersenneTwister(729302);
-randnormalWeight = DataFrame(randn(rng, Float64, (nrow(both), 1)))
-rename!(randnormalWeight, :x1 => :randWeight)
-refute.randWeight = (randnormalWeight.randWeight)
-lm(@formula(randOD ~ randWeight), refute) #checking the random variables are different
+
 
