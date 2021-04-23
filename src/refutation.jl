@@ -616,8 +616,12 @@ p3 = plot(
 
 p4 = plot(dummyfits, x = :W, y = :D, Geom.point, color = :Edge)
 
-dummyfitps =
-    DataFrame(Edge = String[], Wpvalue = Float64[], Dpvalue = Float64[])
+dummyfitps = DataFrame(
+    Edge = String[],
+    Wpvalue = Float64[],
+    Dpvalue = Float64[],
+    DummyFC = Float64[],
+)
 
 push!(
     dummyfitps,
