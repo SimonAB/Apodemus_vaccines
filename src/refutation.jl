@@ -398,6 +398,7 @@ p2 = plot(
     commoncausefits,
     x = :p_value,
     y = :PcDiff,
+    Geom.point,
     slope = [commoncauseps.model.pp.beta0[2]],
     intercept = [commoncauseps.model.pp.beta0[1]],
     Geom.abline(style = :dash, color = "red"),
