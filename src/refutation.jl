@@ -620,7 +620,7 @@ dummyfitps = DataFrame(
     Edge = String[],
     Wpvalue = Float64[],
     Dpvalue = Float64[],
-    DummyFC = Float64[],
+    log10DummyFC = Float64[],
 )
 
 push!(
@@ -629,6 +629,12 @@ push!(
         "repro -> weight",
         DataFrame(coeftable(w1).cols).x4[2],
         DataFrame(coeftable(d1).cols).x4[2],
+        log10(
+            (
+                DataFrame(coeftable(d1).cols).x4[2] -
+                DataFrame(coeftable(w1).cols).x4[2]
+            ) / DataFrame(coeftable(w1).cols).x4[2]
+        ),
     ),
 ) #this got around an AbstractRow iteration error
 push!(
@@ -637,6 +643,12 @@ push!(
         "fat -> weight",
         DataFrame(coeftable(w2).cols).x4[2],
         DataFrame(coeftable(d2).cols).x4[2],
+        log10(
+            (
+                DataFrame(coeftable(d2).cols).x4[2] -
+                DataFrame(coeftable(w2).cols).x4[2]
+            ) / DataFrame(coeftable(w2).cols).x4[2]
+        ),
     ),
 )
 push!(
@@ -645,6 +657,12 @@ push!(
         "sex -> weight",
         DataFrame(coeftable(w3).cols).x4[2],
         DataFrame(coeftable(d3).cols).x4[2],
+        log10(
+            (
+                DataFrame(coeftable(d3).cols).x4[2] -
+                DataFrame(coeftable(w3).cols).x4[2]
+            ) / DataFrame(coeftable(w3).cols).x4[2]
+        ),
     ),
 )
 push!(
@@ -653,6 +671,12 @@ push!(
         "diet -> weight",
         DataFrame(coeftable(w4).cols).x4[2],
         DataFrame(coeftable(d4).cols).x4[2],
+        log10(
+            (
+                DataFrame(coeftable(d4).cols).x4[2] -
+                DataFrame(coeftable(w4).cols).x4[2]
+            ) / DataFrame(coeftable(w4).cols).x4[2]
+        ),
     ),
 )
 push!(
@@ -661,6 +685,12 @@ push!(
         "env -> repro",
         DataFrame(coeftable(w5).cols).x4[2],
         DataFrame(coeftable(d5).cols).x4[2],
+        log10(
+            (
+                DataFrame(coeftable(d5).cols).x4[2] -
+                DataFrame(coeftable(w5).cols).x4[2]
+            ) / DataFrame(coeftable(w5).cols).x4[2]
+        ),
     ),
 )
 push!(
@@ -669,6 +699,12 @@ push!(
         "env -> fat",
         DataFrame(coeftable(w6).cols).x4[2],
         DataFrame(coeftable(d6).cols).x4[2],
+        log10(
+            (
+                DataFrame(coeftable(d6).cols).x4[2] -
+                DataFrame(coeftable(w6).cols).x4[2]
+            ) / DataFrame(coeftable(w6).cols).x4[2]
+        ),
     ),
 )
 push!(
@@ -677,6 +713,12 @@ push!(
         "sex -> fat",
         DataFrame(coeftable(w7).cols).x4[2],
         DataFrame(coeftable(d7).cols).x4[2],
+        log10(
+            (
+                DataFrame(coeftable(d7).cols).x4[2] -
+                DataFrame(coeftable(w7).cols).x4[2]
+            ) / DataFrame(coeftable(w7).cols).x4[2]
+        ),
     ),
 )
 push!(
@@ -685,6 +727,12 @@ push!(
         "time -> fat",
         DataFrame(coeftable(w8).cols).x4[2],
         DataFrame(coeftable(d8).cols).x4[2],
+        log10(
+            (
+                DataFrame(coeftable(d8).cols).x4[2] -
+                DataFrame(coeftable(w8).cols).x4[2]
+            ) / DataFrame(coeftable(w8).cols).x4[2]
+        ),
     ),
 )
 push!(
@@ -693,6 +741,12 @@ push!(
         "diet -> OD",
         DataFrame(coeftable(w9).cols).x4[2],
         DataFrame(coeftable(d9).cols).x4[2],
+        log10(
+            (
+                DataFrame(coeftable(d9).cols).x4[2] -
+                DataFrame(coeftable(w9).cols).x4[2]
+            ) / DataFrame(coeftable(w9).cols).x4[2]
+        ),
     ),
 )
 push!(
@@ -701,6 +755,12 @@ push!(
         "weight -> OD",
         DataFrame(coeftable(w10).cols).x4[2],
         DataFrame(coeftable(d10).cols).x4[2],
+        log10(
+            (
+                DataFrame(coeftable(d10).cols).x4[2] -
+                DataFrame(coeftable(w10).cols).x4[2]
+            ) / DataFrame(coeftable(w10).cols).x4[2]
+        ),
     ),
 )
 push!(
@@ -709,6 +769,12 @@ push!(
         "sex -> OD",
         DataFrame(coeftable(w11).cols).x4[2],
         DataFrame(coeftable(d11).cols).x4[2],
+        log10(
+            (
+                DataFrame(coeftable(d11).cols).x4[2] -
+                DataFrame(coeftable(w11).cols).x4[2]
+            ) / DataFrame(coeftable(w11).cols).x4[2]
+        ),
     ),
 )
 push!(
@@ -717,6 +783,12 @@ push!(
         "env -> OD",
         DataFrame(coeftable(w12).cols).x4[2],
         DataFrame(coeftable(d12).cols).x4[2],
+        log10(
+            (
+                DataFrame(coeftable(d12).cols).x4[2] -
+                DataFrame(coeftable(w12).cols).x4[2]
+            ) / DataFrame(coeftable(w12).cols).x4[2]
+        ),
     ),
 )
 push!(
@@ -725,9 +797,26 @@ push!(
         "time -> OD",
         DataFrame(coeftable(w13).cols).x4[2],
         DataFrame(coeftable(d13).cols).x4[2],
+        log10(
+            (
+                DataFrame(coeftable(d13).cols).x4[2] -
+                DataFrame(coeftable(w13).cols).x4[2]
+            ) / DataFrame(coeftable(w13).cols).x4[2]
+        ),
     ),
 )
 
 dummyfitjoin = innerjoin(dummyfits, dummyfitps, on = :Edge)
 dummyfitjoin.n = 1:nrow(dummyfitjoin)
 printstyled(dummyfitjoin)
+
+p5 = plot(
+    dummyfitjoin,
+    x = :Edge,
+    y = :log10DummyFC,
+    Geom.bar,
+    Geom.hline,
+    yintercept = [log10(1)],
+    Guide.ylabel("log(10) p-value fold change", orientation = :vertical),
+    Guide.xlabel(nothing),
+)
