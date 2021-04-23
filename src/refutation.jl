@@ -394,3 +394,4 @@ p2 = plot(commoncausefits, x = :p_value, y = :PcDiff)
 
 @rput commoncausefits
 R"cor.test(commoncausefits$p_value, commoncausefits$PcDiff)"
+lm(@formula(PcDiff ~ p_value), commoncausefits)
