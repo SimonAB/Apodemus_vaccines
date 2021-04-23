@@ -386,3 +386,11 @@ p = plot(
 
 # plot effect size changes
 p |> PNG("/Users/ewanwsmith/Downloads/commoncauseplot.png", 6inch, 4inch)
+
+# compare % change in effect size with p-value of original model
+commoncausefits.p_value = [w1.pvalues[2],w2.pvalues[2],w3.pvalues[2],w4.pvalues[2],w5.pvalues[2],w6.pvalues[2],w7.pvalues[2],w8.pvalues[2],w9.pvalues[2],w10.pvalues[2],w11.pvalues[2],w12.pvalues[2],w13.pvalues[2],]
+
+p2 = plot(commoncausefits, x = :p_value, y = :PcDiff)
+
+@rput commoncausefits
+R"cor.test(commoncausefits$p_value, commoncausefits$PcDiff)"
