@@ -821,7 +821,7 @@ p5 = plot(
     Guide.xlabel(nothing),
 )
 
-p5 |> PNG("/Users/ewanwsmith/Downloads/log10.png", 6inch, 4inch)
+p5 |> PNG("/Users/ewanwsmith/Downloads/log100.png", 6inch, 4inch)
 
 @rput dummyfitjoin
 R"cor.test(dummyfitjoin$W, dummyfitjoin$log100DummyFC)"
