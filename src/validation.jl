@@ -127,11 +127,12 @@ p10 = plot(
 
 # import dataset with fits adjusted for removed nodes
 markov = CSV.read(
-    "/Users/ewanwsmith/Downloads/markov_blanket.csv";
+    "./data/markov predicts.csv.csv";
     missingstrings = ["NA"],
     pool = true,
     copycols = true,
 )
+
 categorical!(markov, :ID)
 
 # fit full markov blanket prediction to observed OD
@@ -188,6 +189,7 @@ push!(
         aic(fitmodel) - aic(no_Env_fitmodel),
     ),
 )
+
 # compare fit without Weight node
 no_Weight_plot = plot(
     markov,
