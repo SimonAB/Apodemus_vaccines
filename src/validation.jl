@@ -124,3 +124,67 @@ p10 = plot(
     intercept = [diffWeightmodel.beta[1]],
     Geom.abline(style = :dash, color = "blue"),
 )
+
+# import dataset with fits adjusted for removed nodes
+markov = CSV.read(
+    "/Users/ewanwsmith/Downloads/markov_blanket.csv";
+    missingstrings = ["NA"],
+    pool = true,
+    copycols = true,
+)
+categorical!(markov, :ID)
+
+# fit full markov blanket prediction to observed OD
+fitmodel = fit(MixedModel, @formula(OD ~ OD_predict + (1|ID)), markov)
+
+# compare fit without time node
+no_time_plot = plot(
+    markov,
+    y = :OD,
+    x = :no_time,
+    Geom.point,
+    Guide.xlabel("Prediction without time node"),
+    Guide.ylabel("OD"),
+    color = :ID,
+)
+
+no_time_fitmodel = fit(MixedModel, @formula(OD ~ no_time + (1|ID)), markov)
+
+# compare fit without Env node
+no_Env_plot = plot(
+    markov,
+    y = :OD,
+    x = :no_Env,
+    Geom.point,
+    Guide.xlabel("Prediction without Env node"),
+    Guide.ylabel("OD"),
+    color = :ID,
+)
+
+no_Env_fitmodel = fit(MixedModel, @formula(OD ~ no_Env + (1|ID)), markov)
+
+# compare fit without Weight node
+no_Weight_plot = plot(
+    markov,
+    y = :OD,
+    x = :no_Weight,
+    Geom.point,
+    Guide.xlabel("Prediction without Weight node"),
+    Guide.ylabel("OD"),
+    color = :ID,
+)
+
+no_Weight_fitmodel = fit(MixedModel, @formula(OD ~ no_Weight + (1|ID)), markov)
+
+# compare fit without Diet node
+no_Diet_plot = plot(
+    markov,
+    y = :OD,
+    x = :no_Diet,
+    Geom.point,
+    Guide.xlabel("Prediction without Diet node"),
+    Guide.ylabel("OD"),
+    color = :ID,
+)
+
+no_Diet_fitmodel = fit(MixedModel, @formula(OD ~ no_Diet + (1|ID)), markov)
