@@ -8,7 +8,7 @@ using RCall
 
 # check the fit for validation set
 valid = CSV.read(
-  "./data/joint_dataset_4analysis.csv";
+  "./data/validation.csv";
   missingstrings = ["NA"],
   pool = true,
   copycols = true,
@@ -124,3 +124,137 @@ p10 = plot(
     intercept = [diffWeightmodel.beta[1]],
     Geom.abline(style = :dash, color = "blue"),
 )
+
+# import dataset with fits adjusted for removed nodes
+markov = CSV.read(
+    "./data/markov predicts.csv.csv";
+    missingstrings = ["NA"],
+    pool = true,
+    copycols = true,
+)
+
+categorical!(markov, :ID)
+
+# fit full markov blanket prediction to observed OD
+fitmodel = fit(MixedModel, @formula(OD ~ OD_predict + (1|ID)), markov)
+
+#create DataFrame with AICs from all models
+markovAICs = DataFrame(
+    Node = String[],
+    full_AIC = Float64[],
+    dropped_AIC = Float64[],
+    delta_AIC = Float64[],
+)
+
+# compare fit without time node
+no_time_plot = plot(
+    markov,
+    y = :OD,
+    x = :no_time,
+    Geom.point,
+    Guide.xlabel("Prediction without time node"),
+    Guide.ylabel("OD"),
+    color = :ID,
+)
+
+no_time_fitmodel = fit(MixedModel, @formula(OD ~ no_time + (1|ID)), markov)
+push!(
+    markovAICs,
+    (
+        "time",
+        aic(fitmodel),
+        aic(no_time_fitmodel),
+        aic(fitmodel) - aic(no_time_fitmodel),
+    ),
+)
+
+# compare fit without Env node
+no_Env_plot = plot(
+    markov,
+    y = :OD,
+    x = :no_Env,
+    Geom.point,
+    Guide.xlabel("Prediction without Env node"),
+    Guide.ylabel("OD"),
+    color = :ID,
+)
+
+no_Env_fitmodel = fit(MixedModel, @formula(OD ~ no_Env + (1|ID)), markov)
+push!(
+    markovAICs,
+    (
+        "Env",
+        aic(fitmodel),
+        aic(no_Env_fitmodel),
+        aic(fitmodel) - aic(no_Env_fitmodel),
+    ),
+)
+
+# compare fit without Weight node
+no_Weight_plot = plot(
+    markov,
+    y = :OD,
+    x = :no_Weight,
+    Geom.point,
+    Guide.xlabel("Prediction without Weight node"),
+    Guide.ylabel("OD"),
+    color = :ID,
+)
+
+no_Weight_fitmodel = fit(MixedModel, @formula(OD ~ no_Weight + (1|ID)), markov)
+push!(
+    markovAICs,
+    (
+        "Weight",
+        aic(fitmodel),
+        aic(no_Weight_fitmodel),
+        aic(fitmodel) - aic(no_Weight_fitmodel),
+    ),
+)
+
+# compare fit without Diet node
+no_Diet_plot = plot(
+    markov,
+    y = :OD,
+    x = :no_Diet,
+    Geom.point,
+    Guide.xlabel("Prediction without Diet node"),
+    Guide.ylabel("OD"),
+    color = :ID,
+)
+
+no_Diet_fitmodel = fit(MixedModel, @formula(OD ~ no_Diet + (1|ID)), markov)
+push!(
+    markovAICs,
+    (
+        "Diet",
+        aic(fitmodel),
+        aic(no_Diet_fitmodel),
+        aic(fitmodel) - aic(no_Diet_fitmodel),
+    ),
+)
+
+# compare fit without Sex node
+no_Sex_plot = plot(
+    markov,
+    y = :OD,
+    x = :no_Sex,
+    Geom.point,
+    Guide.xlabel("Prediction without Sex node"),
+    Guide.ylabel("OD"),
+    color = :ID,
+)
+
+no_Sex_fitmodel = fit(MixedModel, @formula(OD ~ no_Sex + (1|ID)), markov)
+push!(
+    markovAICs,
+    (
+        "Sex",
+        aic(fitmodel),
+        aic(no_Sex_fitmodel),
+        aic(fitmodel) - aic(no_Sex_fitmodel),
+    ),
+)
+
+# print AICs
+printstyled(markovAICs)
