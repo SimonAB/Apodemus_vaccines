@@ -568,16 +568,6 @@ push!(
         "env -> OD",
     ),
 )
-push!(
-    dummyfits,
-    (
-        w13.β[2],
-        d13.β[2],
-        w13.β[2] - d13.β[2],
-        (((w13.β[2] - d13.β[2]) / w13.β[2]) * 100),
-        "time -> OD",
-    ),
-)
 
 p3 = plot(
     dummyfits,
@@ -765,20 +755,7 @@ push!(
         ),
     ),
 ),)
-push!(
-    dummyfitps,
-    (
-        "time -> OD",
-        DataFrame(coeftable(w13).cols).x4[2],
-        DataFrame(coeftable(d13).cols).x4[2],
-        log(100,(
-            (
-                DataFrame(coeftable(d13).cols).x4[2] -
-                DataFrame(coeftable(w13).cols).x4[2]
-            ) / DataFrame(coeftable(w13).cols).x4[2]
-        ),
-    ),
-),)
+
 
 dummyfitjoin = innerjoin(dummyfits, dummyfitps, on = :Edge)
 dummyfitjoin.n = 1:nrow(dummyfitjoin)
