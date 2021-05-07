@@ -234,7 +234,7 @@ push!(
         c1.β[2],
         w1.β[2] - c1.β[2],
         abs(((w1.β[2] - c1.β[2]) / w1.β[2]) * 100),
-        "repro -> weight",
+        "env -> weight",
     ),
 )
 push!(
@@ -274,7 +274,7 @@ push!(
         c5.β[2],
         w5.β[2] - c5.β[2],
         abs(((w5.β[2] - c5.β[2]) / w5.β[2]) * 100),
-        "env -> repro",
+        "env -> fat",
     ),
 )
 push!(
@@ -284,7 +284,7 @@ push!(
         c6.β[2],
         w6.β[2] - c6.β[2],
         abs(((w6.β[2] - c6.β[2]) / w6.β[2]) * 100),
-        "env -> fat",
+        "sex -> fat",
     ),
 )
 push!(
@@ -294,7 +294,7 @@ push!(
         c7.β[2],
         w7.β[2] - c7.β[2],
         abs(((w7.β[2] - c7.β[2]) / w7.β[2]) * 100),
-        "sex -> fat",
+        "time -> fat",
     ),
 )
 push!(
@@ -304,7 +304,7 @@ push!(
         c8.β[2],
         w8.β[2] - c8.β[2],
         abs(((w8.β[2] - c8.β[2]) / w8.β[2]) * 100),
-        "time -> fat",
+        "diet -> OD",
     ),
 )
 push!(
@@ -314,7 +314,7 @@ push!(
         c9.β[2],
         w9.β[2] - c9.β[2],
         abs(((w9.β[2] - c9.β[2]) / w9.β[2]) * 100),
-        "diet -> OD",
+        "weight -> OD",
     ),
 )
 push!(
@@ -324,7 +324,7 @@ push!(
         c10.β[2],
         w10.β[2] - c10.β[2],
         abs(((w10.β[2] - c10.β[2]) / w10.β[2]) * 100),
-        "weight -> OD",
+        "sex -> OD",
     ),
 )
 push!(
@@ -334,7 +334,7 @@ push!(
         c11.β[2],
         w11.β[2] - c11.β[2],
         abs(((w11.β[2] - c11.β[2]) / w11.β[2]) * 100),
-        "sex -> OD",
+        "env -> OD",
     ),
 )
 push!(
@@ -344,16 +344,6 @@ push!(
         c12.β[2],
         w12.β[2] - c12.β[2],
         abs(((w12.β[2] - c12.β[2]) / w12.β[2]) * 100),
-        "env -> OD",
-    ),
-)
-push!(
-    commoncausefits,
-    (
-        w13.β[2],
-        c13.β[2],
-        w13.β[2] - c13.β[2],
-        abs(((w13.β[2] - c13.β[2]) / w13.β[2]) * 100),
         "time -> OD",
     ),
 )
@@ -371,7 +361,7 @@ p = plot(
 p |> PNG("/Users/ewanwsmith/Downloads/commoncauseplot.png", 6inch, 4inch)
 
 # compare % change in effect size with p-value of original model
-commoncausefits.p_value = [w1.pvalues[2],w2.pvalues[2],w3.pvalues[2],w4.pvalues[2],w5.pvalues[2],w6.pvalues[2],w7.pvalues[2],w8.pvalues[2],w9.pvalues[2],w10.pvalues[2],w11.pvalues[2],w12.pvalues[2],w13.pvalues[2],]
+commoncausefits.p_value = [w1.pvalues[2],w2.pvalues[2],w3.pvalues[2],w4.pvalues[2],w5.pvalues[2],w6.pvalues[2],w7.pvalues[2],w8.pvalues[2],w9.pvalues[2],w10.pvalues[2],w11.pvalues[2],w12.pvalues[2],]
 
 @rput commoncausefits
 R"cor.test(commoncausefits$p_value, commoncausefits$PcDiff)"
@@ -391,38 +381,37 @@ p2 = plot(
 
 # fit dummy outcome variables
 # random normal variable for weight
-d1 = fit(MixedModel, @formula(randWeight ~ isrepro + Env + (1 | ID)), refute)
+d1 = fit(
+    MixedModel,
+    @formula(randWeight ~ Env + (1 | ID)),
+    refute,
+)
 d2 = fit(
     MixedModel,
     @formula(randWeight ~ Fat_Scores_Sum + Env + (1 | ID)),
     refute,
 )
-d3 = fit(
-    MixedModel,
-    @formula(randWeight ~ Sex + Fat_Scores_Sum + (1 | ID)),
-    refute,
-)
-d4 = fit(MixedModel, @formula(randWeight ~ Diet + Env + (1 | ID)), refute)
+d3 = fit(MixedModel, @formula(randWeight ~ Sex + Fat_Scores_Sum + (1 | ID)), refute)
 
 # random normal variable for repro
-d5 = fit(MixedModel, @formula(randRepro ~ Env + (1 | ID)), refute)
+d4 = fit(MixedModel, @formula(randWeight ~ Diet + Env + (1 | ID)), refute)
 
 # random normal variable for fat scores
-d6 = fit(MixedModel, @formula(randFat ~ Env + (1 | ID)), refute)
-d7 = fit(MixedModel, @formula(randFat ~ Sex + Env + (1 | ID)), refute)
-d8 = fit(
+d5 = fit(MixedModel, @formula(randFat ~ Env + (1 | ID)), refute)
+d6 = fit(MixedModel, @formula(randFat ~ Sex + Env + (1 | ID)), refute)
+d7 = fit(
     MixedModel,
     @formula(randFat ~ days_since_1st_trt + Env + (1 | ID)),
     refute,
 )
 
 # random normal variable for OD
-d9 = fit(
+d8 = fit(
     MixedModel,
     @formula(randOD ~ Diet + Weight + days_since_1st_D_inj + Env + (1 | ID)),
     refute,
 )
-d10 = fit(
+d9 = fit(
     MixedModel,
     @formula(
         randOD ~
@@ -430,12 +419,12 @@ d10 = fit(
     ),
     refute,
 )
-d11 = fit(
+d10 = fit(
     MixedModel,
     @formula(randOD ~ Sex + Weight + days_since_1st_D_inj + (1 | ID)),
     refute,
 )
-d12 = fit(
+d11 = fit(
     MixedModel,
     @formula(
         randOD ~
@@ -443,7 +432,7 @@ d12 = fit(
     ),
     refute,
 )
-d13 = fit(
+d12 = fit(
     MixedModel,
     @formula(randOD ~ days_since_1st_D_inj + Fat_Scores_Sum + (1 | ID)),
     refute,
