@@ -333,6 +333,14 @@ data.iswild = data[:,:iswild] .^2
 data.islow = data[:,:ishigh] .-1
 data.islow = data[:,:islow] .^2
 
+# predict fat scores
+data.fat_predict = (
+    (w5.β[2] * data.iswild) +
+    (w6.β[2] * data.ismale) +
+    (w7.β[2] * data.days_since_1st_D_inj)
+)
+data.fat_predict = data[:,:fat_predict] .+mean(skipmissing(data.Fat_Scores_Sum))
+
 # predict weight
 data.Weight_predict = (
     (w1.β[2] * data.iswild) +
@@ -341,14 +349,6 @@ data.Weight_predict = (
     (w4.β[2] * data.islow)
 )
 data.Weight_predict = data[:,:Weight_predict] .+mean(data.Weight)
-
-# predict fat scores
-data.fat_predict = (
-    (w5.β[2] * data.iswild) +
-    (w6.β[2] * data.ismale) +
-    (w7.β[2] * data.days_since_1st_D_inj)
-)
-data.fat_predict = data[:,:fat_predict] .+mean(skipmissing(data.Fat_Scores_Sum))
 
 # predict OD
 data.OD_predict = (
@@ -364,15 +364,6 @@ data.OD_predict = data[:,:OD_predict] .+mean(data.OD)
 valid = filter(:ID => in(Set(test)), data)
 
 # plot predictions
-weight_predict_plot = plot(
-    valid,
-    Geom.point,
-    x = :Weight_predict,
-    y = :Weight,
-    Guide.xlabel("predicted weight"),
-    Guide.ylabel("observed weight"),
-)
-
 fat_predict_plot = plot(
     valid,
     Geom.point,
@@ -380,6 +371,15 @@ fat_predict_plot = plot(
     y = :Fat_Scores_Sum,
     Guide.xlabel("predicted fat scores"),
     Guide.ylabel("observed fat scores"),
+)
+
+weight_predict_plot = plot(
+    valid,
+    Geom.point,
+    x = :Weight_predict,
+    y = :Weight,
+    Guide.xlabel("predicted weight"),
+    Guide.ylabel("observed weight"),
 )
 
 OD_predict_plot = plot(
@@ -390,3 +390,26 @@ OD_predict_plot = plot(
     Guide.xlabel("predicted OD"),
     Guide.ylabel("observed OD"),
 )
+
+# model selection for weight
+data.Weight_predict_fat = (
+    (w1.β[2] * data.iswild) +
+    (w5.β[2] * data.iswild) +
+    (w6.β[2] * data.ismale) +
+    (w7.β[2] * data.days_since_1st_D_inj) +
+    (w3.β[2] * data.ismale) +
+    (w4.β[2] * data.islow))
+data.Weight_predict_fat = data[:,:Weight_predict_fat] .+mean(data.Weight)
+
+weight_predict_fat_plot = plot(
+    valid,
+    Geom.point,
+    x = :Weight_predict_fat,
+    y = :Weight,
+    Guide.xlabel("predicted weight"),
+    Guide.ylabel("observed weight"),
+)
+
+@rput valid
+R"cor.test(valid$Weight_predict, valid$Weight)"
+R"cor.test(valid$Weight_predict_fat, valid$Weight)"
