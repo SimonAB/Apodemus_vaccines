@@ -31,7 +31,8 @@ categorical!(vax, [:ID, :Sex, :Diet, :Treatment])
 data =
     raw_data |>
     @dropna(:ID) |>
-    @filter(_.days_since_1st_D_inj < 40) |>
+    @dropna(:Weight) |>
+    @filter(_.days_since_1st_D_inj > 7) |>
     @filter(_.boost == 0) |>
     DataFrame
 
