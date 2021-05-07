@@ -28,10 +28,12 @@ categorical!(lab, [:ID, :Sex, :Diet, :Treatment])
 categorical!(vax, [:ID, :Sex, :Diet, :Treatment])
 
 # Partition dataset into train (fit) and test rows
+#filter for vaccination
 data =
     raw_data |>
     @dropna(:ID) |>
-    @filter(_.days_since_1st_D_inj < 40) |>
+    @dropna(:Weight) |>
+    @filter(_.days_since_1st_D_inj > 10) |>
     @filter(_.boost == 0) |>
     DataFrame
 
