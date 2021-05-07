@@ -45,4 +45,3 @@ fit(MixedModel, @formula(OD ~ Weight + Diet + Sex + Env + days_since_1st_D_inj +
 fit(MixedModel, @formula(OD ~ Sex + Weight + days_since_1st_D_inj + (1|ID)), both)
 fit(MixedModel, @formula(OD ~ Env + Fat_Scores_Sum + isrepro + days_since_1st_D_inj + (1|ID)), both)
 fit(MixedModel, @formula(OD ~ days_since_1st_D_inj + Fat_Scores_Sum + (1|ID)), both)
-fit(MixedModel, @formula(OD ~ isvax + (1 | ID)), vax)
