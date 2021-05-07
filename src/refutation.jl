@@ -590,7 +590,7 @@ dummyfitps = DataFrame(
 push!(
     dummyfitps,
     (
-        "diet -> weight",
+        "env -> weight",
         DataFrame(coeftable(w1).cols).x4[2],
         DataFrame(coeftable(d1).cols).x4[2],
         log(100,(
@@ -604,7 +604,7 @@ push!(
 push!(
     dummyfitps,
     (
-        "diet -> weight",
+        "fat -> weight",
         DataFrame(coeftable(w2).cols).x4[2],
         DataFrame(coeftable(d2).cols).x4[2],
         log(100,(
@@ -646,7 +646,7 @@ push!(
 push!(
     dummyfitps,
     (
-        "env -> repro",
+        "env -> fat",
         DataFrame(coeftable(w5).cols).x4[2],
         DataFrame(coeftable(d5).cols).x4[2],
         log(100,(
@@ -660,7 +660,7 @@ push!(
 push!(
     dummyfitps,
     (
-        "env -> fat",
+        "sex -> fat",
         DataFrame(coeftable(w6).cols).x4[2],
         DataFrame(coeftable(d6).cols).x4[2],
         log(100,(
@@ -674,7 +674,7 @@ push!(
 push!(
     dummyfitps,
     (
-        "sex -> fat",
+        "time -> fat",
         DataFrame(coeftable(w7).cols).x4[2],
         DataFrame(coeftable(d7).cols).x4[2],
         log(100,(
@@ -688,7 +688,7 @@ push!(
 push!(
     dummyfitps,
     (
-        "time -> fat",
+        "diet -> OD",
         DataFrame(coeftable(w8).cols).x4[2],
         DataFrame(coeftable(d8).cols).x4[2],
         log(100,(
@@ -702,7 +702,7 @@ push!(
 push!(
     dummyfitps,
     (
-        "diet -> OD",
+        "weight -> OD",
         DataFrame(coeftable(w9).cols).x4[2],
         DataFrame(coeftable(d9).cols).x4[2],
         log(100,(
@@ -716,7 +716,7 @@ push!(
 push!(
     dummyfitps,
     (
-        "weight -> OD",
+        "sex -> OD",
         DataFrame(coeftable(w10).cols).x4[2],
         DataFrame(coeftable(d10).cols).x4[2],
         log(100,(
@@ -730,7 +730,7 @@ push!(
 push!(
     dummyfitps,
     (
-        "sex -> OD",
+        "env -> OD",
         DataFrame(coeftable(w11).cols).x4[2],
         DataFrame(coeftable(d11).cols).x4[2],
         log(100,(
@@ -744,7 +744,7 @@ push!(
 push!(
     dummyfitps,
     (
-        "env -> OD",
+        "time -> OD",
         DataFrame(coeftable(w12).cols).x4[2],
         DataFrame(coeftable(d12).cols).x4[2],
         log(100,(
