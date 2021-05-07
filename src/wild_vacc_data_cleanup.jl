@@ -33,7 +33,7 @@ data =
     raw_data |>
     @dropna(:ID) |>
     @dropna(:Weight) |>
-    @filter(_.days_since_1st_D_inj > 10) |>
+    @filter(_.days_since_1st_D_inj > 7) |>
     @filter(_.boost == 0) |>
     DataFrame
 
