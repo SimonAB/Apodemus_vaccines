@@ -1,4 +1,6 @@
+# Load packages
 using DataFrames, Query
+using CategoricalArrays
 using CSV
 using StatsBase
 using GLM, MixedModels
@@ -6,27 +8,31 @@ using Gadfly
 using Cairo
 using RCall
 
+include("wild_vacc_data_cleanup.jl")
+
 # check the fit for validation set
-valid = CSV.read(
+valid = CSV.File(
   "./data/validation.csv";
   missingstrings = ["NA"],
   pool = true,
-  copycols = true,
-)
+#   copycols = true,
+) |> DataFrame
+valid[!, :ID] = categorical(valid[!, :ID])
 
-lines = CSV.read(
+lines = CSV.File(
   "./data/lines.csv";
   missingstrings = ["NA"],
   pool = true,
-  copycols = true,
-)
+#   copycols = true,
+) |> DataFrame
 
-categorical!(valid, :ID)
+
 p1 = plot(
     valid,
     y = :OD_predict,
     x = :OD,
     Geom.point,
+    Geom.line,
     Guide.xlabel("Observed OD"),
     Guide.ylabel("Predicted OD"),
     color = :ID,

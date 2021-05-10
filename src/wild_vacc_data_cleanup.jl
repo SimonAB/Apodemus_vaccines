@@ -1,4 +1,5 @@
 using DataFrames, Query
+using CategoricalArrays
 using CSV
 using StatsBase
 using MLJ
@@ -6,7 +7,7 @@ using MLJ
 # Import & filter data
 
 #import data & filter for just lab mice
-raw_data = DataFrame!(CSV.File("./data/joint_dataset_4analysis.csv"; pool = true))
+raw_data = DataFrame(CSV.File("./data/joint_dataset_4analysis.csv"; pool = true))
 
 data = raw_data |>
     @dropna(:ID) |>
@@ -20,12 +21,25 @@ lab = data |>
       DataFrame
 
 vax = raw_data |> @dropna(:ID) |> @filter(_.boost == 0) |> DataFrame
-categorical!(vax, :ID)
+# vax[!, :ID] = categorical(vax[!, :ID])
 
 #   Specify how to correctly treat columns
-categorical!(data, [:ID, :Sex, :Diet, :Treatment])
-categorical!(lab, [:ID, :Sex, :Diet, :Treatment])
-categorical!(vax, [:ID, :Sex, :Diet, :Treatment])
+coerce!(data,:ID => Multiclass,
+             :Sex => Multiclass,
+             :Diet => Multiclass,
+             :Treatment => Multiclass)
+coerce!(lab, :ID => Multiclass,
+             :Sex => Multiclass,
+             :Diet => Multiclass,
+             :Treatment => Multiclass)
+coerce!(vax, :ID => Multiclass,
+             :Sex => Multiclass,
+             :Diet => Multiclass,
+             :Treatment => Multiclass)
+
+# categorical!(data, [:ID, :Sex, :Diet, :Treatment])
+# categorical!(lab, [:ID, :Sex, :Diet, :Treatment])
+# categorical!(vax, [:ID, :Sex, :Diet, :Treatment])
 
 # Partition dataset into train (fit) and test rows
 #filter for vaccination
