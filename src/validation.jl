@@ -366,8 +366,6 @@ data.OD_predict = (
 )
 data.OD_predict = data[:,:OD_predict] .+mean(data.OD)
 
-# filter for just test set
-valid = filter(:ID => in(Set(test)), data)
 
 # plot predictions
 fat_predict_plot = plot(
