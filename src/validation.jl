@@ -9,6 +9,7 @@ using Cairo
 using RCall
 
 include("wild_vacc_data_cleanup.jl")
+include("refutation.jl")
 
 # check the fit for validation set
 valid = CSV.File(
@@ -366,8 +367,6 @@ data.OD_predict = (
 )
 data.OD_predict = data[:,:OD_predict] .+mean(data.OD)
 
-# filter for just test set
-valid = filter(:ID => in(Set(test)), data)
 
 # plot predictions
 fat_predict_plot = plot(
