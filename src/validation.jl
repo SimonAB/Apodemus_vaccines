@@ -41,40 +41,6 @@ p1 = plot(
 
 validmodel = fit(MixedModel, @formula(OD ~ OD_predict + (1|ID)), valid)
 
-# create iswild
-data.iswild = data[:,:islab] .-1
-data.iswild = data[:,:iswild] .^2
-
-# create islow
-data.islow = data[:,:ishigh] .-1
-data.islow = data[:,:islow] .^2
-
-# predict weight
-data.Weight_predict = (
-    (w1.β[2] * data.iswild) +
-    (w2.β[2] * data.Fat_Scores_Sum) +
-    (w3.β[2] * data.ismale) +
-    (w4.β[2] * data.islow)
-)
-data.Weight_predict = data[:,:Weight_predict] .+mean(data.Weight)
-
-# predict fat scores
-data.fat_predict = (
-    (w5.β[2] * data.iswild) +
-    (w6.β[2] * data.ismale) +
-    (w7.β[2] * data.days_since_1st_D_inj)
-)
-data.fat_predict = data[:,:fat_predict] .+mean(skipmissing(data.Fat_Scores_Sum))
-
-# predict OD
-data.OD_predict = (
-    (w8.β[2] * data.islow) +
-    (w9.β[2] * data.Weight) +
-    (w10.β[2] * data.ismale) +
-    (w11.β[2] * data.iswild) +
-    (w12.β[2] * data.days_since_1st_D_inj)
-)
-data.OD_predict = data[:,:OD_predict] .+mean(data.OD)
 
 # filter for just test set
 valid = filter(:ID => in(Set(test)), data)
@@ -344,18 +310,18 @@ data.islow = data[:,:islow] .^2
 data.fat_predict = (
     (w5.β[2] * data.iswild) +
     (w6.β[2] * data.ismale) +
-    (w7.β[2] * data.days_since_1st_D_inj)
+    (w7.β[2] * data.days_since_1st_D_inj) +
+    mean(skipmissing(data.Fat_Scores_Sum))
 )
-data.fat_predict = data[:,:fat_predict] .+mean(skipmissing(data.Fat_Scores_Sum))
 
 # predict weight
 data.Weight_predict = (
     (w1.β[2] * data.iswild) +
     (w2.β[2] * data.Fat_Scores_Sum) +
     (w3.β[2] * data.ismale) +
-    (w4.β[2] * data.islow)
+    (w4.β[2] * data.islow) +
+    mean(data.Weight)
 )
-data.Weight_predict = data[:,:Weight_predict] .+mean(data.Weight)
 
 # predict OD
 data.OD_predict = (
@@ -363,9 +329,9 @@ data.OD_predict = (
     (w9.β[2] * data.Weight) +
     (w10.β[2] * data.ismale) +
     (w11.β[2] * data.iswild) +
-    (w12.β[2] * data.days_since_1st_D_inj)
+    (w12.β[2] * data.days_since_1st_D_inj) +
+    mean(data.OD)
 )
-data.OD_predict = data[:,:OD_predict] .+mean(data.OD)
 
 
 # plot predictions
@@ -403,7 +369,8 @@ data.Weight_predict_fat = (
     (w6.β[2] * data.ismale) +
     (w7.β[2] * data.days_since_1st_D_inj) +
     (w3.β[2] * data.ismale) +
-    (w4.β[2] * data.islow))
+    (w4.β[2] * data.islow) +
+    mean(data.Weight))
 data.Weight_predict_fat = data[:,:Weight_predict_fat] .+mean(data.Weight)
 
 weight_predict_fat_plot = plot(
