@@ -333,12 +333,22 @@ data.Weight_predict_fat = (
     mean(data.Weight))
 
 # predict OD
+# predict OD
 data.OD_predict = (
+    (w8.β[2] * data.islow) +
+    (w9.β[2] * data.Weight_predict) +
+    (w10.β[2] * data.ismale) +
+    (w11.β[2] * data.iswild) +
+    (w12.β[2] * data.days_since_1st_D_inj) +
+    mean(data.OD)
+)
+
+data.OD_predict_fat = (
     (w8.β[2] * data.islow) +
     (w9.β[2] * data.Weight_predict_fat) +
     (w10.β[2] * data.ismale) +
     (w11.β[2] * data.iswild) +
-    (w12.β[2] * data.days_since_1st_D_inj) .+
+    (w12.β[2] * data.days_since_1st_D_inj) +
     mean(data.OD)
 )
 
