@@ -388,3 +388,12 @@ weight_predict_fat_plot = plot(
     Guide.xlabel("predicted weight"),
     Guide.ylabel("observed weight"),
 )
+
+OD_predict_fat_plot = plot(
+    valid,
+    Geom.point,
+    x = :OD_predict_fat,
+    y = :OD,
+    Guide.xlabel("predicted OD"),
+    Guide.ylabel("observed OD"),
+)
