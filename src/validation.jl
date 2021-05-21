@@ -323,6 +323,16 @@ data.Weight_predict = (
     mean(data.Weight)
 )
 
+data.Weight_predict_fat = (
+    (w1.β[2] * data.iswild) +
+    (w5.β[2] * data.iswild) +
+    (w6.β[2] * data.ismale) +
+    (w7.β[2] * data.days_since_1st_D_inj) +
+    (w3.β[2] * data.ismale) +
+    (w4.β[2] * data.islow) .+
+    mean(data.Weight))
+
+# predict OD
 data.OD_predict = (
     (w8.β[2] * data.islow) +
     (w9.β[2] * data.Weight_predict_fat) +
@@ -361,16 +371,6 @@ OD_predict_plot = plot(
     Guide.ylabel("observed OD"),
 )
 
-# model selection for weight
-data.Weight_predict_fat = (
-    (w1.β[2] * data.iswild) +
-    (w5.β[2] * data.iswild) +
-    (w6.β[2] * data.ismale) +
-    (w7.β[2] * data.days_since_1st_D_inj) +
-    (w3.β[2] * data.ismale) +
-    (w4.β[2] * data.islow) .+
-    mean(data.Weight))
-
 weight_predict_fat_plot = plot(
     valid,
     Geom.point,
@@ -379,7 +379,3 @@ weight_predict_fat_plot = plot(
     Guide.xlabel("predicted weight"),
     Guide.ylabel("observed weight"),
 )
-
-@rput valid
-R"cor.test(valid$Weight_predict, valid$Weight)"
-R"cor.test(valid$Weight_predict_fat, valid$Weight)"
