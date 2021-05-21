@@ -368,9 +368,8 @@ data.Weight_predict_fat = (
     (w6.β[2] * data.ismale) +
     (w7.β[2] * data.days_since_1st_D_inj) +
     (w3.β[2] * data.ismale) +
-    (w4.β[2] * data.islow) +
+    (w4.β[2] * data.islow) .+
     mean(data.Weight))
-data.Weight_predict_fat = data[:,:Weight_predict_fat] .+mean(data.Weight)
 
 weight_predict_fat_plot = plot(
     valid,
