@@ -323,7 +323,6 @@ data.Weight_predict = (
     mean(data.Weight)
 )
 
-
 # predict OD
 data.OD_predict = (
     (w8.β[2] * data.islow) +
@@ -331,7 +330,7 @@ data.OD_predict = (
     (w10.β[2] * data.ismale) +
     (w11.β[2] * data.iswild) +
     (w12.β[2] * data.days_since_1st_D_inj) .+
-    mean(data.OD)
+    median(data.logOD)
 )
 
 data.OD_predict_Weight = (
