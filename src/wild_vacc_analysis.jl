@@ -43,23 +43,23 @@ w7 = fit(
 
 w8 = fit(
     MixedModel,
-    @formula(OD ~ Diet + Weight + days_since_1st_D_inj + Env + (1 | ID)),
+    @formula(logOD ~ Diet + Weight + days_since_1st_D_inj + Env + (1 | ID)),
     both,
 )
 w9 = fit(
     MixedModel,
-    @formula(OD ~ Weight + Diet + Sex + Env + days_since_1st_D_inj + (1 | ID)),
+    @formula(logOD ~ Weight + Diet + Sex + Env + days_since_1st_D_inj + (1 | ID)),
     both,
 )
 w10 = fit(
     MixedModel,
-    @formula(OD ~ Sex + Weight + days_since_1st_D_inj + (1 | ID)),
+    @formula(logOD ~ Sex + Weight + days_since_1st_D_inj + (1 | ID)),
     both,
 )
 w11 = fit(
     MixedModel,
-    @formula(OD ~ Env + Fat_Scores_Sum + days_since_1st_D_inj + (1 | ID)),
+    @formula(logOD ~ Env + Fat_Scores_Sum + days_since_1st_D_inj + (1 | ID)),
     both,
 )
 w12 =
-    fit(MixedModel, @formula(OD ~ days_since_1st_D_inj + Env + (1 | ID)), both)
+    fit(MixedModel, @formula(logOD ~ days_since_1st_D_inj + Env + (1 | ID)), both)
