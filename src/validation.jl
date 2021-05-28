@@ -9,6 +9,7 @@ using Cairo
 using RCall
 
 include("wild_vacc_data_cleanup.jl")
+include("wild_vacc_data_analysis.jl")
 
 # check the fit for validation set
 valid = CSV.File(
