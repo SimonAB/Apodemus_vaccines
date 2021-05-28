@@ -7,7 +7,6 @@ using MLJ
 # Import & filter data
 raw_data = DataFrame(CSV.File("./data/joint_dataset_4analysis.csv"; pool = true))
 
-
 #filter for vaccination & seroconversion
 data =
     raw_data |>
