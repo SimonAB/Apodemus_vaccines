@@ -25,6 +25,9 @@ coerce!(data,:ID => Multiclass,
              :Diet => Multiclass,
              :Treatment => Multiclass)
 
+# create log OD response variable
+data.logOD = log.(1 .+ data.OD)
+
 train, test = partition(unique(data.ID), 0.9, shuffle = true, rng = 793426)
 
 both = filter(:ID => in(Set(train)), data)
