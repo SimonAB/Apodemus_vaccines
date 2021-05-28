@@ -26,7 +26,6 @@ coerce!(data,:ID => Multiclass,
 # create log OD response variable
 data.logOD = log.(1 .+ data.OD)
 
-
 # Partition dataset into train (fit) and test rows
 train, test = partition(unique(data.ID), 0.9, shuffle = true, rng = 793426)
 
