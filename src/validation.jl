@@ -9,160 +9,7 @@ using Cairo
 using RCall
 
 include("wild_vacc_data_cleanup.jl")
-include("refutation.jl")
-
-# check the fit for validation set
-valid = CSV.File(
-  "./data/validation.csv";
-  missingstrings = ["NA"],
-  pool = true,
-#   copycols = true,
-) |> DataFrame
-valid[!, :ID] = categorical(valid[!, :ID])
-
-lines = CSV.File(
-  "./data/lines.csv";
-  missingstrings = ["NA"],
-  pool = true,
-#   copycols = true,
-) |> DataFrame
-
-
-p1 = plot(
-    valid,
-    y = :OD_predict,
-    x = :OD,
-    Geom.point,
-    Geom.line,
-    Guide.xlabel("Observed OD"),
-    Guide.ylabel("Predicted OD"),
-    color = :ID,
-    Geom.abline(style = :dash, color = "red"))
-
-validmodel = fit(MixedModel, @formula(OD ~ OD_predict + (1|ID)), valid)
-
-
-# filter for just test set
-valid = filter(:ID => in(Set(test)), data)
-
-# plot predictions
-weight_predict_plot = plot(
-    valid,
-    Geom.point,
-    x = :Weight_predict,
-    y = :Weight,
-    Guide.xlabel("predicted weight"),
-    Guide.ylabel("observed weight"),
-)
-
-fat_predict_plot = plot(
-    valid,
-    Geom.point,
-    x = :fat_predict,
-    y = :Fat_Scores_Sum,
-    Guide.xlabel("predicted fat scores"),
-    Guide.ylabel("observed fat scores"),
-)
-
-OD_predict_plot = plot(
-    valid,
-    Geom.point,
-    x = :OD_predict,
-    y = :OD,
-    Guide.xlabel("predicted OD"),
-    Guide.ylabel("observed OD"),
-)
-p2 = plot(
-    valid,
-    y = :OD_predict,
-    x = :OD,
-    Geom.point,
-    Guide.xlabel("Observed OD"),
-    Guide.ylabel("Predicted OD"),
-    color = :ID,
-    slope = [validmodel.beta[2]],
-    intercept = [validmodel.beta[1]],
-    Geom.abline(style = :dash, color = "blue"),
-)
-
-
-predictlayer = layer(
-    valid,
-    x = :days_since_1st_D_inj,
-    y = :OD_predict,
-    Geom.point,
-    Theme(default_color = "red"))
-observedlayer = layer(
-    valid,
-    x = :days_since_1st_D_inj,
-    y = :OD,
-    Geom.point)
-lineslayer = layer(
-    lines,
-    y = :lines,
-    x = :days_since_1st_D_inj,
-    Geom.line,
-    Theme(default_color = "black"),
-    group = :fit)
-p3 = plot(valid, predictlayer, observedlayer, lineslayer)
-
-p4 = plot(valid, x = :diff, Geom.hair(orientation=:horizontal), color = :ID)
-
-@rput valid
-R"cor.test(valid$abs_diff, valid$OD)"
-p5 = plot(valid, y = :abs_diff, x = :OD)
-
-R"cor.test(valid$diff, valid$OD)"
-diffODmodel = fit(MixedModel, @formula(diff ~ OD + (1|ID)), valid)
-p6 = plot(
-    valid,
-    y = :diff,
-    x = :OD,
-    Guide.xlabel("Observed OD"),
-    Guide.ylabel("Observed - Predicted OD"),
-    Geom.point,
-    slope = [diffODmodel.beta[2]],
-    intercept = [diffODmodel.beta[1]],
-    Geom.abline(style = :dash, color = "blue"),
-)
-
-R"cor.test(valid$abs_diff, valid$days_since_1st_D_inj)"
-p7 = plot(valid, y = :abs_diff, x = :days_since_1st_D_inj)
-
-R"cor.test(valid$diff, valid$days_since_1st_D_inj)"
-p8 = plot(valid, y = :diff, x = :days_since_1st_D_inj)
-
-R"t.test(valid$diff ~ valid$Sex)"
-R"t.test(valid$abs_diff ~ valid$Sex)"
-
-R"t.test(valid$diff ~ valid$Diet)"
-R"t.test(valid$abs_diff ~ valid$Diet)"
-
-R"t.test(valid$diff ~ valid$Env)"
-R"t.test(valid$abs_diff ~ valid$Env)"
-
-R"cor.test(valid$abs_diff, valid$Weight)"
-absdiffWeightmodel = fit(MixedModel, @formula(abs_diff ~ Weight + (1|ID)), valid)
-p9 = plot(
-    valid,
-    y = :abs_diff,
-    x = :Weight,
-    Geom.point,
-    slope = [absdiffWeightmodel.beta[2]],
-    intercept = [absdiffWeightmodel.beta[1]],
-    Geom.abline(style = :dash, color = "blue"),
-)
-R"cor.test(valid$diff, valid$Weight)"
-diffWeightmodel = fit(MixedModel, @formula(diff ~ Weight + (1|ID)), valid)
-p10 = plot(
-    valid,
-    y = :diff,
-    x = :Weight,
-    Geom.point,
-    slope = [diffWeightmodel.beta[2]],
-    intercept = [diffWeightmodel.beta[1]],
-    Geom.abline(style = :dash, color = "blue"),
-)
+include("wild_vacc_data_analysis.jl")
 
 # import dataset with fits adjusted for removed nodes
 markov = CSV.read(
@@ -172,6 +19,7 @@ markov = CSV.read(
     copycols = true,
 )
 
+# categorical blocking vector
 categorical!(markov, :ID)
 
 # fit full markov blanket prediction to observed OD
@@ -323,34 +171,27 @@ data.Weight_predict = (
     mean(data.Weight)
 )
 
-data.Weight_predict_fat = (
-    (w1.β[2] * data.iswild) +
-    (w5.β[2] * data.iswild) +
-    (w6.β[2] * data.ismale) +
-    (w7.β[2] * data.days_since_1st_D_inj) +
-    (w3.β[2] * data.ismale) +
-    (w4.β[2] * data.islow) .+
-    mean(data.Weight))
-
-# predict OD
+# predict OD without intercept
 data.OD_predict = (
     (w8.β[2] * data.islow) +
-    (w9.β[2] * data.Weight_predict) +
+    (w9.β[2] * data.Weight) +
     (w10.β[2] * data.ismale) +
     (w11.β[2] * data.iswild) +
-    (w12.β[2] * data.days_since_1st_D_inj) .+
-    mean(data.OD)
+    (w12.β[2] * data.days_since_1st_D_inj) .+ mean(both.logOD)
 )
 
-data.OD_predict_fat = (
-    (w8.β[2] * data.islow) +
-    (w9.β[2] * data.Weight_predict_fat) +
-    (w10.β[2] * data.ismale) +
-    (w11.β[2] * data.iswild) +
-    (w12.β[2] * data.days_since_1st_D_inj) .+
-    mean(data.OD)
-)
+#filter for weights set
+train, test = partition(unique(data.ID), 0.9, shuffle = true, rng = 793426)
+both = filter(:ID => in(Set(train)), data)
 
+# categorical blocking vector
+categorical!(both, :ID)
+
+# find observed intercept 
+interceptmodel = fit(MixedModel, @formula(logOD ~ OD_predict + (1 | ID)), both)
+
+# predict OD with intercept
+data.OD_predict_intercept = (data.OD_predict .+ interceptmodel.β[1])
 
 # plot predictions
 fat_predict_plot = plot(
@@ -374,26 +215,13 @@ weight_predict_plot = plot(
 OD_predict_plot = plot(
     valid,
     Geom.point,
-    x = :OD_predict,
-    y = :OD,
-    Guide.xlabel("predicted OD"),
-    Guide.ylabel("observed OD"),
+    x = :OD_predict_intercept,
+    y = :logOD,
+    Guide.xlabel("predicted log OD"),
+    Guide.ylabel("observed log OD"),
+    Geom.abline,
 )
 
-weight_predict_fat_plot = plot(
-    valid,
-    Geom.point,
-    x = :Weight_predict_fat,
-    y = :Weight,
-    Guide.xlabel("predicted weight"),
-    Guide.ylabel("observed weight"),
-)
 
-OD_predict_fat_plot = plot(
-    valid,
-    Geom.point,
-    x = :OD_predict_fat,
-    y = :OD,
-    Guide.xlabel("predicted OD"),
-    Guide.ylabel("observed OD"),
-)
+
+
