@@ -243,8 +243,8 @@ push!(
         x = :OD_predict_intercept,
         y = :logOD,
         Geom.abline,
-        slope = [0.946],
-        intercept = [0.037],
+slope = coef(fitmodel)[2]
+intercept = coef(fitmodel)[1]
     ),
 )
 
