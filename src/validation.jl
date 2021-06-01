@@ -233,4 +233,30 @@ qq = plot(
     Guide.ylabel("sample residuals"),
 )
 
+bandsplot = plot()
+
+push!(
+    bandsplot,
+    layer(
+        valid,
+        Geom.point,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.abline,
+        slope = [0.946],
+        intercept = [0.037],
+    ),
+)
+
+
+push!(
+    bandsplot,
+    layer(
+        valid,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.ribbon,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    ),
+)
 
