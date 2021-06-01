@@ -222,6 +222,15 @@ OD_predict_plot = plot(
     Geom.abline,
 )
 
+fitmodel = fit(MixedModel, @formula(logOD ~ OD_predict_intercept + (1 | ID)), valid)
 
+qq = plot(
+    y = GLM.residuals(fitmodel),
+    x = Normal(),
+    Stat.qq,
+    Geom.point,
+    Guide.xlabel("theoretical normal quantiles"),
+    Guide.ylabel("sample residuals"),
+)
 
 
