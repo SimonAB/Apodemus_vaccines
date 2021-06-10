@@ -222,6 +222,283 @@ OD_predict_plot = plot(
     Geom.abline,
 )
 
+fitmodel = fit(MixedModel, @formula(logOD ~ OD_predict_intercept + (1 | ID)), valid)
+
+qq = plot(
+    y = GLM.residuals(fitmodel),
+    x = Normal(),
+    Stat.qq,
+    Geom.point,
+    Guide.xlabel("theoretical normal quantiles"),
+    Guide.ylabel("sample residuals"),
+)
+
+bandsplot =
+    plot(Guide.xlabel("predicted log OD"), Guide.ylabel("observed log OD"))
+
+push!(
+    bandsplot,
+    layer(
+        valid,
+        Geom.point,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.abline,
+        slope = [0.946],
+        intercept = [0.037],
+    ),
+)
+
+
+push!(
+    bandsplot,
+    layer(
+        valid,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.ribbon,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    ),
+)
+
+residualsplot = plot(
+    x = GLM.residuals(fitmodel),
+    Geom.histogram,
+    Guide.xlabel("residual size"),
+    Guide.ylabel("frequency"),
+)
+
+# small test set, so consider these graphs for training set
+# filter for train set
+both = filter(:ID => in(Set(train)), data)
+
+# categorical blocking vector
+categorical!(both, :ID)
+
+OD_predict_train_plot = plot(
+    both,
+    Geom.point,
+    x = :OD_predict_intercept,
+    y = :logOD,
+    Guide.xlabel("predicted log OD"),
+    Guide.ylabel("observed log OD"),
+    Geom.abline,
+)
+
+fit_train_model = fit(MixedModel, @formula(logOD ~ OD_predict_intercept + (1 | ID)), both)
+
+qq_train = plot(
+    y = GLM.residuals(fit_train_model),
+    x = Normal(),
+    Stat.qq,
+    Geom.point,
+    Guide.xlabel("theoretical normal quantiles"),
+    Guide.ylabel("sample residuals"),
+)
+
+bands_train_plot =
+    plot(Guide.xlabel("predicted log OD"), Guide.ylabel("observed log OD"))
+
+push!(
+    bands_train_plot,
+    layer(
+        both,
+        Geom.point,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.abline,
+        slope = [0.844],
+        intercept = [0.021],
+    ),
+)
+
+
+push!(
+    bands_train_plot,
+    layer(
+        both,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.ribbon,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    ),
+)
+
+residuals_train_plot = plot(
+    x = GLM.residuals(fit_train_model),
+    Geom.histogram,
+    Guide.xlabel("residual size"),
+    Guide.ylabel("frequency"),
+)
+
+bands_sex_plot =
+    plot(Guide.xlabel("predicted log OD"), Guide.ylabel("observed log OD"))
+
+push!(
+    bands_sex_plot,
+    layer(
+        both,
+        Geom.point,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.abline,
+        slope = [0.844],
+        intercept = [0.021],
+        color = :Sex,
+    ),
+)
+
+push!(
+    bands_sex_plot,
+    layer(
+        both,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.ribbon,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    ),
+)
+
+bands_diet_plot =
+    plot(Guide.xlabel("predicted log OD"), Guide.ylabel("observed log OD"))
+
+push!(
+    bands_diet_plot,
+    layer(
+        both,
+        Geom.point,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.abline,
+        slope = [0.844],
+        intercept = [0.021],
+        color = :Diet,
+    ),
+)
+
+
+push!(
+    bands_diet_plot,
+    layer(
+        both,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.ribbon,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    ),
+)
+
+bands_weight_plot =
+    plot(Guide.xlabel("predicted log OD"), Guide.ylabel("observed log OD"))
+
+push!(
+    bands_weight_plot,
+    layer(
+        both,
+        Geom.point,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.abline,
+        slope = [0.844],
+        intercept = [0.021],
+        color = :Weight,
+    ),
+)
+
+
+push!(
+    bands_weight_plot,
+    layer(
+        both,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.ribbon,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    ),
+)
+
+bands_env_plot =
+    plot(Guide.xlabel("predicted log OD"), Guide.ylabel("observed log OD"))
+
+push!(
+    bands_env_plot,
+    layer(
+        both,
+        Geom.point,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.abline,
+        slope = [0.844],
+        intercept = [0.021],
+        color = :Env,
+    ),
+)
+
+
+push!(
+    bands_env_plot,
+    layer(
+        both,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.ribbon,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    ),
+)
+
+elipseplot = plot(
+    both,
+    Guide.ylabel("observed log OD"),
+    Guide.xlabel("predicted log OD"),
+    x = :OD_predict_intercept,
+    y = :logOD,
+    color = :Env,
+    Geom.point,
+    Geom.ellipse(fill = true),
+    layer(Geom.ellipse(levels = [0.99]), style(line_style = [:dot])),
+)
+
+weightODplot = plot(
+    both,
+    Geom.point,
+    x = :Weight,
+    y = :OD_predict_intercept,
+    color = :Env,
+    Guide.ylabel("predicted log OD"),
+    layer(
+        Geom.line,
+        x = :Weight,
+        y = :OD_predict_intercept,
+        Stat.smooth(method = :lm, levels = [0.95]),
+        color = :Env,
+    ),
+    layer(
+        Geom.ribbon,
+        x = :Weight,
+        y = :OD_predict_intercept,
+        Stat.smooth(method = :lm),
+        group = :Env,
+        color = :Env,
+    ),
+)
+
+SexODplot = plot(
+    both,
+    Geom.boxplot,
+    x = :Sex,
+    y = :OD_predict_intercept,
+    color = :Env,
+    Guide.ylabel("predicted log OD"),
+)
+
+DietODplot = plot(
+    both,
+    Geom.boxplot,
+    x = :Diet,
+    y = :OD_predict_intercept,
+    color = :Env,
+    Guide.ylabel("predicted log OD"),
+)
 
 
 
