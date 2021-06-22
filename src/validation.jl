@@ -13,14 +13,14 @@ include("wild_vacc_data_analysis.jl")
 
 # import dataset with fits adjusted for removed nodes
 markov = CSV.read(
-    "./data/markov predicts.csv.csv";
+    "./data/markov predicts.csv", DataFrame;
     missingstrings = ["NA"],
     pool = true,
     copycols = true,
 )
 
 # categorical blocking vector
-categorical!(markov, :ID)
+markov.ID = categorical(markov.ID)
 
 # fit full markov blanket prediction to observed OD
 fitmodel = fit(MixedModel, @formula(OD ~ OD_predict + (1|ID)), markov)
@@ -187,7 +187,7 @@ both = filter(:ID => in(Set(train)), data)
 # categorical blocking vector
 categorical!(both, :ID)
 
-# find observed intercept 
+# find observed intercept
 interceptmodel = fit(MixedModel, @formula(logOD ~ OD_predict + (1 | ID)), both)
 
 # predict OD with intercept
