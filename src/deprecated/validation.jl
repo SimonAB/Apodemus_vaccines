@@ -177,7 +177,7 @@ data.OD_predict = (
     (w9.β[2] * data.Weight) +
     (w10.β[2] * data.ismale) +
     (w11.β[2] * data.iswild) +
-    (w12.β[2] * data.days_since_1st_D_inj) .+ mean(both.logOD)
+    (w12.β[2] * data.days_since_1st_D_inj) .+ mean(data.logOD)
 )
 
 #filter for weights set
