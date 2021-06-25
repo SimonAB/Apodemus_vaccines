@@ -4,7 +4,7 @@ using CSV
 using StatsBase
 using MLJ
 
-# Import & filter data
+# Import dataset
 raw_data = DataFrame(CSV.File("./data/joint_dataset_4analysis.csv"; pool = true))
 
 #filter for vaccination & seroconversion
@@ -25,6 +25,14 @@ coerce!(data,:ID => Multiclass,
 
 # create log OD response variable
 data.logOD = log.(1 .+ data.OD)
+
+# create iswild
+data.iswild = data[:,:islab] .-1
+data.iswild = data[:,:iswild] .^2
+
+# create islow
+data.islow = data[:,:ishigh] .-1
+data.islow = data[:,:islow] .^2
 
 # Partition dataset into train (fit) and test rows
 trainIDs, testIDs = partition(unique(data.ID), 0.9, shuffle = true, rng = 793426)
