@@ -1,0 +1,36 @@
+using DataFrames, Query
+using CategoricalArrays
+using CSV
+using StatsBase
+using MLJ
+
+# Import & filter data
+raw_data = DataFrame(CSV.File("./data/joint_dataset_4analysis.csv"; pool = true))
+
+#filter for vaccination & seroconversion
+data =
+    raw_data |>
+    @dropna(:ID) |>
+    @dropna(:Weight) |>
+    @filter(_.days_since_1st_D_inj > 7) |>
+    @filter(_.boost == 0) |>
+    @filter(_.OD > 0) |>
+    DataFrame
+
+#   Specify how to correctly treat columns
+coerce!(data,:ID => Multiclass,
+             :Sex => Multiclass,
+             :Diet => Multiclass,
+             :Treatment => Multiclass)
+
+# create log OD response variable
+data.logOD = log.(1 .+ data.OD)
+
+# Partition dataset into train (fit) and test rows
+train, test = partition(unique(data.ID), 0.9, shuffle = true, rng = 793426)
+
+#filter for just train set
+both = filter(:ID => in(Set(train)), data)
+
+# filter for just test set
+valid = filter(:ID => in(Set(test)), data)
