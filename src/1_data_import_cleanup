@@ -27,10 +27,10 @@ coerce!(data,:ID => Multiclass,
 data.logOD = log.(1 .+ data.OD)
 
 # Partition dataset into train (fit) and test rows
-train, test = partition(unique(data.ID), 0.9, shuffle = true, rng = 793426)
+trainIDs, testIDs = partition(unique(data.ID), 0.9, shuffle = true, rng = 793426)
 
 #filter for just train set
-both = filter(:ID => in(Set(train)), data)
+train = filter(:ID => in(Set(trainIDs)), data)
 
 # filter for just test set
-valid = filter(:ID => in(Set(test)), data)
+test = filter(:ID => in(Set(testIDs)), data)
