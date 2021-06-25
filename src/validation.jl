@@ -500,5 +500,15 @@ DietODplot = plot(
     Guide.ylabel("predicted log OD"),
 )
 
-
+OD_predict_ID_plot = plot(
+    both,
+    Geom.point,
+    x = :OD_predict_intercept,
+    y = :logOD,
+    Guide.xlabel("predicted log OD"),
+    Guide.ylabel("observed log OD", orientation = :vertical),
+    color = :ID,
+    Geom.abline,
+    Guide.colorkey(title = nothing, labels = nothing, pos = nothing),
+)
 
