@@ -63,3 +63,15 @@ w11 = fit(
 )
 w12 =
     fit(MixedModel, @formula(logOD ~ days_since_1st_D_inj + Env + (1 | ID)), both)
+
+OD_predict_ID_plot = plot(
+    both,
+    Geom.point,
+    x = :OD_predict_intercept,
+    y = :logOD,
+    Guide.xlabel("predicted log OD"),
+    Guide.ylabel("observed log OD", orientation = :vertical),
+    color = :ID,
+    Geom.abline,
+    Guide.colorkey(title = nothing, labels = nothing, pos = nothing),
+)
