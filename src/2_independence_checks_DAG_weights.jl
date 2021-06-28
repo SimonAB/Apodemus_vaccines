@@ -1,4 +1,4 @@
-using trainFrames, Query
+using DataFrames, Query
 using CSV
 using StatsBase
 using GLM, MixedModels
@@ -6,7 +6,7 @@ using Gadfly
 using Cairo
 using RCall
 
-include(1_train_import_cleanup.jl)
+include("1_data_import_cleanup.jl")
 
 # independence checks
 

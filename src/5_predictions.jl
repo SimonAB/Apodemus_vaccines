@@ -1,4 +1,4 @@
-using testFrames, Query
+using DataFrames, Query
 using CategoricalArrays
 using CSV
 using StatsBase
@@ -7,10 +7,8 @@ using Gadfly
 using Cairo
 using RCall
 
-include(1_data_import_cleanup.jl)
-inclide(2_independence_checks_DAG_weights.jl)
-include(3_refutation.jl)
-include(4(validation.jl))
+include("1_data_import_cleanup.jl")
+include("2_independence_checks_DAG_weights.jl")
 
 # predict OD for the test set
 # predict OD without intercept
@@ -29,24 +27,6 @@ interceptmodel = fit(MixedModel, @formula(logOD ~ OD_predict + (1 | ID)), test)
 test.OD_predict_intercept = (test.OD_predict .+ interceptmodel.β[1])
 
 # plot predictions
-fat_predict_plot = plot(
-    test,
-    Geom.point,
-    x = :fat_predict,
-    y = :Fat_Scores_Sum,
-    Guide.xlabel("predicted fat scores"),
-    Guide.ylabel("observed fat scores"),
-)
-
-weight_predict_plot = plot(
-    test,
-    Geom.point,
-    x = :Weight_predict,
-    y = :Weight,
-    Guide.xlabel("predicted weight"),
-    Guide.ylabel("observed weight"),
-)
-
 OD_predict_plot = plot(
     test,
     Geom.point,

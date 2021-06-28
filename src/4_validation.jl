@@ -7,9 +7,8 @@ using Gadfly
 using Cairo
 using RCall
 
-include(1_data_import_cleanup.jl)
-inclide(2_independence_checks_DAG_weights.jl)
-include(3_refutation.jl)
+include("1_data_import_cleanup.jl")
+include("2_independence_checks_DAG_weights.jl")
 
 OD_predict_train_plot = plot(
     train,

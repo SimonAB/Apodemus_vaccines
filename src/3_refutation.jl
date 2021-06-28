@@ -2,11 +2,11 @@ using GLM, MixedModels
 using Gadfly
 using Cairo
 using Random
-Pkg.add("Missings")
-import Missings
+import Pkg; Pkg.add("Missings")
+using Missings
 
-include(1_data_import_cleanup.jl)
-inclide(2_independence_checks_DAG_weights.jl)
+include("1_data_import_cleanup.jl")
+include("2_independence_checks_DAG_weights.jl")
 
 #generate random normal OD response variable and merge into new dataframe
 rng = MersenneTwister(820480);
