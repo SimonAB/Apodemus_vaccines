@@ -12,7 +12,7 @@ include("1_data_import_cleanup.jl")
 
 
 # DAG weights
-w1 = fit(MixedModel, @formula(Weight ~ Env + (1 | ID)), train)
+w1 = fit(MixedModel, @formula(Weight ~ Env + (1 | ID)), train) #blocked by ID to account for multiple sampling 
 w2 = fit(MixedModel, @formula(Weight ~ Fat_Scores_Sum + Env + (1 | ID)), train)
 w3 = fit(MixedModel, @formula(Weight ~ Sex + Fat_Scores_Sum + (1 | ID)), train)
 w4 = fit(MixedModel, @formula(Weight ~ Diet + Env + (1 | ID)), train)
