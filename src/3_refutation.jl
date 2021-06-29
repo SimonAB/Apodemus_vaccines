@@ -2,8 +2,11 @@ using GLM, MixedModels
 using Gadfly
 using Cairo
 using Random
-import Pkg; Pkg.add("Missings")
+import Missings
 using Missings
+import Tar
+using Tar
+export Tar
 
 include("1_data_import_cleanup.jl")
 include("2_independence_checks_DAG_weights.jl")
