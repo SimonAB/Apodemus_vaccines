@@ -41,12 +41,19 @@ push!(
         Geom.point,
         x = :OD_predict_intercept,
         y = :logOD,
-        Geom.abline,
-        slope = [0.844],
-        intercept = [0.021],
     ),
 )
 
+push!(
+    bands_train_plot,
+    layer(
+        train,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.line,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    ),
+)
 
 push!(
     bands_train_plot,
