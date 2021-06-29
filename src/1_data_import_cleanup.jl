@@ -10,28 +10,28 @@ raw_data = DataFrame(CSV.File("./data/joint_dataset_4analysis.csv"; missingstrin
 #filter for vaccination & seroconversion
 data =
 raw_data |>
-@dropna(:ID) |>
-@dropna(:Weight) |>
-@filter(_.days_since_1st_D_inj > 7) |>
-@filter(_.boost == 0) |>
-@filter(_.OD > 0) |>
+@dropna(:ID) |> #remove entries which lack lab ID or PIT tag IDs
+@dropna(:Weight) |> #remove entries which lack a body mass measurement
+@filter(_.days_since_1st_D_inj > 7) |> # remove entries which were measured less than a week after vaccination
+@filter(_.boost == 0) |> #remove entries which were vaccinated twice
+@filter(_.OD > 0) |> #remove entries which did not seroconvert
 DataFrame
 
 # Specify how to correctly treat columns
-coerce!(data,:ID => Union{Missing,Multiclass},
+coerce!(data,:ID => Union{Missing,Multiclass}, # treat these columns as factors which can also handle NAs
              :Sex => Union{Missing,Multiclass},
              :Diet => Union{Missing,Multiclass},
              :Treatment => Union{Missing,Multiclass})
 
 # create log OD response variable
-data.logOD = log.(1 .+ data.OD)
+data.logOD = log.(1 .+ data.OD) 
 
 # create iswild
-data.iswild = data[:,:islab] .-1
+data.iswild = data[:,:islab] .-1 #dataset only had "islab", so -1 and squaring gives the opposite
 data.iswild = data[:,:iswild] .^2
 
 # create islow
-data.islow = data[:,:ishigh] .-1
+data.islow = data[:,:ishigh] .-1 #as above
 data.islow = data[:,:islow] .^2
 
 # Partition dataset into train (fit) and test rows
