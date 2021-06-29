@@ -10,6 +10,7 @@ using RCall
 include("1_data_import_cleanup.jl")
 include("2_independence_checks_DAG_weights.jl")
 
+# plot predicted OD against observed OD against a line of x=y
 OD_predict_train_plot = plot(
     train,
     Geom.point,
@@ -20,8 +21,10 @@ OD_predict_train_plot = plot(
     Geom.abline,
 )
 
+# compute a model to examine fit
 fit_train_model = fit(MixedModel, @formula(logOD ~ OD_predict_intercept + (1 | ID)), train)
 
+# plot q-q plot to examine residual distributiom 
 qq_train = plot(
     y = GLM.residuals(fit_train_model),
     x = Normal(),
@@ -31,9 +34,9 @@ qq_train = plot(
     Guide.ylabel("sample residuals"),
 )
 
+# plot fit with confidence bands
 bands_train_plot =
     plot(Guide.xlabel("predicted log OD"), Guide.ylabel("observed log OD"))
-
 push!(
     bands_train_plot,
     layer(
@@ -43,7 +46,6 @@ push!(
         y = :logOD,
     ),
 )
-
 push!(
     bands_train_plot,
     layer(
@@ -54,7 +56,6 @@ push!(
         Stat.smooth(method = :lm, levels = [0.95]),
     ),
 )
-
 push!(
     bands_train_plot,
     layer(
@@ -66,6 +67,7 @@ push!(
     ),
 )
 
+# histogram of residuals
 residuals_train_plot = plot(
     x = GLM.residuals(fit_train_model),
     Geom.histogram,
@@ -73,9 +75,9 @@ residuals_train_plot = plot(
     Guide.ylabel("frequency"),
 )
 
+# colour by sex
 bands_sex_plot =
     plot(Guide.xlabel("predicted log OD"), Guide.ylabel("observed log OD"))
-
 push!(
     bands_sex_plot,
     layer(
@@ -86,7 +88,6 @@ push!(
         color = :Sex,
     ),
 )
-
 push!(
     bands_sex_plot,
     layer(
@@ -97,7 +98,6 @@ push!(
         Stat.smooth(method = :lm, levels = [0.95]),
     ),
 )
-
 push!(
     bands_sex_plot,
     layer(
@@ -109,9 +109,9 @@ push!(
     ),
 )
 
+#colour by diet
 bands_diet_plot =
     plot(Guide.xlabel("predicted log OD"), Guide.ylabel("observed log OD"))
-
 push!(
     bands_diet_plot,
     layer(
@@ -122,7 +122,6 @@ push!(
         color = :Diet,
     ),
 )
-
 push!(
     bands_diet_plot,
     layer(
@@ -133,7 +132,6 @@ push!(
         Stat.smooth(method = :lm, levels = [0.95]),
     ),
 )
-
 push!(
     bands_diet_plot,
     layer(
@@ -145,9 +143,9 @@ push!(
     ),
 )
 
+#colour by weight
 bands_weight_plot =
     plot(Guide.xlabel("predicted log OD"), Guide.ylabel("observed log OD"))
-
 push!(
     bands_weight_plot,
     layer(
@@ -158,7 +156,6 @@ push!(
         color = :Weight,
     ),
 )
-
 push!(
     bands_weight_plot,
     layer(
@@ -169,7 +166,6 @@ push!(
         Stat.smooth(method = :lm, levels = [0.95]),
     ),
 )
-
 push!(
     bands_weight_plot,
     layer(
@@ -181,9 +177,9 @@ push!(
     ),
 )
 
+# plot by environment
 bands_env_plot =
     plot(Guide.xlabel("predicted log OD"), Guide.ylabel("observed log OD"))
-
 push!(
     bands_env_plot,
     layer(
@@ -194,7 +190,6 @@ push!(
         color = :Env,
     ),
 )
-
 push!(
     bands_env_plot,
     layer(
@@ -205,7 +200,6 @@ push!(
         Stat.smooth(method = :lm, levels = [0.95]),
     ),
 )
-
 push!(
     bands_env_plot,
     layer(
@@ -217,6 +211,7 @@ push!(
     ),
 )
 
+# plot confidence elipses for environment
 elipseplot = plot(
     train,
     Guide.ylabel("observed log OD"),
@@ -229,6 +224,8 @@ elipseplot = plot(
     layer(Geom.ellipse(levels = [0.99]), style(line_style = [:dot])),
 )
 
+# plot predicted OD values by predictors for ease of visualisation
+#predicted OD by weight
 weightODplot = plot(
     train,
     Geom.point,
@@ -253,6 +250,7 @@ weightODplot = plot(
     ),
 )
 
+# predicted OD by Sex
 SexODplot = plot(
     train,
     Geom.boxplot,
@@ -262,6 +260,7 @@ SexODplot = plot(
     Guide.ylabel("predicted log OD"),
 )
 
+# predicted OD by diet
 DietODplot = plot(
     train,
     Geom.boxplot,
@@ -271,6 +270,7 @@ DietODplot = plot(
     Guide.ylabel("predicted log OD"),
 )
 
+# predicted OD by ID
 OD_predict_ID_plot = plot(
     train,
     Geom.point,
