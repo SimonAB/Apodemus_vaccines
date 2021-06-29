@@ -35,7 +35,7 @@ data.islow = data[:,:ishigh] .-1
 data.islow = data[:,:islow] .^2
 
 # Partition dataset into train (fit) and test rows
-trainIDs, testIDs = partition(unique(data.ID), 0.9, shuffle = true, rng = 793426)
+trainIDs, testIDs = partition(unique(data.ID), 0.9, shuffle = true, rng = 743271)
 
 #filter for just train set
 train = filter(:ID => in(Set(trainIDs)), data)
