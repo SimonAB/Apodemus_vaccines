@@ -18,10 +18,10 @@ raw_data |>
 DataFrame
 
 # Specify how to correctly treat columns
-coerce!(data,:ID => Multiclass,
-             :Sex => Multiclass,
-             :Diet => Multiclass,
-             :Treatment => Multiclass)
+coerce!(data,:ID => Union{Missing,Multiclass},
+             :Sex => Union{Missing,Multiclass},
+             :Diet => Union{Missing,Multiclass},
+             :Treatment => Union{Missing,Multiclass})
 
 # create log OD response variable
 data.logOD = log.(1 .+ data.OD)
@@ -35,7 +35,7 @@ data.islow = data[:,:ishigh] .-1
 data.islow = data[:,:islow] .^2
 
 # Partition dataset into train (fit) and test rows
-trainIDs, testIDs = partition(unique(data.ID), 0.9, shuffle = true, rng = 793426)
+trainIDs, testIDs = partition(unique(data.ID), 0.9, shuffle = true, rng = 743271)
 
 #filter for just train set
 train = filter(:ID => in(Set(trainIDs)), data)

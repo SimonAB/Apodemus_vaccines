@@ -58,12 +58,19 @@ push!(
         Geom.point,
         x = :OD_predict_intercept,
         y = :logOD,
-        Geom.abline,
-        slope = [0.946],
-        intercept = [0.037],
     ),
 )
 
+push!(
+    bandsplot,
+    layer(
+        test,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.line,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    )
+)
 
 push!(
     bandsplot,

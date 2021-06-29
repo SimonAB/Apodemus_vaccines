@@ -41,12 +41,19 @@ push!(
         Geom.point,
         x = :OD_predict_intercept,
         y = :logOD,
-        Geom.abline,
-        slope = [0.844],
-        intercept = [0.021],
     ),
 )
 
+push!(
+    bands_train_plot,
+    layer(
+        train,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.line,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    ),
+)
 
 push!(
     bands_train_plot,
@@ -76,10 +83,18 @@ push!(
         Geom.point,
         x = :OD_predict_intercept,
         y = :logOD,
-        Geom.abline,
-        slope = [0.844],
-        intercept = [0.021],
         color = :Sex,
+    ),
+)
+
+push!(
+    bands_sex_plot,
+    layer(
+        train,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.line,
+        Stat.smooth(method = :lm, levels = [0.95]),
     ),
 )
 
@@ -104,13 +119,20 @@ push!(
         Geom.point,
         x = :OD_predict_intercept,
         y = :logOD,
-        Geom.abline,
-        slope = [0.844],
-        intercept = [0.021],
         color = :Diet,
     ),
 )
 
+push!(
+    bands_diet_plot,
+    layer(
+        train,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.line,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    ),
+)
 
 push!(
     bands_diet_plot,
@@ -133,13 +155,20 @@ push!(
         Geom.point,
         x = :OD_predict_intercept,
         y = :logOD,
-        Geom.abline,
-        slope = [0.844],
-        intercept = [0.021],
         color = :Weight,
     ),
 )
 
+push!(
+    bands_weight_plot,
+    layer(
+        train,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.line,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    ),
+)
 
 push!(
     bands_weight_plot,
@@ -162,13 +191,20 @@ push!(
         Geom.point,
         x = :OD_predict_intercept,
         y = :logOD,
-        Geom.abline,
-        slope = [0.844],
-        intercept = [0.021],
         color = :Env,
     ),
 )
 
+push!(
+    bands_env_plot,
+    layer(
+        train,
+        x = :OD_predict_intercept,
+        y = :logOD,
+        Geom.line,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    ),
+)
 
 push!(
     bands_env_plot,
