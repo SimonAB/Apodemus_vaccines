@@ -18,10 +18,10 @@ raw_data |>
 DataFrame
 
 # Specify how to correctly treat columns
-coerce!(data,:ID => Multiclass,
-             :Sex => Multiclass,
-             :Diet => Multiclass,
-             :Treatment => Multiclass)
+coerce!(data,:ID => Union{Missing,Multiclass},
+             :Sex => Union{Missing,Multiclass},
+             :Diet => Union{Missing,Multiclass},
+             :Treatment => Union{Missing,Multiclass})
 
 # create log OD response variable
 data.logOD = log.(1 .+ data.OD)
