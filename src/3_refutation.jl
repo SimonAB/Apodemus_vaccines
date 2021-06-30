@@ -12,8 +12,8 @@ include("1_data_import_cleanup.jl")
 include("2_independence_checks_DAG_weights.jl")
 
 #generate random normal OD response variable and merge into new dataframe
+randnormalOD = DataFrame(randn(rng, Float64, (nrow(train), 1)), :auto)
 rng = MersenneTwister(820480);
-randnormalOD = DataFrame(randn(rng, Float64, (nrow(train), 1)))
 rename!(randnormalOD,:x1 => :randOD)
 randnormalOD.Row = (train.Row)
 
@@ -22,7 +22,7 @@ refute = copy(train; copycols=true)
 refute.randOD = (randnormalOD.randOD)
 
 # generate all-zero variable (placebo treatment) 
-placebo = DataFrame(Array{Union{Missing, Int}}(missing, nrow(train), 1))
+placebo = DataFrame(Array{Union{Missing, Int}}(missing, nrow(train), 1), :auto)
 rename!(placebo,:x1 => :placebo)
 for col in names(placebo)
    placebo[col] = Missings.coalesce.(placebo[col], 0)
@@ -32,15 +32,15 @@ end
 refute.placebo = placebo.placebo
 
 # generate random normal variable (common cause) and merge into refute dataframe
-commoncause = DataFrame(randn(rng, Float64, (nrow(train), 1)))
+commoncause = DataFrame(randn(rng, Float64, (nrow(train), 1)), :auto)
 rename!(commoncause,:x1 => :commoncause)
 
 # merge common cause variable into refute dataframe
 refute.commoncause = (commoncause.commoncause)
 
 # generate Weight dummy response variable and merge into refute dataframe
+randnormalWeight = DataFrame(randn(rng, Float64, (nrow(train), 1)), :auto)
 rng = MersenneTwister(729302);
-randnormalWeight = DataFrame(randn(rng, Float64, (nrow(train), 1)))
 rename!(randnormalWeight, :x1 => :randWeight)
 refute.randWeight = (randnormalWeight.randWeight)
 lm(@formula(randOD ~ randWeight), refute) #checking the random variables are different
@@ -62,7 +62,7 @@ lm(@formula(randOD ~ randFat), refute) #checking the random variables are differ
 
 
 # placebo treatment for diet
-categorical!(refute, :ID)
+coerce!(refute, :Diet => Union{Missing,Multiclass},)
 fit(MixedModel, @formula(Weight ~ placebo + Env + (1 | ID)), refute)
 fit(
     MixedModel,
