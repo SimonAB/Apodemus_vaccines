@@ -463,7 +463,6 @@ dummy_fits_effect_plot = plot(
     Geom.bar,
     Scale.x_discrete,
     Guide.ylabel("% Change in Effect Size"),
-    Guide.xlabel(nothing),
 )
 
 # not enough change in effect size on time -> OD edge
