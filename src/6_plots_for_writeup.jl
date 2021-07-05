@@ -72,3 +72,15 @@ OD_time_plot = plot(
 )
 
 OD_time_plot |> PNG("plots/OD_time_plot.png")
+
+
+# refutation plots
+
+include("3_refutation.jl")
+
+# placebo treatment for diet
+placebo_4_plot = plot(placebo4, y = :Effect_size, x = :Edge, Geom.bar, color = :Edge)
+placebo_4_plot |> PNG("plots/placebo_4_plot.png")
+
+placebo_8_plot = plot(placebo8, y = :Effect_size, x = :Edge, Geom.bar, color = :Edge)
+placebo_8_plot |> PNG("plots/placebo_8_plot.png")
