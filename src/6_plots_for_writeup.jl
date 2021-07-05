@@ -84,3 +84,29 @@ placebo_4_plot |> PNG("plots/placebo_4_plot.png")
 
 placebo_8_plot = plot(placebo8, y = :Effect_size, x = :Edge, Geom.bar, color = :Edge)
 placebo_8_plot |> PNG("plots/placebo_8_plot.png")
+
+# dummy outcome treatment
+dummy_outcome_plot = plot(
+    dummyfits,
+    x=:Edge,
+    y=:PcDiff,
+    Geom.bar,
+    Scale.x_discrete,
+    Guide.ylabel("% Change in Effect Size"),
+    Guide.xlabel(nothing)
+)
+
+dummy_outcome_plot |> PNG("plots/dummy_outcome_plot.png")
+
+# common cause treatment
+common_cause_plot = plot(
+    commoncausefits,
+    x=:Edge,
+    y=:PcDiff,
+    Geom.bar,
+    Scale.x_discrete,
+    Guide.ylabel("% Difference in Effect Size"),
+    Guide.xlabel(nothing)
+)
+
+common_cause_plot |> PNG("plots/common_cause_plots.png")
