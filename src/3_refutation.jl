@@ -470,3 +470,35 @@ dummy_fits_effect_plot = plot(
 w12.pvalues[2] 
 d12.pvalues[2]
 # almost no change in effect size but massive loss in significance
+
+
+# placebo treatment for diet supplementation
+# w4 = diet -> body mass
+p4 = fit(MixedModel, @formula(Weight ~ placebo + Env + (1 | ID)), train)
+placebo4 = DataFrame(
+    Effect_size=Float64[],
+    Edge=String[],
+)
+
+push!(placebo4,(w4.beta[2], "diet -> body mass"))
+push!(placebo4,(p4.beta[2], "placebo -> body mass"))
+
+placebo_4_plot = plot(placebo4, y = :Effect_size, x = :Edge, Geom.bar, color = :Edge)
+
+
+
+# w8 = diet -> OD
+p8 = fit(
+    MixedModel,
+    @formula(logOD ~ placebo + Weight + days_since_1st_D_inj + Env + (1 | ID)),
+    train,
+)
+placebo8 = DataFrame(
+    Effect_size=Float64[],
+    Edge=String[],
+)
+
+push!(placebo8,(w8.beta[2], "diet -> body mass"))
+push!(placebo8,(p8.beta[2], "placebo -> body mass"))
+
+placebo_8_plot = plot(placebo8, y = :Effect_size, x = :Edge, Geom.bar, color = :Edge)
