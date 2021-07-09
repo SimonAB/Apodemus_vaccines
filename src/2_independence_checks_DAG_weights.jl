@@ -9,6 +9,17 @@ using RCall
 include("1_data_import_cleanup.jl")
 
 # independence checks
+@rput train
+independence_checks = [
+    R"chisq.test(train$Env, train$Diet)",
+    R"chisq.test(train$Env, train$Sex)",
+    R"t.test(train$days_since_1st_D_inj ~ train$Env)", #this is because of the experimental design rather than any causal effects
+    R"chisq.test(train$Diet, train$Sex)",
+    R"t.test(train$days_since_1st_D_inj ~ train$Diet)", 
+    R"lm(logOD ~ Fat_Scores_Sum + Diet + Env + Sex + days_since_1st_D_inj + Weight, data = train)",
+    R"lm(Weight ~ days_since_1st_D_inj + Env + Fat_Scores_Sum + Sex, data = train)",
+    R"t.test(train$days_since_1st_D_inj ~ train$Sex)", 
+    ]
 
 
 # DAG weights
