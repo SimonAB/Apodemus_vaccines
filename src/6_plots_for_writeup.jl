@@ -1,3 +1,4 @@
+using MixedModels: include
 using DataFrames, Query
 using CategoricalArrays
 using CSV
@@ -98,7 +99,7 @@ placebo_8_plot = plot(
     color=:Edge,
     Guide.ylabel("Effect Size"),
     Guide.xlabel(nothing))
-    
+
 placebo_8_plot |> PNG("plots/placebo_8_plot.png")
 
 # dummy outcome treatment
@@ -126,3 +127,72 @@ common_cause_plot = plot(
 )
 
 common_cause_plot |> PNG("plots/common_cause_plots.png")
+
+# predictions plots
+
+include("6_plots_for_writeup.jl")
+
+# plot predictions
+OD_predict_plot = plot(
+    test,
+    Geom.point,
+    x = :OD_predict,
+    y = :logOD,
+    Guide.xlabel("predicted log(10) IgG1 OD"),
+    Guide.ylabel("observed log(10) IgG1 OD"),
+    Geom.abline,
+)
+
+# quantile-quantile plot to examine fit
+qq = plot(
+    y = GLM.residuals(fitmodel),
+    x = Normal(),
+    Stat.qq,
+    Geom.point,
+    Guide.xlabel("theoretical normal quantiles"),
+    Guide.ylabel("sample residuals"),
+)
+
+# plot of predictions with confidence bands
+bandsplot =
+    plot(Guide.xlabel("predicted log(10) IgG1 OD"), Guide.ylabel("observed log(10) IgG1 OD"))
+
+push!(
+    bandsplot,
+    layer(
+        test,
+        Geom.point,
+        x = :OD_predict,
+        y = :logOD,
+    ),
+)
+
+push!(
+    bandsplot,
+    layer(
+        test,
+        x = :OD_predict,
+        y = :logOD,
+        Geom.line,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    )
+)
+
+push!(
+    bandsplot,
+    layer(
+        test,
+        x = :OD_predict,
+        y = :logOD,
+        Geom.ribbon,
+        Stat.smooth(method = :lm, levels = [0.95]),
+    ),
+)
+
+# plot of residuals
+residualsplot = plot(
+    x = GLM.residuals(fitmodel),
+    Geom.histogram,
+    Guide.xlabel("residual size"),
+    Guide.ylabel("frequency"),
+)
