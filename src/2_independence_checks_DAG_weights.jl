@@ -83,7 +83,7 @@ train.OD_predict = (
     (w9.β[2] * train.Weight) +
     (w10.β[2] * train.ismale) +
     (w11.β[2] * train.iswild) +
-    (w12.β[2] * train.days_since_1st_D_inj) .+ mean(train.logOD)
+    (w12.β[2] * train.days_since_1st_D_inj)
 )
 
 # find observed intercept
