@@ -130,7 +130,7 @@ common_cause_plot |> PNG("plots/common_cause_plots.png")
 
 # predictions plots
 
-include("6_plots_for_writeup.jl")
+include("5_predictions.jl")
 
 # plot predictions
 OD_predict_plot = plot(
