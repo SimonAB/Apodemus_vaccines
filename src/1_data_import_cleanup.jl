@@ -24,7 +24,7 @@ coerce!(data,:ID => Union{Missing,Multiclass}, # treat these columns as factors 
              :Treatment => Union{Missing,Multiclass})
 
 # create log OD response variable
-data.logOD = log.(1 .+ data.OD) 
+data.logOD = log.(10, 1 .+ data.OD) 
 
 # create iswild
 data.iswild = data[:,:islab] .-1 #dataset only had "islab", so -1 and squaring gives the opposite
