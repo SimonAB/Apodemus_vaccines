@@ -284,3 +284,6 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# deprecated files
+src/deprecated/
