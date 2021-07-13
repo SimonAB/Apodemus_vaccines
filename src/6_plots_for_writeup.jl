@@ -143,6 +143,8 @@ OD_predict_plot = plot(
     Geom.abline,
 )
 
+OD_predict_plot |> PNG("plots/OD_predict_plot.png")
+
 # quantile-quantile plot to examine fit
 qq = plot(
     y = GLM.residuals(fitmodel),
@@ -152,6 +154,8 @@ qq = plot(
     Guide.xlabel("theoretical normal quantiles"),
     Guide.ylabel("sample residuals"),
 )
+
+qq |> PNG("qq.png")
 
 # plot of predictions with confidence bands
 bandsplot =
@@ -189,6 +193,8 @@ push!(
     ),
 )
 
+bandsplot |> PNG("bandsplot.png")
+
 # plot of residuals
 residualsplot = plot(
     x = GLM.residuals(fitmodel),
@@ -196,3 +202,5 @@ residualsplot = plot(
     Guide.xlabel("residual size"),
     Guide.ylabel("frequency"),
 )
+
+residualsplot |> PNG("residualsplot.png")
