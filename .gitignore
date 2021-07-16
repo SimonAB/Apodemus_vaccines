@@ -286,4 +286,4 @@ dmypy.json
 cython_debug/
 
 # deprecated files
-src/deprecated/
+/src/deprecated

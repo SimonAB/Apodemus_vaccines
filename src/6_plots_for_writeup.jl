@@ -1,4 +1,4 @@
-using MixedModels: include
+using MixedModels #: include
 using DataFrames, Query
 using CategoricalArrays
 using CSV
@@ -81,10 +81,10 @@ include("3_refutation.jl")
 
 # placebo treatment for diet
 placebo_4_plot = plot(
-    placebo4, 
-    y=:Effect_size, 
-    x=:Edge, 
-    Geom.bar, 
+    placebo4,
+    y=:Effect_size,
+    x=:Edge,
+    Geom.bar,
     color=:Edge,
     Guide.ylabel("Effect Size"),
     Guide.xlabel(nothing))
@@ -92,10 +92,10 @@ placebo_4_plot = plot(
 placebo_4_plot |> PNG("plots/placebo_4_plot.png")
 
 placebo_8_plot = plot(
-    placebo8, 
-    y=:Effect_size, 
-    x=:Edge, 
-    Geom.bar, 
+    placebo8,
+    y=:Effect_size,
+    x=:Edge,
+    Geom.bar,
     color=:Edge,
     Guide.ylabel("Effect Size"),
     Guide.xlabel(nothing))
