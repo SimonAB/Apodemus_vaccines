@@ -22,3 +22,13 @@ test.OD_predict = (
 
 fitmodel = fit(MixedModel, @formula(logOD ~ OD_predict + (1 | ID)), test)
 
+# create a function for conditional R2
+
+function condR2(x::MixedModel)
+    numerator = ( varest(x) + condVar(x) )
+    denominator = ( varest(x)  + condVar(x) + var(residuals(x)) )
+    conditional_R2 = numerator / denominator
+    return conditional_R2
+end
+
+condR2(fitmodel)
