@@ -23,7 +23,6 @@ test.OD_predict = (
 fitmodel = fit(MixedModel, @formula(logOD ~ OD_predict + (1 | ID)), test)
 
 # create a function for conditional R2
-
 function condR2(m::MixedModel)
     var_fixed = MixedModels.varest(m)
     var_random = sum(sum(MixedModels.condVar(m)))
@@ -32,3 +31,5 @@ function condR2(m::MixedModel)
 
     return conditional_R2
 end
+
+condR2(fitmodel)
