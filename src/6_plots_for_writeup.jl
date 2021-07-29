@@ -152,7 +152,7 @@ qq = plot(
     Stat.qq,
     Geom.point,
     Guide.xlabel("theoretical normal quantiles"),
-    Guide.ylabel("sample residuals"),
+    Guide.ylabel("plots/sample residuals"),
 )
 
 qq |> PNG("qq.png")
@@ -193,7 +193,7 @@ push!(
     ),
 )
 
-bandsplot |> PNG("bandsplot.png")
+bandsplot |> PNG("plots/bandsplot.png")
 
 # plot of residuals
 residualsplot = plot(
@@ -203,4 +203,4 @@ residualsplot = plot(
     Guide.ylabel("frequency"),
 )
 
-residualsplot |> PNG("residualsplot.png")
+residualsplot |> PNG("plots/residualsplot.png")
