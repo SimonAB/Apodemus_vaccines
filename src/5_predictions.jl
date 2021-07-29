@@ -33,3 +33,17 @@ function condR2(m::MixedModel)
 end
 
 condR2(fitmodel)
+
+# predict OD for the entire set
+data.OD_predict = (
+    (w8.β[2] * data.islow) +
+    (w9.β[2] * data.Weight) +
+    (w10.β[2] * data.ismale) +
+    (w11.β[2] * data.iswild) +
+    (w12.β[2] * data.days_since_1st_D_inj)
+    .+ intercepttrainmodel.β[1]
+)
+
+fitallmodel = fit(MixedModel, @formula(logOD ~ OD_predict + (1 | ID)), data)
+
+condR2(fitallmodel)
