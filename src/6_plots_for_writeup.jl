@@ -105,12 +105,11 @@ placebo_8_plot |> PNG("plots/placebo_8_plot.png")
 # dummy outcome treatment
 dummy_outcome_plot = plot(
     dummyfits,
-    x=:Edge,
-    y=:PcDiff,
-    Geom.bar,
-    Scale.x_discrete,
-    Guide.ylabel("% Change in Effect Size"),
-    Guide.xlabel(nothing)
+    x=:W,
+    y=:D,
+    Geom.point,
+    Guide.ylabel("Absolute effect size after Dummy Outcome treatment", orientation=:vertical),
+    Guide.xlabel("Original absolute effect size")
 )
 
 dummy_outcome_plot |> PNG("plots/dummy_outcome_plot.png")
@@ -152,10 +151,10 @@ qq = plot(
     Stat.qq,
     Geom.point,
     Guide.xlabel("theoretical normal quantiles"),
-    Guide.ylabel("plots/sample residuals"),
+    Guide.ylabel("sample residuals"),
 )
 
-qq |> PNG("qq.png")
+qq |> PNG("plots/qq.png")
 
 # plot of predictions with confidence bands
 bandsplot =
