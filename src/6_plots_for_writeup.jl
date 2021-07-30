@@ -1,4 +1,4 @@
-using MixedModels #: include
+using MixedModels
 using DataFrames, Query
 using CategoricalArrays
 using CSV
@@ -136,8 +136,8 @@ include("5_predictions.jl")
 OD_predict_plot = plot(
     test,
     Geom.point,
-    x = :OD_predict,
-    y = :logOD,
+    x=:OD_predict,
+    y=:logOD,
     Guide.xlabel("predicted log(10) IgG1 OD"),
     Guide.ylabel("observed log(10) IgG1 OD"),
     Geom.abline,
@@ -147,8 +147,8 @@ OD_predict_plot |> PNG("plots/OD_predict_plot.png")
 
 # quantile-quantile plot to examine fit
 qq = plot(
-    y = GLM.residuals(fitmodel),
-    x = Normal(),
+    y=GLM.residuals(fitmodel),
+    x=Normal(),
     Stat.qq,
     Geom.point,
     Guide.xlabel("theoretical normal quantiles"),
@@ -166,8 +166,8 @@ push!(
     layer(
         test,
         Geom.point,
-        x = :OD_predict,
-        y = :logOD,
+        x=:OD_predict,
+        y=:logOD,
     ),
 )
 
@@ -175,10 +175,10 @@ push!(
     bandsplot,
     layer(
         test,
-        x = :OD_predict,
-        y = :logOD,
+        x=:OD_predict,
+        y=:logOD,
         Geom.line,
-        Stat.smooth(method = :lm, levels = [0.95]),
+        Stat.smooth(method=:lm, levels=[0.95]),
     )
 )
 
@@ -186,10 +186,10 @@ push!(
     bandsplot,
     layer(
         test,
-        x = :OD_predict,
-        y = :logOD,
+        x=:OD_predict,
+        y=:logOD,
         Geom.ribbon,
-        Stat.smooth(method = :lm, levels = [0.95]),
+        Stat.smooth(method=:lm, levels=[0.95]),
     ),
 )
 
@@ -197,7 +197,7 @@ bandsplot |> PNG("plots/bandsplot.png")
 
 # plot of residuals
 residualsplot = plot(
-    x = GLM.residuals(fitmodel),
+    x=GLM.residuals(fitmodel),
     Geom.histogram,
     Guide.xlabel("residual size"),
     Guide.ylabel("frequency"),
