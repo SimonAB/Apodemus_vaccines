@@ -105,15 +105,10 @@ placebo_8_plot |> PNG("plots/placebo_8_plot.png")
 # dummy outcome treatment
 dummy_outcome_plot = plot(
     dummyfits,
-    x=:W,
+    x=:Edge,
     y=:D,
-    Geom.point,
-    Guide.ylabel("Absolute effect size after Dummy Outcome treatment", orientation=:vertical),
-    Guide.xlabel("Original absolute effect size"),
-    Geom.abline(color="red", style=:dash),
-    Scale.y_continuous(maxvalue=4, scalable=false),
-    Geom.label(position=:dynamic),
-    label="Edge",
+    Geom.bar,
+    Guide.ylabel("Effect size after Dummy Outcome treatment", orientation=:vertical),
 )
 
 dummy_outcome_plot |> PNG("plots/dummy_outcome_plot.png")

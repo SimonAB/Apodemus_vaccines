@@ -123,121 +123,121 @@ commoncausefits = DataFrame(
 push!(
     commoncausefits,
     (
-        abs(w1.beta[2]),
-        abs(c1.beta[2]),
-        abs(w1.beta[2]) - abs(c1.beta[2]),
-        (((abs(w1.beta[2]) - abs(c1.beta[2])) / abs(w1.beta[2])) * 100),
+        (w1.beta[2]),
+        (c1.beta[2]),
+        (w1.beta[2]) - (c1.beta[2]),
+        ((((w1.beta[2]) - (c1.beta[2])) / (w1.beta[2])) * 100),
         "env -> weight",
     ),
 )
 push!(
     commoncausefits,
     (
-        abs(w2.beta[2]),
-        abs(c2.beta[2]),
-        abs(w2.beta[2]) - abs(c2.beta[2]),
-        (((abs(w2.beta[2]) - abs(c2.beta[2])) / abs(w2.beta[2])) * 100),
+        (w2.beta[2]),
+        (c2.beta[2]),
+        (w2.beta[2]) - (c2.beta[2]),
+        ((((w2.beta[2]) - (c2.beta[2])) / (w2.beta[2])) * 100),
         "fat -> weight",
         ),
 )
 push!(
     commoncausefits,
     (
-        abs(w3.beta[2]),
-        abs(c3.beta[2]),
-        abs(w3.beta[2]) - abs(c3.beta[2]),
-        (((abs(w3.beta[2]) - abs(c3.beta[2])) / abs(w3.beta[2])) * 100),
+        (w3.beta[2]),
+        (c3.beta[2]),
+        (w3.beta[2]) - (c3.beta[2]),
+        ((((w3.beta[2]) - (c3.beta[2])) / (w3.beta[2])) * 100),
         "sex -> weight",
     ),
 )
 push!(
     commoncausefits,
     (
-        abs(w4.beta[2]),
-        abs(c4.beta[2]),
-        abs(w4.beta[2]) - abs(c4.beta[2]),
-        (((abs(w4.beta[2]) - abs(c4.beta[2])) / abs(w4.beta[2])) * 100),
-        "ciet -> weight",
+        (w4.beta[2]),
+        (c4.beta[2]),
+        (w4.beta[2]) - (c4.beta[2]),
+        ((((w4.beta[2]) - (c4.beta[2])) / (w4.beta[2])) * 100),
+        "diet -> weight",
     ),
 )
 push!(
     commoncausefits,
     (
-        abs(w5.beta[2]),
-        abs(c5.beta[2]),
-        abs(w5.beta[2]) - abs(c5.beta[2]),
-        (((abs(w5.beta[2]) - abs(c5.beta[2])) / abs(w5.beta[2])) * 100),
-        "emv -> fat",
+        (w5.beta[2]),
+        (c5.beta[2]),
+        (w5.beta[2]) - (c5.beta[2]),
+        ((((w5.beta[2]) - (c5.beta[2])) / (w5.beta[2])) * 100),
+        "env -> fat",
     ),
 )
 push!(
     commoncausefits,
     (
-        abs(w6.beta[2]),
-        abs(c6.beta[2]),
-        abs(w6.beta[2]) - abs(c6.beta[2]),
-        (((abs(w6.beta[2]) - abs(c6.beta[2])) / abs(w6.beta[2])) * 100),
+        (w6.beta[2]),
+        (c6.beta[2]),
+        (w6.beta[2]) - (c6.beta[2]),
+        ((((w6.beta[2]) - (c6.beta[2])) / (w6.beta[2])) * 100),
         "sex -> fat"
     ),
 )
 push!(
     commoncausefits,
     (
-        abs(w7.beta[2]),
-        abs(c7.beta[2]),
-        abs(w7.beta[2]) - abs(c7.beta[2]),
-        (((abs(w7.beta[2]) - abs(c7.beta[2])) / abs(w7.beta[2])) * 100),
+        (w7.beta[2]),
+        (c7.beta[2]),
+        (w7.beta[2]) - (c7.beta[2]),
+        ((((w7.beta[2]) - (c7.beta[2])) / (w7.beta[2])) * 100),
         "sex -> fat",
     ),
 )
 push!(
     commoncausefits,
     (
-        abs(w8.beta[2]),
-        abs(c8.beta[2]),
-        abs(w8.beta[2]) - abs(c8.beta[2]),
-        (((abs(w8.beta[2]) - abs(c8.beta[2])) / abs(w8.beta[2])) * 100),
-        "ciet -> logOc",
+        (w8.beta[2]),
+        (c8.beta[2]),
+        (w8.beta[2]) - (c8.beta[2]),
+        ((((w8.beta[2]) - (c8.beta[2])) / (w8.beta[2])) * 100),
+        "diet -> logOD",
     ),
 )
 push!(
     commoncausefits,
     (
-        abs(w9.beta[2]),
-        abs(c9.beta[2]),
-        abs(w9.beta[2]) - abs(c9.beta[2]),
-        (((abs(w9.beta[2]) - abs(c9.beta[2])) / abs(w9.beta[2])) * 100),
-        "weight -> logOc"
+        (w9.beta[2]),
+        (c9.beta[2]),
+        (w9.beta[2]) - (c9.beta[2]),
+        ((((w9.beta[2]) - (c9.beta[2])) / (w9.beta[2])) * 100),
+        "weight -> logOD"
     ),
 )
 push!(
     commoncausefits,
     (
-        abs(w10.beta[2]),
-        abs(c10.beta[2]),
-        abs(w10.beta[2]) - abs(c10.beta[2]),
-        (((abs(w10.beta[2]) - abs(c10.beta[2])) / abs(w10.beta[2])) * 100),
-        "sex -> logOc",
+        (w10.beta[2]),
+        (c10.beta[2]),
+        (w10.beta[2]) - (c10.beta[2]),
+        ((((w10.beta[2]) - (c10.beta[2])) / (w10.beta[2])) * 100),
+        "sex -> logOD",
     ),
 )
 push!(
     commoncausefits,
     (
-        abs(w11.beta[2]),
-        abs(c11.beta[2]),
-        abs(w11.beta[2]) - abs(c11.beta[2]),
-        (((abs(w11.beta[2]) - abs(c11.beta[2])) / abs(w11.beta[2])) * 100),
-        "sex -> logOc",
+        (w11.beta[2]),
+        (c11.beta[2]),
+        (w11.beta[2]) - (c11.beta[2]),
+        ((((w11.beta[2]) - (c11.beta[2])) / (w11.beta[2])) * 100),
+        "sex -> logOD",
     ),
 )
 push!(
     commoncausefits,
     (
-        abs(w12.beta[2]),
-        abs(c12.beta[2]),
-        abs(w12.beta[2]) - abs(c12.beta[2]),
-        (((abs(w12.beta[2]) - abs(c12.beta[2])) / abs(w12.beta[2])) * 100),
-        "time -> logOc",
+        (w12.beta[2]),
+        (c12.beta[2]),
+        (w12.beta[2]) - (c12.beta[2]),
+        ((((w12.beta[2]) - (c12.beta[2])) / (w12.beta[2])) * 100),
+        "time -> logOD",
     ),
 )
 
@@ -338,120 +338,120 @@ dummyfits = DataFrame(
 push!(
     dummyfits,
     (
-        abs(w1.beta[2]),
-        abs(d1.beta[2]),
-        abs(w1.beta[2]) - abs(d1.beta[2]),
-        (((abs(w1.beta[2]) - abs(d1.beta[2])) / abs(w1.beta[2])) * 100),
+        (w1.beta[2]),
+        (d1.beta[2]),
+        (w1.beta[2]) - (d1.beta[2]),
+        ((((w1.beta[2]) - (d1.beta[2])) / (w1.beta[2])) * 100),
         "env -> weight",
     ),
 )
 push!(
     dummyfits,
     (
-        abs(w2.beta[2]),
-        abs(d2.beta[2]),
-        abs(w2.beta[2]) - abs(d2.beta[2]),
-        (((abs(w2.beta[2]) - abs(d2.beta[2])) / abs(w2.beta[2])) * 100),
+        (w2.beta[2]),
+        (d2.beta[2]),
+        (w2.beta[2]) - (d2.beta[2]),
+        ((((w2.beta[2]) - (d2.beta[2])) / (w2.beta[2])) * 100),
         "fat -> weight",
     ),
 )
 push!(
     dummyfits,
     (
-        abs(w3.beta[2]),
-        abs(d3.beta[2]),
-        abs(w3.beta[2]) - abs(d3.beta[2]),
-        (((abs(w3.beta[2]) - abs(d3.beta[2])) / abs(w3.beta[2])) * 100),
+        (w3.beta[2]),
+        (d3.beta[2]),
+        (w3.beta[2]) - (d3.beta[2]),
+        ((((w3.beta[2]) - (d3.beta[2])) / (w3.beta[2])) * 100),
         "sex -> weight",
     ),
 )
 push!(
     dummyfits,
     (
-        abs(w4.beta[2]),
-        abs(d4.beta[2]),
-        abs(w4.beta[2]) - abs(d4.beta[2]),
-        (((abs(w4.beta[2]) - abs(d4.beta[2])) / abs(w4.beta[2])) * 100),
+        (w4.beta[2]),
+        (d4.beta[2]),
+        (w4.beta[2]) - (d4.beta[2]),
+        ((((w4.beta[2]) - (d4.beta[2])) / (w4.beta[2])) * 100),
         "diet -> weight",
     ),
 )
 push!(
     dummyfits,
     (
-        abs(w5.beta[2]),
-        abs(d5.beta[2]),
-        abs(w5.beta[2]) - abs(d5.beta[2]),
-        (((abs(w5.beta[2]) - abs(d5.beta[2])) / abs(w5.beta[2])) * 100),
-        "emv -> fat",
+        (w5.beta[2]),
+        (d5.beta[2]),
+        (w5.beta[2]) - (d5.beta[2]),
+        ((((w5.beta[2]) - (d5.beta[2])) / (w5.beta[2])) * 100),
+        "env -> fat",
     ),
 )
 push!(
     dummyfits,
     (
-        abs(w6.beta[2]),
-        abs(d6.beta[2]),
-        abs(w6.beta[2]) - abs(d6.beta[2]),
-        (((abs(w6.beta[2]) - abs(d6.beta[2])) / abs(w6.beta[2])) * 100),
+        (w6.beta[2]),
+        (d6.beta[2]),
+        (w6.beta[2]) - (d6.beta[2]),
+        ((((w6.beta[2]) - (d6.beta[2])) / (w6.beta[2])) * 100),
         "sex -> fat"
     ),
 )
 push!(
     dummyfits,
     (
-        abs(w7.beta[2]),
-        abs(d7.beta[2]),
-        abs(w7.beta[2]) - abs(d7.beta[2]),
-        (((abs(w7.beta[2]) - abs(d7.beta[2])) / abs(w7.beta[2])) * 100),
+        (w7.beta[2]),
+        (d7.beta[2]),
+        (w7.beta[2]) - (d7.beta[2]),
+        ((((w7.beta[2]) - (d7.beta[2])) / (w7.beta[2])) * 100),
         "sex -> fat",
     ),
 )
 push!(
     dummyfits,
     (
-        abs(w8.beta[2]),
-        abs(d8.beta[2]),
-        abs(w8.beta[2]) - abs(d8.beta[2]),
-        (((abs(w8.beta[2]) - abs(d8.beta[2])) / abs(w8.beta[2])) * 100),
+        (w8.beta[2]),
+        (d8.beta[2]),
+        (w8.beta[2]) - (d8.beta[2]),
+        ((((w8.beta[2]) - (d8.beta[2])) / (w8.beta[2])) * 100),
         "diet -> logOD",
     ),
 )
 push!(
     dummyfits,
     (
-        abs(w9.beta[2]),
-        abs(d9.beta[2]),
-        abs(w9.beta[2]) - abs(d9.beta[2]),
-        (((abs(w9.beta[2]) - abs(d9.beta[2])) / abs(w9.beta[2])) * 100),
+        (w9.beta[2]),
+        (d9.beta[2]),
+        (w9.beta[2]) - (d9.beta[2]),
+        ((((w9.beta[2]) - (d9.beta[2])) / (w9.beta[2])) * 100),
         "weight -> logOD"
     ),
 )
 push!(
     dummyfits,
     (
-        abs(w10.beta[2]),
-        abs(d10.beta[2]),
-        abs(w10.beta[2]) - abs(d10.beta[2]),
-        (((abs(w10.beta[2]) - abs(d10.beta[2])) / abs(w10.beta[2])) * 100),
+        (w10.beta[2]),
+        (d10.beta[2]),
+        (w10.beta[2]) - (d10.beta[2]),
+        ((((w10.beta[2]) - (d10.beta[2])) / (w10.beta[2])) * 100),
         "sex -> logOD",
     ),
 )
 push!(
     dummyfits,
     (
-        abs(w11.beta[2]),
-        abs(d11.beta[2]),
-        abs(w11.beta[2]) - abs(d11.beta[2]),
-        (((abs(w11.beta[2]) - abs(d11.beta[2])) / abs(w11.beta[2])) * 100),
+        (w11.beta[2]),
+        (d11.beta[2]),
+        (w11.beta[2]) - (d11.beta[2]),
+        ((((w11.beta[2]) - (d11.beta[2])) / (w11.beta[2])) * 100),
         "sex -> logOD",
     ),
 )
 push!(
     dummyfits,
     (
-        abs(w12.beta[2]),
-        abs(d12.beta[2]),
-        abs(w12.beta[2]) - abs(d12.beta[2]),
-        (((abs(w12.beta[2]) - abs(d12.beta[2])) / abs(w12.beta[2])) * 100),
+        (w12.beta[2]),
+        (d12.beta[2]),
+        (w12.beta[2]) - (d12.beta[2]),
+        ((((w12.beta[2]) - (d12.beta[2])) / (w12.beta[2])) * 100),
         "time -> logOD",
     ),
 )
