@@ -109,7 +109,11 @@ dummy_outcome_plot = plot(
     y=:D,
     Geom.point,
     Guide.ylabel("Absolute effect size after Dummy Outcome treatment", orientation=:vertical),
-    Guide.xlabel("Original absolute effect size")
+    Guide.xlabel("Original absolute effect size"),
+    Geom.abline(color="red", style=:dash),
+    Scale.y_continuous(maxvalue=4, scalable=false),
+    Geom.label(position=:dynamic),
+    label="Edge",
 )
 
 dummy_outcome_plot |> PNG("plots/dummy_outcome_plot.png")
