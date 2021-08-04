@@ -9,7 +9,7 @@ include("1_data_import_cleanup.jl")
 include("2_independence_checks_DAG_weights.jl")
 
 # generate random normal  variable
-rng = MersenneTwister(145687);
+rng = MersenneTwister(141687);
 randnormal = DataFrame(randn(rng, Float64, (nrow(train), 1)), :auto)
 train.randnormal = randnormal.x1
 
@@ -123,120 +123,120 @@ commoncausefits = DataFrame(
 push!(
     commoncausefits,
     (
-        w1.β[2],
-        c1.β[2],
-        w1.β[2] - c1.β[2],
-        abs(((w1.β[2] - c1.β[2]) / w1.β[2]) * 100),
+        (w1.beta[2]),
+        (c1.beta[2]),
+        (w1.beta[2]) - (c1.beta[2]),
+        ((((w1.beta[2]) - (c1.beta[2])) / (w1.beta[2])) * 100),
         "env -> weight",
     ),
 )
 push!(
     commoncausefits,
     (
-        w2.β[2],
-        c2.β[2],
-        w2.β[2] - c2.β[2],
-        abs(((w2.β[2] - c2.β[2]) / w2.β[2]) * 100),
+        (w2.beta[2]),
+        (c2.beta[2]),
+        (w2.beta[2]) - (c2.beta[2]),
+        ((((w2.beta[2]) - (c2.beta[2])) / (w2.beta[2])) * 100),
         "fat -> weight",
-    ),
+        ),
 )
 push!(
     commoncausefits,
     (
-        w3.β[2],
-        c3.β[2],
-        w3.β[2] - c3.β[2],
-        abs(((w3.β[2] - c3.β[2]) / w3.β[2]) * 100),
+        (w3.beta[2]),
+        (c3.beta[2]),
+        (w3.beta[2]) - (c3.beta[2]),
+        ((((w3.beta[2]) - (c3.beta[2])) / (w3.beta[2])) * 100),
         "sex -> weight",
     ),
 )
 push!(
     commoncausefits,
     (
-        w4.β[2],
-        c4.β[2],
-        w4.β[2] - c4.β[2],
-        abs(((w4.β[2] - c4.β[2]) / w4.β[2]) * 100),
+        (w4.beta[2]),
+        (c4.beta[2]),
+        (w4.beta[2]) - (c4.beta[2]),
+        ((((w4.beta[2]) - (c4.beta[2])) / (w4.beta[2])) * 100),
         "diet -> weight",
     ),
 )
 push!(
     commoncausefits,
     (
-        w5.β[2],
-        c5.β[2],
-        w5.β[2] - c5.β[2],
-        abs(((w5.β[2] - c5.β[2]) / w5.β[2]) * 100),
+        (w5.beta[2]),
+        (c5.beta[2]),
+        (w5.beta[2]) - (c5.beta[2]),
+        ((((w5.beta[2]) - (c5.beta[2])) / (w5.beta[2])) * 100),
         "env -> fat",
     ),
 )
 push!(
     commoncausefits,
     (
-        w6.β[2],
-        c6.β[2],
-        w6.β[2] - c6.β[2],
-        abs(((w6.β[2] - c6.β[2]) / w6.β[2]) * 100),
+        (w6.beta[2]),
+        (c6.beta[2]),
+        (w6.beta[2]) - (c6.beta[2]),
+        ((((w6.beta[2]) - (c6.beta[2])) / (w6.beta[2])) * 100),
+        "sex -> fat"
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        (w7.beta[2]),
+        (c7.beta[2]),
+        (w7.beta[2]) - (c7.beta[2]),
+        ((((w7.beta[2]) - (c7.beta[2])) / (w7.beta[2])) * 100),
         "sex -> fat",
     ),
 )
 push!(
     commoncausefits,
     (
-        w7.β[2],
-        c7.β[2],
-        w7.β[2] - c7.β[2],
-        abs(((w7.β[2] - c7.β[2]) / w7.β[2]) * 100),
-        "time -> fat",
-    ),
-)
-push!(
-    commoncausefits,
-    (
-        w8.β[2],
-        c8.β[2],
-        w8.β[2] - c8.β[2],
-        abs(((w8.β[2] - c8.β[2]) / w8.β[2]) * 100),
+        (w8.beta[2]),
+        (c8.beta[2]),
+        (w8.beta[2]) - (c8.beta[2]),
+        ((((w8.beta[2]) - (c8.beta[2])) / (w8.beta[2])) * 100),
         "diet -> logOD",
     ),
 )
 push!(
     commoncausefits,
     (
-        w9.β[2],
-        c9.β[2],
-        w9.β[2] - c9.β[2],
-        abs(((w9.β[2] - c9.β[2]) / w9.β[2]) * 100),
-        "weight -> logOD",
+        (w9.beta[2]),
+        (c9.beta[2]),
+        (w9.beta[2]) - (c9.beta[2]),
+        ((((w9.beta[2]) - (c9.beta[2])) / (w9.beta[2])) * 100),
+        "weight -> logOD"
     ),
 )
 push!(
     commoncausefits,
     (
-        w10.β[2],
-        c10.β[2],
-        w10.β[2] - c10.β[2],
-        abs(((w10.β[2] - c10.β[2]) / w10.β[2]) * 100),
+        (w10.beta[2]),
+        (c10.beta[2]),
+        (w10.beta[2]) - (c10.beta[2]),
+        ((((w10.beta[2]) - (c10.beta[2])) / (w10.beta[2])) * 100),
         "sex -> logOD",
     ),
 )
 push!(
     commoncausefits,
     (
-        w11.β[2],
-        c11.β[2],
-        w11.β[2] - c11.β[2],
-        abs(((w11.β[2] - c11.β[2]) / w11.β[2]) * 100),
-        "env -> logOD",
+        (w11.beta[2]),
+        (c11.beta[2]),
+        (w11.beta[2]) - (c11.beta[2]),
+        ((((w11.beta[2]) - (c11.beta[2])) / (w11.beta[2])) * 100),
+        "sex -> logOD",
     ),
 )
 push!(
     commoncausefits,
     (
-        w12.β[2],
-        c12.β[2],
-        w12.β[2] - c12.β[2],
-        abs(((w12.β[2] - c12.β[2]) / w12.β[2]) * 100),
+        (w12.beta[2]),
+        (c12.beta[2]),
+        (w12.beta[2]) - (c12.beta[2]),
+        ((((w12.beta[2]) - (c12.beta[2])) / (w12.beta[2])) * 100),
         "time -> logOD",
     ),
 )
@@ -251,7 +251,7 @@ common_cause_fits_plot = plot(
 )
 
 # compare % change in effect size with p-value of original model
-commoncausefits.p_value = [w1.pvalues[2],w2.pvalues[2],w3.pvalues[2],w4.pvalues[2],w5.pvalues[2],w6.pvalues[2],w7.pvalues[2],w8.pvalues[2],w9.pvalues[2],w10.pvalues[2],w11.pvalues[2],w12.pvalues[2],]
+commoncausefits.p_value = [w1.pvalues[2],w2.pvalues[2],w3.pvalues[2],w4.pvalues[2],w9.pvalues[2],w6.pvalues[2],w7.pvalues[2],w8.pvalues[2],w9.pvalues[2],w10.pvalues[2],w11.pvalues[2],w12.pvalues[2],]
 
 @rput commoncausefits
 R"cor.test(commoncausefits$p_value, commoncausefits$PcDiff)"
@@ -338,121 +338,121 @@ dummyfits = DataFrame(
 push!(
     dummyfits,
     (
-        w1.β[2],
-        d1.β[2],
-        w1.β[2] - d1.β[2],
-        (((w1.β[2] - d1.β[2]) / w1.β[2]) * 100),
-        "repro -> weight",
+        (w1.beta[2]),
+        (d1.beta[2]),
+        (w1.beta[2]) - (d1.beta[2]),
+        ((((w1.beta[2]) - (d1.beta[2])) / (w1.beta[2])) * 100),
+        "env -> weight",
     ),
 )
 push!(
     dummyfits,
     (
-        w2.β[2],
-        d2.β[2],
-        w2.β[2] - d2.β[2],
-        (((w2.β[2] - d2.β[2]) / w2.β[2]) * 100),
+        (w2.beta[2]),
+        (d2.beta[2]),
+        (w2.beta[2]) - (d2.beta[2]),
+        ((((w2.beta[2]) - (d2.beta[2])) / (w2.beta[2])) * 100),
         "fat -> weight",
     ),
 )
 push!(
     dummyfits,
     (
-        w3.β[2],
-        d3.β[2],
-        w3.β[2] - d3.β[2],
-        (((w3.β[2] - d3.β[2]) / w3.β[2]) * 100),
+        (w3.beta[2]),
+        (d3.beta[2]),
+        (w3.beta[2]) - (d3.beta[2]),
+        ((((w3.beta[2]) - (d3.beta[2])) / (w3.beta[2])) * 100),
         "sex -> weight",
     ),
 )
 push!(
     dummyfits,
     (
-        w4.β[2],
-        d4.β[2],
-        w4.β[2] - d4.β[2],
-        (((w4.β[2] - d4.β[2]) / w4.β[2]) * 100),
+        (w4.beta[2]),
+        (d4.beta[2]),
+        (w4.beta[2]) - (d4.beta[2]),
+        ((((w4.beta[2]) - (d4.beta[2])) / (w4.beta[2])) * 100),
         "diet -> weight",
     ),
 )
 push!(
     dummyfits,
     (
-        w5.β[2],
-        d5.β[2],
-        w5.β[2] - d5.β[2],
-        (((w5.β[2] - d5.β[2]) / w5.β[2]) * 100),
-        "env -> repro",
-    ),
-)
-push!(
-    dummyfits,
-    (
-        w6.β[2],
-        d6.β[2],
-        w6.β[2] - d6.β[2],
-        (((w6.β[2] - d6.β[2]) / w6.β[2]) * 100),
+        (w5.beta[2]),
+        (d5.beta[2]),
+        (w5.beta[2]) - (d5.beta[2]),
+        ((((w5.beta[2]) - (d5.beta[2])) / (w5.beta[2])) * 100),
         "env -> fat",
     ),
 )
 push!(
     dummyfits,
     (
-        w7.β[2],
-        d7.β[2],
-        w7.β[2] - d7.β[2],
-        (((w7.β[2] - d7.β[2]) / w7.β[2]) * 100),
+        (w6.beta[2]),
+        (d6.beta[2]),
+        (w6.beta[2]) - (d6.beta[2]),
+        ((((w6.beta[2]) - (d6.beta[2])) / (w6.beta[2])) * 100),
+        "sex -> fat"
+    ),
+)
+push!(
+    dummyfits,
+    (
+        (w7.beta[2]),
+        (d7.beta[2]),
+        (w7.beta[2]) - (d7.beta[2]),
+        ((((w7.beta[2]) - (d7.beta[2])) / (w7.beta[2])) * 100),
         "sex -> fat",
     ),
 )
 push!(
     dummyfits,
     (
-        w8.β[2],
-        d8.β[2],
-        w8.β[2] - d8.β[2],
-        (((w8.β[2] - d8.β[2]) / w8.β[2]) * 100),
-        "time -> fat",
-    ),
-)
-push!(
-    dummyfits,
-    (
-        w9.β[2],
-        d9.β[2],
-        w9.β[2] - d9.β[2],
-        (((w9.β[2] - d9.β[2]) / w9.β[2]) * 100),
+        (w8.beta[2]),
+        (d8.beta[2]),
+        (w8.beta[2]) - (d8.beta[2]),
+        ((((w8.beta[2]) - (d8.beta[2])) / (w8.beta[2])) * 100),
         "diet -> logOD",
     ),
 )
 push!(
     dummyfits,
     (
-        w10.β[2],
-        d10.β[2],
-        w10.β[2] - d10.β[2],
-        (((w10.β[2] - d10.β[2]) / w10.β[2]) * 100),
-        "weight -> logOD",
+        (w9.beta[2]),
+        (d9.beta[2]),
+        (w9.beta[2]) - (d9.beta[2]),
+        ((((w9.beta[2]) - (d9.beta[2])) / (w9.beta[2])) * 100),
+        "weight -> logOD"
     ),
 )
 push!(
     dummyfits,
     (
-        w11.β[2],
-        d11.β[2],
-        w11.β[2] - d11.β[2],
-        (((w11.β[2] - d11.β[2]) / w11.β[2]) * 100),
+        (w10.beta[2]),
+        (d10.beta[2]),
+        (w10.beta[2]) - (d10.beta[2]),
+        ((((w10.beta[2]) - (d10.beta[2])) / (w10.beta[2])) * 100),
         "sex -> logOD",
     ),
 )
 push!(
     dummyfits,
     (
-        w12.β[2],
-        d12.β[2],
-        w12.β[2] - d12.β[2],
-        (((w12.β[2] - d12.β[2]) / w12.β[2]) * 100),
-        "env -> logOD",
+        (w11.beta[2]),
+        (d11.beta[2]),
+        (w11.beta[2]) - (d11.beta[2]),
+        ((((w11.beta[2]) - (d11.beta[2])) / (w11.beta[2])) * 100),
+        "sex -> logOD",
+    ),
+)
+push!(
+    dummyfits,
+    (
+        (w12.beta[2]),
+        (d12.beta[2]),
+        (w12.beta[2]) - (d12.beta[2]),
+        ((((w12.beta[2]) - (d12.beta[2])) / (w12.beta[2])) * 100),
+        "time -> logOD",
     ),
 )
 
@@ -483,7 +483,7 @@ placebo4 = DataFrame(
 push!(placebo4,(w4.beta[2], "diet -> body mass"))
 push!(placebo4,(p4.beta[2], "placebo -> body mass"))
 
-placebo_4_plot = plot(placebo4, y = :Effect_size, x = :Edge, Geom.bar, color = :Edge)
+placebo_4_plot = plot(placebo4, y=:Effect_size, x=:Edge, Geom.bar, color=:Edge)
 
 
 
@@ -501,4 +501,4 @@ placebo8 = DataFrame(
 push!(placebo8,(w8.beta[2], "diet -> body mass"))
 push!(placebo8,(p8.beta[2], "placebo -> body mass"))
 
-placebo_8_plot = plot(placebo8, y = :Effect_size, x = :Edge, Geom.bar, color = :Edge)
+placebo_8_plot = plot(placebo8, y=:Effect_size, x=:Edge, Geom.bar, color=:Edge)
