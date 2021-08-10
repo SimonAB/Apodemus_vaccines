@@ -145,7 +145,7 @@ OD_predict_plot |> PNG("plots/OD_predict_plot.png")
 
 # quantile-quantile plot to examine fit
 qq = plot(
-    y=GLM.residuals(fitmodel),
+    y=GLM.residuals(fitallmodel),
     x=Normal(),
     Stat.qq,
     Geom.point,
@@ -195,10 +195,22 @@ bandsplot |> PNG("plots/bandsplot.png")
 
 # plot of residuals
 residualsplot = plot(
-    x=GLM.residuals(fitmodel),
+    x=GLM.residuals(fitallmodel),
     Geom.histogram,
     Guide.xlabel("residual size"),
     Guide.ylabel("frequency"),
 )
 
 residualsplot |> PNG("plots/residualsplot.png")
+
+# quantile-quantile plot to examine fit
+qq = plot(
+    y=GLM.residuals(fitallmodel),
+    x=Normal(),
+    Stat.qq,
+    Geom.point,
+    Guide.xlabel("theoretical normal quantiles"),
+    Guide.ylabel("sample residuals"),
+)
+
+qq |> PNG("plots/qq.png")
