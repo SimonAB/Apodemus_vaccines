@@ -130,6 +130,19 @@ common_cause_plot |> PNG("plots/common_cause_plots.png")
 
 include("5_predictions.jl")
 
+# plot training set for observed intercept
+OD_train_intercept_plot = plot(
+    train,
+    Geom.point,
+    x=:OD_predict,
+    y=:logOD,
+    Guide.xlabel("predicted log(10) IgG1 OD"),
+    Guide.ylabel("observed log(10) IgG1 OD"),
+    Geom.smooth(method=:lm),
+)
+
+OD_train_intercept_plot |> PNG("plots/OD_train_intercept_plot.png")
+
 # plot predictions
 OD_predict_plot = plot(
     test,
