@@ -111,7 +111,7 @@ lab_OD_Diet_plot = plot(
 lab_OD_Diet_plot |> PNG("plots/lab_OD_Diet_plot.png")
 
 # wild mice
-wildmice = data |> @filter(_.Env == "wild") |> DataFrame
+wildmice = data |> @filter(_.Env == "Wild") |> DataFrame
 
 # boxplot of weight by diet for wild mice
 wild_Weight_Diet_plot = plot(
@@ -123,7 +123,7 @@ wild_Weight_Diet_plot = plot(
     Guide.xlabel("Diet")
 )
 
-wild_Weight_Env_plot |> PNG("plots/wild_Weight_Diet_plot.png")
+wild_Weight_Diet_plot |> PNG("plots/wild_Weight_Diet_plot.png")
 
 # boxplot of fat scores by environment
 wild_dorsal_fat_Diet_plot = plot(
