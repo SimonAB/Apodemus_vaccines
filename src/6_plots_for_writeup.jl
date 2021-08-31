@@ -75,8 +75,7 @@ OD_time_plot = plot(
 OD_time_plot |> PNG("plots/OD_time_plot.png")
 
 # correlogram
-
-using StatPlots, pyplot()
+using StatsPlots
 corrplot(Array(data[[:logOD, :Env, :days_since_1st_D_inj]]), bins=10)
 
 

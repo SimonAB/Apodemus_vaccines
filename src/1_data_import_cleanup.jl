@@ -2,6 +2,7 @@ using DataFrames, Query
 using CategoricalArrays
 using CSV
 using StatsBase
+using Distributions
 using MLJ
 
 # Import dataset
@@ -15,7 +16,7 @@ raw_data |>
 @filter(_.days_since_1st_D_inj > 7) |> # remove entries which were measured less than a week after vaccination
 @filter(_.boost == 0) |> # remove entries which were vaccinated twice
 @filter(_.OD > 0) |> # remove individuals who didn't seroconvert
-DataFramePK
+DataFrame
 
 # Specify how to correctly treat columns
 coerce!(data,:ID => Union{Missing,Multiclass}, # treat these columns as factors which can also handle NAs
