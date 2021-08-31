@@ -159,7 +159,7 @@ wild_OD_Diet_plot = plot(
     Guide.xlabel("Diet")
 )
 
-wild_OD_Diet_plot |> PNG("plots/lab_OD_Diet_plot.png")
+wild_OD_Diet_plot |> PNG("plots/wild_OD_Diet_plot.png")
 
 
 # other OD plots
