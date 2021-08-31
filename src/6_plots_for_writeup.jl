@@ -8,12 +8,50 @@ using Cairo
 
 include("1_data_import_cleanup.jl")
 
+## Diet plots 
+# boxplot of weight by environment
+Weight_Env_plot = plot(
+    data,
+    x=:Diet,
+    y=:Weight,
+    color=:Diet,
+    Geom.boxplot,
+    Guide.ylabel("Body mass (g)"),
+    Guide.xlabel("Environment")
+)
+
+Weight_Env_plot |> PNG("plots/Weight_Env_plot.png")
+
+# boxplot of fat scores by environment
+dorsal_fat_Env_plot = plot(
+    data,
+    x=:Diet,
+    y=:Fat_Scores_Dorsal,
+    color=:Diet,
+    Geom.boxplot,
+    Guide.ylabel("Dorsal fat score"),
+    Guide.xlabel("Environment")
+)
+
+pelvic_fat_Env_plot = plot(
+    data,
+    x=:Diet,
+    y=:Fat_Scores_Pelvic,
+    color=:Diet,
+    Geom.boxplot,
+    Guide.ylabel("Pelvic fat score"),
+    Guide.xlabel("Environment")
+)
+
+# Fat_Scores_Env_plot = Compose.hstack(dorsal_fat_Env_plot, pelvic_fat_Env_plot)
+# Fat_Scores_Env_plot |> PNG("plots/Fat_Scores_Env_plot.png")
+
 # boxplot of OD by environment
 OD_Env_plot = plot(
     data,
-    x=:Env,
+    x=:Diet,
     y=:logOD,
-    color=:Env,
+    color=:Diet,
     Geom.boxplot,
     Guide.ylabel("log(10) IgG1 OD"),
     Guide.xlabel("Environment")
@@ -21,18 +59,42 @@ OD_Env_plot = plot(
 
 OD_Env_plot |> PNG("plots/OD_Env_plot.png")
 
-# boxplot of OD by sex
-OD_Sex_plot = plot(
+## Diet plots
+Weight_Env_plot = plot(
     data,
-    x=:Sex,
-    y=:logOD,
-    color=:Sex,
+    x=:Diet,
+    y=:Weight,
+    color=:Diet,
     Geom.boxplot,
-    Guide.ylabel("log(10) IgG1 OD"),
-    Guide.xlabel("Sex")
+    Guide.ylabel("Body mass (g)"),
+    Guide.xlabel("Diet")
 )
 
-OD_Sex_plot |> PNG("plots/OD_Sex_plot.png")
+Weight_Env_plot |> PNG("plots/Weight_Env_plot.png")
+
+# boxplot of fat scores by environment
+dorsal_fat_Env_plot = plot(
+    data,
+    x=:Diet,
+    y=:Fat_Scores_Dorsal,
+    color=:Diet,
+    Geom.boxplot,
+    Guide.ylabel("Dorsal fat score"),
+    Guide.xlabel("Diet")
+)
+
+pelvic_fat_Env_plot = plot(
+    data,
+    x=:Diet,
+    y=:Fat_Scores_Pelvic,
+    color=:Diet,
+    Geom.boxplot,
+    Guide.ylabel("Pelvic fat score"),
+    Guide.xlabel("Diet")
+)
+
+Fat_Scores_Diet_plot = hstack(dorsal_fat_Diet_plot, pelvic_fat_Diet_plot)
+Fat_Scores_Diet_plot |> PNG("plots/Fat_Scores_Diet_plot.png")
 
 # boxplot of OD by diet
 OD_Diet_plot = plot(
@@ -46,6 +108,19 @@ OD_Diet_plot = plot(
 )
 
 OD_Diet_plot |> PNG("plots/OD_Diet_plot.png")
+
+# boxplot of OD by sex
+OD_Sex_plot = plot(
+    data,
+    x=:Sex,
+    y=:logOD,
+    color=:Sex,
+    Geom.boxplot,
+    Guide.ylabel("log(10) IgG1 OD"),
+    Guide.xlabel("Sex")
+)
+
+OD_Sex_plot |> PNG("plots/OD_Sex_plot.png")
 
 # dot plot of OD by body mass
 OD_body_mass_plot = plot(
@@ -67,17 +142,12 @@ OD_time_plot = plot(
     x=:days_since_1st_D_inj,
     y=:logOD,
     Geom.point,
-    color=:Env,
+    color=:Diet,
     Guide.ylabel("log(10) IgG1 OD"),
     Guide.xlabel("time since vaccination (days)"),
 )
 
 OD_time_plot |> PNG("plots/OD_time_plot.png")
-
-# correlogram
-using StatsPlots
-corrplot(Array(data[[:logOD, :Env, :days_since_1st_D_inj]]), bins=10)
-
 
 # refutation plots
 
