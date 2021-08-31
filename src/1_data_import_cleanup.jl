@@ -13,6 +13,10 @@ data =
 raw_data |>
 @dropna(:ID) |> # remove entries which lack lab ID or PIT tag IDs
 @dropna(:Weight) |> # remove entries which lack a body mass measurement
+@dropna(:Diet) |> # remove entires which lack a Diet value
+@dropna(:Env) |> # remove entires which lack an Env value
+@dropna(:Fat_Scores_Dorsal) |>
+@dropna(:Fat_Scores_Pelvic) |> # drop missing fat scores
 @filter(_.days_since_1st_D_inj > 7) |> # remove entries which were measured less than a week after vaccination
 @filter(_.boost == 0) |> # remove entries which were vaccinated twice
 @filter(_.OD > 0) |> # remove individuals who didn't seroconvert

@@ -1,3 +1,4 @@
+using Gadfly
 using MixedModels
 using DataFrames, Query
 using CategoricalArrays
@@ -12,9 +13,8 @@ include("1_data_import_cleanup.jl")
 # boxplot of weight by environment
 Weight_Env_plot = plot(
     data,
-    x=:Diet,
+    x=:Env,
     y=:Weight,
-    color=:Diet,
     Geom.boxplot,
     Guide.ylabel("Body mass (g)"),
     Guide.xlabel("Environment")
@@ -25,33 +25,32 @@ Weight_Env_plot |> PNG("plots/Weight_Env_plot.png")
 # boxplot of fat scores by environment
 dorsal_fat_Env_plot = plot(
     data,
-    x=:Diet,
+    x=:Env,
     y=:Fat_Scores_Dorsal,
-    color=:Diet,
     Geom.boxplot,
     Guide.ylabel("Dorsal fat score"),
-    Guide.xlabel("Environment")
+    Guide.xlabel("Environment"),
+    Theme(key_position=:none),
 )
 
 pelvic_fat_Env_plot = plot(
     data,
-    x=:Diet,
+    x=:Env,
     y=:Fat_Scores_Pelvic,
-    color=:Diet,
     Geom.boxplot,
     Guide.ylabel("Pelvic fat score"),
-    Guide.xlabel("Environment")
+    Guide.xlabel("Environment"),
+    Theme(key_position=:none),
 )
 
-# Fat_Scores_Env_plot = Compose.hstack(dorsal_fat_Env_plot, pelvic_fat_Env_plot)
-# Fat_Scores_Env_plot |> PNG("plots/Fat_Scores_Env_plot.png")
+Fat_Scores_Env_plot = hstack(dorsal_fat_Env_plot, pelvic_fat_Env_plot)
+Fat_Scores_Env_plot |> PNG("plots/Fat_Scores_Env_plot.png")
 
 # boxplot of OD by environment
 OD_Env_plot = plot(
     data,
     x=:Diet,
     y=:logOD,
-    color=:Diet,
     Geom.boxplot,
     Guide.ylabel("log(10) IgG1 OD"),
     Guide.xlabel("Environment")
@@ -60,61 +59,115 @@ OD_Env_plot = plot(
 OD_Env_plot |> PNG("plots/OD_Env_plot.png")
 
 ## Diet plots
-Weight_Env_plot = plot(
-    data,
+# lab mice
+labmice = data |> @filter(_.Env == "Lab") |> DataFrame
+
+# boxplot of weight by diet for wild mice
+lab_Weight_Diet_plot = plot(
+    labmice,
     x=:Diet,
     y=:Weight,
-    color=:Diet,
     Geom.boxplot,
     Guide.ylabel("Body mass (g)"),
     Guide.xlabel("Diet")
 )
 
-Weight_Env_plot |> PNG("plots/Weight_Env_plot.png")
+lab_Weight_Diet_plot |> PNG("plots/lab_Weight_Diet_plot.png")
 
 # boxplot of fat scores by environment
-dorsal_fat_Env_plot = plot(
-    data,
+lab_dorsal_fat_Diet_plot = plot(
+    labmice,
     x=:Diet,
     y=:Fat_Scores_Dorsal,
-    color=:Diet,
     Geom.boxplot,
     Guide.ylabel("Dorsal fat score"),
-    Guide.xlabel("Diet")
+    Guide.xlabel("Environment"),
+    Theme(key_position=:none),
 )
 
-pelvic_fat_Env_plot = plot(
-    data,
+lab_pelvic_fat_Diet_plot = plot(
+    labmice,
     x=:Diet,
     y=:Fat_Scores_Pelvic,
-    color=:Diet,
     Geom.boxplot,
     Guide.ylabel("Pelvic fat score"),
-    Guide.xlabel("Diet")
+    Guide.xlabel("Environment"),
+    Theme(key_position=:none),
 )
 
-Fat_Scores_Diet_plot = hstack(dorsal_fat_Diet_plot, pelvic_fat_Diet_plot)
-Fat_Scores_Diet_plot |> PNG("plots/Fat_Scores_Diet_plot.png")
+lab_Fat_Scores_Diet_plot = hstack(lab_dorsal_fat_Diet_plot, lab_pelvic_fat_Diet_plot)
+lab_Fat_Scores_Diet_plot |> PNG("plots/lab_Fat_Scores_Diet_plot.png")
 
 # boxplot of OD by diet
-OD_Diet_plot = plot(
-    data,
+lab_OD_Diet_plot = plot(
+    labmice,
     x=:Diet,
     y=:logOD,
-    color=:Diet,
     Geom.boxplot,
     Guide.ylabel("log(10) IgG1 OD"),
     Guide.xlabel("Diet")
 )
 
-OD_Diet_plot |> PNG("plots/OD_Diet_plot.png")
+lab_OD_Diet_plot |> PNG("plots/lab_OD_Diet_plot.png")
 
+# wild mice
+wildmice = data |> @filter(_.Env == "wild") |> DataFrame
+
+# boxplot of weight by diet for wild mice
+wild_Weight_Diet_plot = plot(
+    wildmice,
+    x=:Diet,
+    y=:Weight,
+    Geom.boxplot,
+    Guide.ylabel("Body mass (g)"),
+    Guide.xlabel("Diet")
+)
+
+wild_Weight_Env_plot |> PNG("plots/wild_Weight_Diet_plot.png")
+
+# boxplot of fat scores by environment
+wild_dorsal_fat_Diet_plot = plot(
+    wildmice,
+    x=:Diet,
+    y=:Fat_Scores_Dorsal,
+    Geom.boxplot,
+    Guide.ylabel("Dorsal fat score"),
+    Guide.xlabel("Environment"),
+    Theme(key_position=:none),
+)
+
+wild_pelvic_fat_Diet_plot = plot(
+    wildmice,
+    x=:Diet,
+    y=:Fat_Scores_Pelvic,
+    Geom.boxplot,
+    Guide.ylabel("Pelvic fat score"),
+    Guide.xlabel("Environment"),
+    Theme(key_position=:none),
+)
+
+wild_Fat_Scores_Diet_plot = hstack(wild_dorsal_fat_Diet_plot, wild_pelvic_fat_Diet_plot)
+wild_Fat_Scores_Diet_plot |> PNG("plots/wild_Fat_Scores_Diet_plot.png")
+
+# boxplot of OD by diet
+wild_OD_Diet_plot = plot(
+    wildmice,
+    x=:Diet,
+    y=:logOD,
+    Geom.boxplot,
+    Guide.ylabel("log(10) IgG1 OD"),
+    Guide.xlabel("Diet")
+)
+
+wild_OD_Diet_plot |> PNG("plots/lab_OD_Diet_plot.png")
+
+
+# other OD plots
 # boxplot of OD by sex
 OD_Sex_plot = plot(
     data,
     x=:Sex,
     y=:logOD,
-    color=:Sex,
     Geom.boxplot,
     Guide.ylabel("log(10) IgG1 OD"),
     Guide.xlabel("Sex")
@@ -136,13 +189,12 @@ OD_body_mass_plot = plot(
 
 OD_body_mass_plot |> PNG("plots/OD_body_mass_plot.png")
 
-# dot plot of OD by body mass
+# dot plot of OD by time
 OD_time_plot = plot(
     data,
     x=:days_since_1st_D_inj,
     y=:logOD,
     Geom.point,
-    color=:Diet,
     Guide.ylabel("log(10) IgG1 OD"),
     Guide.xlabel("time since vaccination (days)"),
 )

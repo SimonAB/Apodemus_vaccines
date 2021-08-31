@@ -32,7 +32,7 @@ function condR2(m::MixedModel)
     return conditional_R2
 end
 
-condR2(fitmodel)
+
 
 # predict OD for the entire set
 data.OD_predict = (
@@ -47,3 +47,5 @@ data.OD_predict = (
 fitallmodel = fit(MixedModel, @formula(logOD ~ OD_predict + (1 | ID)), data)
 
 condR2(fitallmodel)
+
+condR2(fitmodel)
