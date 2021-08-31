@@ -2,6 +2,7 @@ using DataFrames, Query
 using CategoricalArrays
 using CSV
 using StatsBase
+using Distributions
 using MLJ
 
 # Import dataset
