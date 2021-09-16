@@ -211,7 +211,6 @@ placebo_4_plot = plot(
     y=:Effect_size,
     x=:Edge,
     Geom.bar,
-    color=:Edge,
     Guide.ylabel("Effect Size"),
     Guide.xlabel(nothing))
 
@@ -222,7 +221,6 @@ placebo_8_plot = plot(
     y=:Effect_size,
     x=:Edge,
     Geom.bar,
-    color=:Edge,
     Guide.ylabel("Effect Size"),
     Guide.xlabel(nothing))
 
