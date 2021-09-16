@@ -498,7 +498,7 @@ placebo8 = DataFrame(
     Edge=String[],
 )
 
-push!(placebo8,(w8.beta[2], "diet -> body mass"))
-push!(placebo8,(p8.beta[2], "placebo -> body mass"))
+push!(placebo8,(w8.beta[2], "diet -> OD"))
+push!(placebo8,(p8.beta[2], "placebo -> OD"))
 
 placebo_8_plot = plot(placebo8, y=:Effect_size, x=:Edge, Geom.bar, color=:Edge)
