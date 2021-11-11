@@ -1,0 +1,194 @@
+% FIGURE LIST
+
+%%%%%%% MAIN FIGURES %%%%%%%
+
+\newcommand{\FigParasites}{
+    \begin{wrapfigure}{R}{0.5\textwidth}
+       \vspace{-16pt}
+        \ffigbox[\FBwidth]
+                {
+                    \includegraphics[width=0.93\textwidth, keepaspectratio=true]{sheep-arc-figures/Fig 1 parasite counts.pdf}
+                }
+                {
+                    \caption{\textbf{Vaccine- and age-mediated control of \emph{T. circumcincta} infection.} \textbf{a}, Worm burdens and \textbf{b}, total egg output in 3 month-old lambs with vaccination (3mo-Vax), 3 month-old lambs with adjuvant only (3mo-Ctrl), 6 month-old lambs with vaccination (6mo-Vax), and 6 month-old lambs with adjuvant only (6mo-Ctrl). Immunisation with the prototype vaccine led to a median 73.7\% reduction (P\textsubscript{vacc}~$=$~0.002, GLM) in worm counts and 50\% reduction (P\textsubscript{vacc}~$=$~0.026, GLM) in cumulative egg output.}
+                     \label{fig:parasites}
+                 }
+       \vspace{-12pt}
+    \end{wrapfigure}
+}
+
+% Alternative Fig 1
+% \newcommand{\FigParasites}{
+%     \begin{figure}[hp]
+
+%         \includegraphics[width=0.6\textwidth, keepaspectratio=true]{sheep-arc-figures/Fig 1 parasite counts.pdf}
+
+%         \caption{\textbf{Vaccine- and age-mediated control of \emph{T. circumcincta} infection.} \textbf{a}, Worm burdens and \textbf{b}, total egg output in 3 month-old lambs with vaccination (3mo-Vax), 3 month-old lambs with adjuvant only (3mo-Ctrl), 6 month-old lambs with vaccination (6mo-Vax), and 6 month-old lambs with adjuvant only (6mo-Ctrl). Immunisation with the prototype vaccine led to a median 73.7\% reduction (P\textsubscript{vacc}~$=$~0.002, GLM) in worm counts and 50\% reduction (P\textsubscript{vacc}~$=$~0.026, GLM) in cumulative egg output.}
+
+%         \label{fig:parasites}
+
+%     \end{figure}
+% }
+
+\newcommand{\FigCircle}{
+\begin{figure}[hp]
+    \includegraphics[width=\textwidth, keepaspectratio=true]{sheep-arc-figures/Fig 2 pathway circle.pdf}
+
+    \caption{\textbf{Temporal dynamics of the expression of immune
+        pathways that predict either post-mortem worm burden or
+        cFEC identified by supervised machine learning
+        ElasticNet.} Heat map indicates the pathway enrichment
+        reported as negative $log_{10}^{\mathrm{P-value}}$,
+        where the dark red denotes stronger enrichment within
+        each pathway. Each concentric circle represents one of
+        six time-points at which abomasal biopsies were taken
+        after challenge infection. Worm burdens predicted by these
+        pathways were measured at D49 post challenge.}
+
+    \label{fig:circular}
+\end{figure}
+
+}
+
+\newcommand{\FigEnetcorr}{
+    \begin{figure}[htbp]
+    \includegraphics[width=\textwidth, keepaspectratio=true]{sheep-arc-figures/Fig 3 Enet_corr.pdf}
+
+    \caption{\textbf{Heat map of correlation coefficients} between
+        \textbf{a}, worm burdens or \textbf{b}, cFEC and gene
+        expression in the selected pathways before challenge
+        (D0), seven (D7) and 21 (D21) days post challenge in
+        vaccinated and control lambs. Colours represent negative
+        (red) and positive (blue) Pearson correlation
+        coefficients for each comparison. The immune pathways
+        were clustered using k-means according to their
+        correlation patterns over time in the vaccinated group.}
+
+    \label{fig:enet_corr}
+\end{figure}
+
+}
+
+\newcommand{\FigWGCNA}{
+    \begin{figure}[htbp]
+    \includegraphics[width=\textwidth, keepaspectratio=true]{sheep-arc-figures/Fig 4 WGCNA_gene_expression.pdf}
+
+    \caption{\textbf{Gene expression within immune pathways
+    significantly affected by immunisation, age, or both.}
+        \textbf{a} Heat map of gene expression over time within
+        the four treatments (3mo-Vax, 3mo-Ctrl, 6mo-Vax, and
+        6mo-Ctrl). High to low scaled expression is denoted with
+        blue to white hues. \textbf{b} Heat map of a generalised
+        mixed model t value statistic (number of standard
+        deviations from the mean)~\supercite{Bates2015} indicating
+        the effect of age, vaccination, and the interaction
+        between age and vaccination on the expression of each
+        pathway. Purple indicates a dampening effect on the
+        expression of the pathway while yellow indicates
+        increased expression of that pathway relative to the
+        global average. Pathways included are those presented in
+        Fig.~\ref{fig:circular}. The full list of gene expression
+        is available in Fig.~\ref{suppfig:PathwayDynamics}.}
+
+    \label{fig:WGCNA_gene_expression}
+\end{figure}
+}
+
+%%%%%%% SUPPLEMENTARY FIGURES %%%%%%%
+
+\newcommand{\SuppFigTimeline}{
+    \begin{figure}[H]
+        \includegraphics[width=\textwidth, keepaspectratio=true]{sheep-arc-figures/Fig S1 exp timeline.pdf}
+
+       \caption{\textbf{Experimental design.} Timeline of immunisation, challenge, and sampling of sheep.}
+
+        \label{suppfig:timeline}
+    \end{figure}
+}
+
+\newcommand{\SuppFigFlow}{
+    \begin{figure}[H]
+        \includegraphics[width=\textwidth, keepaspectratio=true]{sheep-arc-figures/Fig S2 analysis pipeline.pdf}
+
+        \caption{\textbf{Data analysis pipeline overview.} Depiction of the
+            flow through which raw transcript counts were taken
+            to extract immunological information relevant to the
+            response to vaccination and infection.
+        }
+
+        \label{suppfig:flow}
+    \end{figure}
+}
+
+\newcommand{\SuppFigTSNE}{
+    \begin{figure}[H]
+    \includegraphics[width=\textwidth, keepaspectratio=true]{sheep-arc-figures/Fig S3 t_sne.pdf}
+
+    \caption{\textbf{Unsupervised clustering of transcriptomes per
+        treatment and day post challenge.} The $\sim$15K
+        transcripts were reduced to two components using
+        t-Distributed Stochastic Neighbour Embedding
+        (t-SNE)~\supercite{Maaten2008} to visualise the datasets in
+        two-dimensional space. Samples clustered weakly by
+        treatment but more distinctly by day post challenge
+        (DPC), specifically before \emph{vs.} after 14 DPC.}
+
+    \label{suppfig:t-sne}
+\end{figure}
+}
+
+\newcommand{\SuppFigEnetmodules}{
+\begin{figure}[H]
+    \includegraphics[width=\textwidth, keepaspectratio=true]{sheep-arc-figures/Fig S4 ElasticNet coefficients.pdf}
+
+    \caption{\textbf{ElasticNet coefficients bar plot of WGCNA modules
+        associated with worm burden and cFEC across 42 days post
+        challenge.} Only modules with ElasticNet coefficients
+        ≠ 0 are depicted and were retained for further
+        analysis.
+    }
+
+    \label{suppfig:enetmodules}
+\end{figure}
+}
+
+\newcommand{\SuppFigDiffexp}{
+    \begin{figure}[H]
+        \includegraphics[width=\textwidth, keepaspectratio=true]{sheep-arc-figures/Fig S5 diff_exp.pdf}
+
+        \caption{\textbf{Time dynamics of differentially expressed (DE)
+            genes.} \textbf{a}, Number of DE genes in each WGCNA
+            modules within each of 4 pairwise DE pairwise
+            comparisons: 3 month-old control \emph{vs.}
+            6 month-old control (`3mo-Ctrl vs 6mo-Ctrl'),
+            3 month-old vaccinated \emph{vs.} 3 month-old
+              control (`3mo-Vax \emph{vs} 3mo-Ctrl'),
+              6 month-old vaccinated \emph{vs.} 6 month-old
+                control (`6mo-Vax \emph{vs} 6mo-Ctrl') and
+              3 month-old vaccinated \emph{vs.} 6 month-old
+                vaccinated (`3mo-Vax \emph{vs} 6mo-Vax').
+                \textbf{b}, Venn diagram of all genes from four
+                pairwise comparisons. \textbf{c} Heat map of the
+                temporal expression patterns of significant DE
+                gene expression. Individual genes within
+                clusters 1—7 are shown in columns (see full
+            gene list in Supplementary Data 2). Each row
+        represents either 3mo or 6mo vaccinated lambs at
+    different time points.}
+
+        \label{suppfig:diff_exp}
+    \end{figure}
+}
+
+\newcommand{\SuppFigPathwayDynamics}{
+\begin{figure}[H]
+    \includegraphics[width=\textwidth, keepaspectratio=true]{sheep-arc-figures/Fig S6 pathway_dynamics.pdf}
+
+    \caption{\textbf{Time course of pathways significantly represented
+        in abomasal transcriptomes.} Mean scaled expression
+        levels in each pathway predictive of worm burdens and/or
+    cFEC, selected in ~\nameref{fig:circular}. Points represent individual lambs at each time point and lines represent corresponding mean values for: vaccinated (solid lines); control (dashed lines); 3-month-old (red); and 6-month-old (blue) lambs.}
+
+    \label{suppfig:PathwayDynamics}
+\end{figure}
+}

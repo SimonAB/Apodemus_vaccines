@@ -1,0 +1,17 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+[remote "origin"]
+	url = https://github.com/SimonAB/sheep_arc_manuscript.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+	github-pr-owner-number = "SimonAB#sheep_arc_manuscript#11"
+[branch "NPJ_Vaccines"]
+	remote = origin
+	merge = refs/heads/NPJ_Vaccines

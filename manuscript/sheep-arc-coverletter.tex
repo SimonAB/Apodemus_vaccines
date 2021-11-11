@@ -1,0 +1,116 @@
+%! TEX program = lualatex
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Professional Formal Letter
+% LaTeX Template
+% Version 2.0 (12/2/17)
+%
+% This template originates from:
+% http://www.LaTeXTemplates.com
+%
+% Authors:
+% Brian Moses
+% Vel (vel@LaTeXTemplates.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%-------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%-------------------------------------------------------------------------------
+
+\documentclass[11pt, a4paper]{letter} % Set the font size (10pt, 11pt and 12pt) and paper size (letterpaper, a4paper, etc)
+
+\input{structure.tex} % Include the file that specifies the document structure
+
+\longindentation=0pt % Un-commenting this line will push the closing "Sincerely," and date to the left of the page
+
+%-------------------------------------------------------------------------------
+%	YOUR INFORMATION
+%-------------------------------------------------------------------------------
+
+\Who{Dr. Simon A. Babayan} % Your name
+
+\Title{, PhD} % Your title, leave blank for no title
+
+\authordetails{
+	Institute of Biodiversity, Animal Health, \\\& Comparative Medicine\\ % Your department/institution
+	Graham Kerr Building\\ % Your address
+	Glasgow, G12 8QQ\\ % Your city, zip code, country, etc
+	Email: simon.babayan@glasgow.ac.uk\\ % Your email address
+}
+
+%-------------------------------------------------------------------------------
+%	HEADER CONTENTS
+%-------------------------------------------------------------------------------
+
+\logo{UoG_logo.png} % Logo filename, your logo should have square dimensions (i.e. roughly the same width and height), if it does not, you will need to adjust spacing within the HEADER STRUCTURE block in structure.tex (read the comments carefully!)
+
+\headerlineone{University} % Top header line, leave blank if you only want the bottom line
+
+\headerlinetwo{\emph{of} Glasgow} % Bottom header line
+
+%-------------------------------------------------------------------------------
+
+\begin{document}
+
+%-------------------------------------------------------------------------------
+%	TO ADDRESS
+%-------------------------------------------------------------------------------
+
+\begin{letter}{
+    Editorial Board of \emph{NPJ Vaccines}.
+}
+
+%-------------------------------------------------------------------------------
+%	LETTER CONTENT
+%-------------------------------------------------------------------------------
+
+\opening{Dear editors,}
+
+We are pleased to submit our manuscript entitled \textbf{``Vaccine-induced time- and age-dependent mucosal immunity to gastrointestinal parasite infection''} for consideration for publication in NPJ Vaccines.
+
+The mechanisms that underlie poor responsiveness to vaccination remain poorly understood, which leads to substantial loss of investment in vaccine development, to imperfect protection of vaccinated populations, and hampers herd immunity. This gap in our knowledge impacts all vaccines, be they destined for humans, domesticated animals or wildlife.
+
+The main novelties of our study include a methodological approach to addressing these knowledge gaps that combines machine learning, bioinformatics, and network analysis; new mechanistic insight into the factors that drive variation in vaccine efficacy \ul{at the site of infection}; and identification of the immune pathways which those factors affect.
+
+Our study system has afforded us unique power to disentangle these processes: we repeatedly sampled the mucosal tissue of the same individuals at the site of infection over the course of several weeks. Specifically, we investigated how the interactions between vaccination and age affect different immune pathways during infection by the gastrointestinal parasite \emph{Teladorsagia circumcincta}, which causes massive health problems and economic losses to sheep farming. We used a vaccine candidate we previously found to be promising but that varied substantially in efficacy\footnotemark, immunised lambs of two age groups, and tracked changes in transcriptional profiles \emph{in situ}.
+
+Highlights of our findings include the shift from primarily innate to primarily adaptive protective immunity from 3- to 6-months of age in lambs; the ability of the vaccine delivered subcutaneously to radically change the transcriptome in the abomasal mucosa even prior to challenge; the greater plasticity of the response to antigen exposure in older individuals; the pathway-specific interactions between age and vaccination with corollary age-invariant and age-dependant protective immune pathways. As far as we know, these fascinating characteristics of the immune system have never been documented in such temporal resolution nor depth within a single study. Future work could build on these findings to refine vaccine formulation, predict optimal age at vaccine delivery, and build a causal model from the associations we are reporting.
+
+We therefore expect this work will be of interest to multiple disciplines in addition to vaccinology, for example in the growing field of systems biology and personalised medicine. This is why we believe it is an excellent fit for NPJ vaccines.
+
+We suggest a multidisciplinary set of reviewers for our paper, as it covers machine learning, systems vaccinology, and mucosal immunology of ruminants:
+
+\begin{itemize}
+        \item Prof. Andrea Graham, Princeton University, algraham@princeton.edu: expertise in immunology, mathematical and statistical modelling, sheep infections.
+        \item Prof. David Emery, Faculty of Veterinary Science, University of Sydney, Australia; david.emery@sydney.edu.au: Experienced ruminant parasite immunologist.
+        \item Dr. Jean-Christophe Bambou, URZ Recherches Zootechniques, Guadeloupe, France; jean-christophe.bambou@inra.fr: has studied transcriptomic changes to GI nematodes in goats.
+\end{itemize}
+
+All authors have approved the submission of this manuscript. This manuscript has been released as a preprint on bioRxiv (\url{https://www.biorxiv.org/content/10.1101/2021.04.28.441781v1}), and all data and code will be made available at \url{https://github.com/SimonAB} upon publication, and can be made available to the editors for review if requested.
+
+\closing{Sincerely, on behalf of my co-authors,}
+
+
+
+% FOOTNOTES
+\footnotetext{A. J. Nisbet, T. N. McNeilly, L. A. Wildblood, A. A. Morrison, D. J. Bartley \emph{et al.}, Successful immunization against a parasitic nematode by vaccination with recombinant proteins. \emph{Vaccine} 31, 4017–4023 (2013).}
+
+%-------------------------------------------------------------------------------
+%	OPTIONAL RIGHT-HAND FOOTNOTE
+%-------------------------------------------------------------------------------
+
+% Uncomment the 4 lines below to print a footnote with custom text
+% \def\thefootnote{}
+% \def\footnoterule{\hrule}
+% \footnotetext{\hspace*{\fill}{\footnotesize \thepage/\pageref{LastPage}}}
+% \def\thefootnote{\arabic{footnote}}
+
+%-------------------------------------------------------------------------------
+
+\end{letter}
+
+\end{document}

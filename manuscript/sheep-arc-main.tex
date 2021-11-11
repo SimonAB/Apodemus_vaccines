@@ -1,0 +1,902 @@
+%! TEX program = lualatex
+% For exporting as word use:
+% pandoc -s sheep-arc-main.tex --filter pandoc-crossref --citeproc --csl nature.csl --bibliography=sheep-arc-refs.bib -o ../Liu_et_al_R1.docx
+
+\documentclass[a4paper, hidelinks, 11pt]{article}
+
+%%%%%%%%%%%%%%%%% LOAD PACKAGES %%%%%%%%%%%%%%%%
+\usepackage[british]{babel}
+\usepackage{microtype}
+
+% font settings
+\usepackage{fontspec}
+\usepackage{mathtools}
+\usepackage{textcomp}
+\usepackage{eurosym}
+\usepackage{unicode-math}
+
+\defaultfontfeatures{Ligatures=TeX}
+
+\setmainfont[
+    Extension=.otf,
+    UprightFont= *-regular,
+    BoldFont=*-bold,
+    ItalicFont=*-italic,
+    BoldItalicFont=*-bolditalic,
+    ]{TeX Gyre Pagella}
+
+\setsansfont[
+        Extension=.otf,
+        UprightFont= *-regular,
+        BoldFont=*-bold,
+        ItalicFont=*-italic,
+        BoldItalicFont=*-bolditalic,
+        ]{TeX Gyre Heros}
+
+\setmathfont{TeX Gyre Pagella Math}
+
+\setmonofont{TeX Gyre Cursor}[Scale=1]
+
+
+% headings
+\usepackage{titlesec}
+
+\titleformat*{\section}{\large\bfseries\sffamily\MakeUppercase}
+\titleformat*{\subsection}{\normalsize\bfseries\sffamily}
+\titleformat*{\subsubsection}{\normalsize\bfseries\sffamily}
+\titleformat*{\paragraph}{\normalsize\bfseries\sffamily}
+\titleformat*{\subparagraph}{\normalsize\bfseries\sffamily}
+
+% page setup
+\usepackage{fancyhdr}
+\usepackage{authblk}
+\usepackage{booktabs} % For prettier tables
+\usepackage{color}
+\usepackage{lineno}
+% \modulolinenumbers[5]
+\usepackage{csquotes}
+\linenumbers
+
+% Text alignment (comment out for fully justified)
+\usepackage[document]{ragged2e}
+
+% prevent widows and orphans
+\usepackage[defaultlines=2,all]{nowidow}
+\usepackage{needspace}
+
+% create outline and links in pdf
+\usepackage{hyperref}
+\usepackage[numbered]{bookmark}
+\makeatletter
+\renewcommand\@seccntformat[1]{}
+\makeatother
+
+% debug warnings
+% \overfullrule=1cm
+
+
+%%%%%%%%%%%%%%%%% TABLES & FIGURES %%%%%%%%%%%%%%%%
+% captions
+\usepackage[labelfont=footnotesize,textfont=footnotesize,singlelinecheck=off,justification=raggedright]{subcaption}
+\DeclareCaptionLabelSeparator{pipe}{\textrm{ | }}
+\usepackage[figurename=Fig.,
+            font={sf,footnotesize},
+            labelfont=bf,
+            labelsep=quad]{caption}
+
+% figures:
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{floatrow}
+
+% tables:
+\usepackage{tabulary}
+\usepackage{multirow}
+\usepackage{ltablex}
+\usepackage{longtable} % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{threeparttable}
+
+%%%%%%%%%%%%%%%%% BIBLIOGRAPHY %%%%%%%%%%%%%%%%
+\usepackage[
+    style=nature,
+    sorting=none,
+    backend=biber,
+    ]{biblatex}
+\addbibresource{sheep-arc-refs.bib}
+\renewcommand*{\bibfont}{\sffamily\footnotesize}
+
+%%%%%%%%%%%%%%%%% ANNOTATIONS %%%%%%%%%%%%%%%%
+\usepackage{soul} % highlighting & strikeout
+\setlength{\marginparwidth}{2cm} % make room for comments
+\usepackage[colorinlistoftodos, textsize=tiny]{todonotes}
+
+%%%%%%%%%%%%%%%%% PAGE SETUP %%%%%%%%%%%%%%%%
+\topmargin0.3cm
+\oddsidemargin0.0cm
+\textwidth15cm
+\textheight22cm
+\footskip1.3cm
+
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[RO]{\emph{Teladorsagia circumcincta} vaccinomics}
+% \fancyfoot[RO, LE]{\thepage{}}
+\fancyfoot[c]{\thepage{}}
+
+\setlength{\headheight}{14pt}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+%%%%%%%%%%%%%%%%% TITLE PAGE %%%%%%%%%%%%%%%%
+
+\title{Vaccine-induced time- and age-dependent mucosal immunity to gastrointestinal parasite infection}
+
+\author[1,\dag]{Wei Liu} % 0000-0001-9953-2813
+\author[2,\dag,*]{Tom N. McNeilly} % 0000-0001-6469-0512
+\author[2]{Mairi Mitchell}
+\author[2]{Stewart T.G. Burgess} % 0000-0002-9268-7641
+\author[2]{Alasdair J. Nisbet} % 0000-0002-4965-5396
+\author[2,3,\dag]{Jacqueline B. Matthews} % 0000-0001-9405-5560
+\author[1,2,\dag,*]{Simon A. Babayan} % 0000-0002-4949-1117
+
+\affil[1]{Institute of Biodiversity, Animal Health and Comparative Medicine, University of Glasgow, Glasgow, G12 8QQ, Scotland, UK,}
+\affil[2]{The Moredun Research Institute, Pentlands Science Park, EH26 0PZ, Scotland, UK,}
+\affil[3]{Roslin Technologies Limited, Roslin Innovation Centre, University of Edinburgh, Easter Bush, EH25 9RG, Scotland, UK}
+\affil[ \dag]{These authors contributed equally to this work}
+\affil[*]{Corresponding authors: tom.mcneilly@moredun.ac.uk, simon.babayan@glasgow.ac.uk}
+
+% \renewcommand\Authfont{\normalsize}
+\renewcommand\Affilfont{\normalsize}
+
+% Include the date command, but leave its argument blank.
+\date{}
+
+% Set title for the abstract (default is "Abstract")
+\addto\captionsbritish{\renewcommand\abstractname{\vspace{-\baselineskip}}}
+
+%%%%%%%%%%%%%%%%% END OF PREAMBLE %%%%%%%%%%%%%%%%
+
+\begin{document}
+% Import list of figures
+\input{sheep-arc-figures.tex}
+
+% Double-space the manuscript.
+\baselineskip24pt
+
+% Make the title.
+\maketitle
+
+% \listoftodos
+
+\begin{abstract}
+
+\noindent\bf\textsf{Individuals vary broadly in their response to vaccination and subsequent challenge infection, with poor vaccine responders causing persistence of both infection and transmission in populations. Yet despite having substantial economic and societal impact, the immune mechanisms that underlie such variability, especially in infected tissues, remain poorly understood. Here, to characterise how antihelminthic immunity at the mucosal site of infection developed in vaccinated lambs, we inserted gastric cannulae into the abomasa of three-month- and six-month-old lambs and longitudinally analysed their local immune response during subsequent challenge infection. The vaccine induced broad changes in pre-challenge abomasal immune profiles and reduced parasite burden and egg output post-challenge, regardless of age. However, age affected how vaccinated lambs responded to infection across multiple immune pathways: adaptive immune pathways were typically age-dependent. Identification of age-dependent and age-independent protective immune pathways may help refine the formulation of vaccines, and indicate specificities of pathogen-specific immunity more generally.}
+
+\end{abstract}
+
+\textbf{Keywords:} Helminth; vaccine; immunoparasitology; machine learning; pathway analysis; ageing.
+
+\pagebreak
+\section{Introduction}
+
+Individuals vary widely in their responses to vaccination and little is known
+about the causes underlying low vaccine efficacy, nor how effective a vaccine
+will be ``in the real world'' against the pathogen for which it has been
+developed. In fact, for most pathogens, imperfect vaccination is the rule rather
+than the exception~\supercite{Weinberg2010}. This is particularly problematic
+for helminths, as vaccination is \textcolor{red}{one of} the most promising alternative\textcolor{red}{s} to anthelmintic
+drug treatments~\supercite{Bartsch2016} in the face of extensive drug
+resistance, which is rising in human parasites~\supercite{Campbell2016,
+Doyle2017} and ubiquitous in many helminths of livestock, including in
+sheep~\supercite{Redman2015, Doyle2018,RoseVineer2020}. In both vaccinated and
+non-vaccinated animals, even a minority of infected individuals can release
+substantial numbers of helminth eggs into the environment, ensuring that
+infection persists within populations~\supercite{Lloyd-Smith2005}. While the
+need for better prediction of vaccine responsiveness has long been recognised,
+the complexity of the factors involved — from variation in genetic
+background~\supercite{Beraldi2007a, Periasamy2014} to differences in age, sex,
+and immune history~\supercite{Pedersen2011, Babayan2011}, combined with immune
+evasion strategies deployed by helminths to ensure persistent
+infection~\supercite{McNeilly2013, Finlay2014, Grencis2015} — have so far
+hampered the development of effective sub-unit vaccines for controlling
+helminths~\supercite{Babayan2012a}. Resistance to several anthelmintic compounds
+in sheep nematodes in the UK alone is estimated to cost in excess of £40M
+annually~\supercite{Charlier2020}. With the need for effective vaccines ever
+more pressing, it is therefore urgent to identify which immune pathways mediate
+vaccine efficacy, and to understand how they change over time and with host age.
+
+We recently developed a prototype subunit vaccine against \emph{Teladorsagia
+circumcincta}, a major contributor to parasitic gastroenteritis in sheep. This
+parasitic nematode resides in the abomasum (the gastric compartment of the
+ruminant stomach) and is primarily a cause of disease in lambs. Third-stage
+larvae (L3) penetrate glands within 24 h of infection and grow rapidly,
+undergoing two moults before emerging into the abomasal lumen approximately 10
+days post-infection~\supercite{McNeilly2009}. The resulting pathology manifests
+as anorexia, diarrhoea and poor productivity. The prototype vaccine achieves
+58–70\% reduction in worm burdens and up to 73–92\% fewer eggs at the peak of
+worm egg shedding compared to challenge controls~\supercite{Nisbet2013}. Such
+reductions in cumulative worm faecal egg counts (cFEC) are expected to have a
+substantial impact on pasture contamination and modelling studies indicate that
+reductions of this magnitude will parallel effective anthelmintic-driven
+parasite control measures~\supercite{Barnes1995}. However, substantial variation
+in the efficacy of this vaccine has been observed among
+individuals~\supercite{Nisbet2013, Nisbet2019}. Such variability can be due to
+multiple genetic and environmental factors~\supercite{Stear1997, Nussey2014,
+Grencis2015}. While genetic factors can be manipulated by selective breeding and
+environmental factors such as nutritional resource can be optimised under
+farming conditions, any vaccine against \emph{T. circumcincta} is likely to be
+most effective if administered to lambs before exposure to worms on pasture and
+to protect them during the late spring/summer period in which their growth rate
+is most susceptible to the impact of parasitic gastroenteritis. This, however,
+raises concerns since the immature immune system is known to respond poorly to
+immunisation~\supercite{McClure1998, McRae2015, Babayan2018b}. We therefore
+sought to compare the efficacy and the immune responses to our prototype vaccine
+in two different age groups, 3-month-old (3mo) and 6-month-old (6mo) lambs to
+attempt to understand age- and vaccine-dependent protective immunity at the site
+of infection to inform further optimisation of the vaccine.
+
+How lambs of different ages respond immunologically to our prototype vaccine
+over the course of repeated exposure and during chronic infection by \emph{T.
+circumcincta} is not known. We therefore analysed the immune gene expression
+pathways elicited by immunisation and subsequent repeated challenge infection
+with \emph{T. circumcincta} in the abomasum using sequential gastric biopsies
+aligned to a novel machine-based learning approach, to characterise: (a) which
+immune pathways are associated with variation in parasite burdens and parasite
+egg output and when they are expressed during the course of infection; (b) at
+what time during the course of the infection are those pathways associated with
+protection, and (c) how those pathways are affected by both vaccination and
+host age.
+
+\section{Results}
+
+\subsection{Vaccination reduced worm burdens and egg shedding in
+both 3mo and 6mo lambs.}
+
+We sought to identify the immune mechanisms underlying variation in the ability
+of the prototype vaccine to control \emph{T. circumcincta} infection in lambs
+and to characterise how lamb age affects vaccine efficacy. Three- and
+six-month-old lambs were vaccinated using our previously-published protocol
+~\supercite{Nisbet2013}. Briefly, fifteen 3mo and fifteen 6mo lambs were
+administered an eight-protein cocktail of \emph{T. circumcincta} recombinant
+antigens with Quil-A adjuvant, three times at three-weekly intervals. All
+vaccinated and non-vaccinated age-matched control lambs were then all exposed
+to repeated (``trickle'') infections with 12 consecutive challenges with
+\emph{T. circumcincta} infective larvae (L3) delivered in measured doses
+spanning four weeks to mimic field challenge conditions (Fig.~\ref{suppfig:timeline}).
+
+% \FigParasites
+
+\textcolor{red}{At time of necropsy, control and vaccinated lambs had median worm burdens of 3,425 and 900, respectively, and median cumulative faecal egg counts of 7680 and 3839, respectively.} Vaccination \textcolor{red}{therefore} led to significant reductions in both worm burden assessed at
+\emph{post mortem} (\nameref{fig:parasites}A; \textcolor{red}{73.7\% reduction,} P~\(=\)~0.002) and cumulative
+faecal egg counts (cFEC) (\nameref{fig:parasites}B; \textcolor{red}{50\% reduction,} P~\(=\)~0.026) in both age
+groups relative to control lambs. In addition, 6mo lambs, whether immunised or
+not, controlled worm burdens more effectively than 3mo lambs (P~\(=\)~0.012).
+However, total egg output differed only marginally between age groups and was
+characteristically variable.
+
+\subsection{Pathway enrichment was most predictive of vaccine efficacy prior
+to challenge and following parasitological events.}
+
+Because worm burdens and cFEC varied substantially between individuals
+regardless of age or vaccination, we then sought to identify (i) which immune
+pathways were associated with controlling worm burdens at post-mortem (49 days
+after the start of challenge infection) and cFEC \textcolor{red}{across all groups with vaccination and age treated as explanatory variables}, and (ii) when their
+expression in the abomasum best predicted these measures of parasite infection.
+To address both questions, we built an analysis pipeline to identify the immune
+pathways that best predicted infection outcomes (Fig.~\ref{suppfig:flow}).
+RNAseq was performed on biopsies taken repeatedly from the abomasum at temporal
+intervals. These produced six transcriptomes spanning 42 days for each lamb,
+beginning post-vaccination but shortly before the first challenge and ending
+one week prior to the end of the trial when the worm burden analysis was
+undertaken (Fig.~\ref{suppfig:timeline}). T-distributed stochastic neighbour
+embedding (t-SNE) suggested there was weak structure within the gene expression
+read counts of all 180 whole transcriptomes (Fig.~\ref{suppfig:t-sne}). We then
+clustered transcripts into co-expression modules regardless of age using a
+weighted correlation network analysis (WGCNA~\supercite{Langfelder2008}). This
+generated a reduced list of variables, each of which represented a set of genes
+that behaved similarly across all transcriptomes. To identify which of the
+resulting modules contained genes of interest, we used worm burdens and cFEC as
+response variables in ElasticNet regression models to which we mapped the
+eigenvalue of each WGCNA module, and used the coefficients learned by the
+ElasticNet to rank the modules according to the strength and direction of their
+association with either worm burden or cFEC (Fig.~\ref{suppfig:enetmodules}).
+
+We then extracted all genes included within the modules that predicted either
+worm burden or cFEC, then entered that gene list into a canonical pathway
+analysis, and selected the resulting immune pathways~\supercite{Kramer2014}.
+~\nameref{fig:circular} presents the immune pathways that robustly predicted
+worm burdens of cFEC and their level of enrichment (proportion of genes within
+specific pathways that was detected in the transcriptome) at each time-point.
+This revealed that most immune pathways that predicted either parasite burden
+49 days (D49) post-infection or cFEC were already enriched by D0, i.e.
+following immunisation, but prior to the first challenge. Pathways that were
+significantly represented exclusively at this time-point included B cell
+development and activation signalling, as well as innate pathways involved in
+interferon and TNF signalling, macrophage stimulating protein receptor
+signalling (MSP-RON), and the complement system (\nameref{fig:circular}, inner
+ring).
+
+% \FigCircle
+
+All other pathways significantly enriched at D0 were also enriched at
+subsequent time-points. In particular, pathways whose expression correlated
+with worm or egg counts showed significant enrichment at days 7, 21, and 42
+post-challenge, consistent with the timing of three significant phases of the
+life cycle, i.e. at D7, upon emergence of the first cohort of late fourth stage
+larvae (L4)/early adults from the gastric glands into the
+lumen~\supercite{Denham1969, McNeilly2017}, coinciding with high enrichment scores
+of pathways involved in the regulation of innate responses (NF-κB, eosinophil
+CCR3, GMCSF, NO and ROS expression by macrophages, IL-2/IL-15, IL-3, and IL-8
+signalling) as well as antigen-processing and lymphoid cell activation (FLT3,
+IL-7, CD40, CXCR4); at D21, co-incident with the initiation of egg-laying by
+the founding population of \emph{T. circumcincta}, a further set of immune
+pathways was activated, including inflammatory and stress response signals
+(LPS-stimulated MAPK, MIF, glucocorticoid receptors, IL-17, and TLR signalling)
+and suppression of lymphocyte proliferation (anti-proliferative role of TOB in
+T cell signalling). Enrichment at D42 was elevated in the majority of pathways
+depicted in ~\nameref{fig:circular} (see full timecourse for all pathways in
+~Fig.~\ref{suppfig:PathwayDynamics} and~\nameref{supdata:ipa}). Being close to
+the post-mortem time-point (D49), this likely reflects near-contemporaneous and
+potentially shorter-lived correlations between immune gene expression and
+parasite burdens, and were thus not considered further in the prediction of
+protective immunity. The very low enrichment scores in the remaining
+time-points likely indicates either low expression of the corresponding genes
+due to biological regulatory processes, or too much variance for any
+statistical pattern to be detected. We therefore decided to further focus on
+time-points D0, D7, and D21 for their relevance to predicting vaccine-mediated
+immunity against \emph{T. circumcincta} in these lambs.
+
+\subsection{Direction and strength of correlation between immune pathway
+expression and parasitological measures varied between time-points.}
+
+To identify the time-points at which the selected pathways
+(\nameref{fig:circular}) best predicted reduced parasite burdens and cFEC, we
+assessed the direction and strength of the correlations between each pathway
+and either parasite burden (\nameref{fig:enet_corr}A) or cFEC
+(\nameref{fig:enet_corr}B) before (D0) or 7 and 21 days following the first
+exposure to \emph{T. circumcincta} L3. For ease of interpretation, we then
+clustered immune pathways according to whether they were negatively associated
+with parasite burdens at each, or all, of these time-points.
+
+Comparing the expression of immune pathways at D0 in vaccinated lambs and
+non-vaccinated controls indicated that IL-6, Th1, PPAR, and interferon
+signalling pathways elicited by the vaccine were instrumental in reducing
+parasite numbers at post-mortem (D49), while higher activation of IL-17A, IL-9,
+CCR3, and TGF-β signalling pathways in vaccinated lambs prior to infection
+predicted lower egg shedding. In non-vaccinated lambs, no pathways were
+predictive of lower worm numbers, whereas IL-17A, CCR3, and chemokine
+signalling pathways were identified as predictors of low cFEC.
+
+At D7, Th1 and PPAR signalling remained negatively associated with post-mortem
+worm burden in vaccinates, while most other pathways were either positively or
+not associated with worm burdens. With regard to egg shedding, in vaccinated
+lambs activation of IL-17A remained negatively associated with cFEC, with
+pathways associated with regulation of T cell activation and Th1 polarisation
+(TOB and IL-12 pathways, respectively) also associated with reduced cFEC.
+Similar to D0, no immune pathways were predictive of lower parasite numbers in
+control lambs, although CCR3 and chemokine signalling pathways remained
+consistently, though weakly, negatively associated with cFEC.
+
+Finally, at D21 vaccinated lambs differed from controls by exhibiting strong
+negative associations between worm burdens and chemokine signalling, IL-6,
+NFκB, natural killer cells, glucocorticoid receptor and acute phase response
+signalling, suggesting a potential role for responses to tissue injury in
+vaccine-induced protection against \emph{T. circumcincta}
+(\nameref{fig:enet_corr}). Additionally, pathways associated with T cell
+activation and polarisation (IL-12, DC maturation, TOB, NFAT, Th1 and Th2
+signalling pathways) were all negatively associated with worm burden at this
+time-point. In the non-vaccinated lambs, no pathways at D21 showed any
+association with worm burdens. With regard to predicting vaccine-induced
+impacts on cFEC, many of the pathways associated with reduced worm burdens at
+D21, in particular chemokine signalling, IL-6, and acute phase response
+signalling, were also predictive of lower cFEC in vaccinates. Lower egg
+shedding in vaccinated lambs was also associated with increased expression of
+CD27 in lymphocytes, and macrophage migration inhibitory factor (MIF).
+Interestingly, in non-vaccinated lambs, IL-7, IL-9, FLT3, and CCR3 signalling
+were negatively associated with parasite egg shedding at D21, whereas these
+signalling pathways were positively associated with cFEC in vaccinated lambs at
+the same time-point post-challenge.
+
+% \FigEnetcorr
+
+\subsection{Protective immune pathways were differentially affected by age
+and vaccination status.}
+
+We then sought to analyse how the age of lambs at immunisation affected their
+expression of protective immune pathways at the same time-points. Overall, the
+mean gene expression levels for most of the pathways described above were most
+strongly expressed in the older (6mo) vaccinates at D21 than at the two other
+time-points (\nameref{fig:WGCNA_gene_expression}A). Six-month-old lambs also
+displayed a greater differential in gene expression between D0 and D21,
+regardless of vaccination status. Indeed, while mean gene expression of immune
+pathways over all time-points was often greater in 3mo lambs, gene expression
+levels varied little over time in the 3mo lambs, particularity in
+non-vaccinated individuals. To assess how age and immunisation explained the
+observed variation in the expression of the focal immune pathways, we
+constructed generalised linear models for each pathway in turn with age,
+vaccine status, and the interaction between age and vaccine as explanatory
+variables. Most protective pathways identified by the ElasticNet
+(\nameref{fig:enet_corr}) were affected by lamb age, especially pathways
+involved in the activation of adaptive immunity and its maintenance, spanning
+Th1, Th2, and Th17 pathways (\nameref{fig:WGCNA_gene_expression}B `Age ×
+Vaccine' column). Pathways that were elicited by vaccination independently of
+age included acute phase response signalling, LPS-mediated inhibition of RXR
+function, MIF Regulation of Innate Immunity, and Toll-like Receptor Signalling
+(\nameref{fig:WGCNA_gene_expression}B, `Vaccine' column). Finally, regardless
+of vaccination, only Antiproliferative Role of TOB in T Cell Signalling and
+possibly the Complement System were affected by age, with 6mo lambs expressing
+them at lower levels than 3mo lambs (\nameref{fig:WGCNA_gene_expression}B
+`Age' column).
+
+% \FigWGCNA
+
+\section{Discussion}
+
+We have recently developed a prophylactic vaccine that shows great promise
+against \emph{T. circumcincta}~\supercite{Nisbet2013}. However, for this
+prototype to deliver consistent protection a better understanding of the immune
+mechanisms that underlie the observed imperfect immunisation in sheep of
+relevant ages is needed ~\supercite{Barnes1995}. We monitored immune responses
+of vaccinated sheep at the site of infection (the abomasum) over the first 42
+days of a trickle challenge infection, and measured parasite burdens on day 49.
+To assess how host age affects vaccine efficacy, we immunised lambs at 3 or 6
+months of age. Consistent with our previous reports~\supercite{Nisbet2013,
+Nisbet2016}, the vaccine led to significant reductions of both worm burdens and
+egg outputs compared to adjuvant-only recipients (\nameref{fig:parasites}),
+\textcolor{red}{confirming the specific protective effect of the antigens used
+in the vaccine.} However, 3-month-old lambs remained more heavily infected than
+6-month-old lambs throughout the experiment, consistent with previous reports in
+ruminants that the immature immune system responds poorly to prior
+immunisation~\supercite{Smith1985,Corpa2000}. Further, age differentially
+affected the ability of sheep to control worm numbers and the numbers of
+parasite eggs produced in their faeces: while we observed a significant
+reduction of parasite burden in 6-month-old animals irrespective of their
+vaccination status, age alone did not significantly affect total egg output
+(\nameref{fig:parasites}). This suggests that maturation of the immune system
+allows better control of \emph{T. circumcincta} worm burden with age but may
+have a more limited effect on parasite transmission via parasite egg shedding.
+Such apparent compensation and density-dependent fecundity in parasites have
+been previously observed in this~\supercite{Bishop2000} and other host-parasite
+systems~\supercite{Churcher2005,Churcher2006,Bleay2007}. Further, while the
+prototype vaccine reduced parasite and egg densities, it did not totally
+eliminate the presence of high worm egg shedders, raising the possibility that
+inherently ``wormy'' individuals may not respond well to vaccination. Reducing
+infection in these poor vaccine responders is of particular importance for
+limiting the spread of infection in vaccinated flocks. \textcolor{red}{In
+addition, while Quil A has been reported to affect \emph{Fasciola
+hepatica}~\supercite{Hacariz2009}, future studies will need to test whether and
+how Quil A alone may affect GI nematodes including \emph{T. circumcincta}.}
+
+In this study, we took a novel systems vaccinology approach to identify immune
+transcriptional pathways that predict both post-mortem worm burdens and cFEC in
+vaccinated individuals. While similar approaches have been taken to understand
+the mechanisms by which vaccines stimulate protection, these have largely
+focused on repeated analysis of blood leukocyte transcriptomes which are
+clustered into blood transcriptional modules (BTM) and subsequently correlated
+with antibody or cellular immune phenotypes~\supercite{Li2014,Hou2017,
+Braun2018}. This approach, while providing important information on immune
+pathways involved in vaccine responses, relies on capturing transcriptomic
+signatures of recirculating leukocytes which may not truly reflect the immune
+response at the site(s) of infection or vaccination. In contrast, the
+application of a gastric cannulation technique in this study allowed repeated
+sampling of the gastric mucosa, resulting in an unparalleled temporal evaluation
+of the local transcriptomic responses over time at the parasite's predilection
+site.  Furthermore, we used a novel machine-learning approach to maximise the
+generalisability of the qualitative and quantitative associations between immune
+responses and worm numbers or fecundity. Thus, the combination of repeated
+\emph{in situ} sampling, unbiased selection of immune mediators of
+vaccine-driven protection, and pathway analysis, allowed us to generate a
+biologically-interpretable, robust, and dynamical representation of how
+vaccination affects the immune response to \emph{T. circumcincta} infection in
+lambs.
+
+Using this approach, analysis of the immune response at the site of infection
+revealed that three main events were indicative of interactions between
+vaccination and parasite life history and were predictive of parasite burdens.
+First, priming of the immune system by the vaccine prior to challenge: immune
+pathways that determined the worm burdens measured at day 49 post challenge were
+already highly activated in the transcriptomes before challenge, likely driven
+by the pre-challenge vaccination. Second, the response to parasite life history
+events: while reduced pathway enrichment observed between days 7 and 28 suggests
+a down-regulation of immune activity in the abomasum once founder populations of
+parasites had established infection, we observed an activation of more directed
+responses to ongoing parasitological events involved in innate responses (e.g.
+eosinophil CCR3, NF-κB activation and NO/ROS expression by macrophages) and
+antigen-processing and lymphocyte recruitment and activation (CD40, IL-7, CXCR4
+signalling) 1–2 weeks post-challenge, matching the timing of the emergence of
+the first larvae from the gastric glands~\supercite{Simpson2000}.  This was
+followed by inflammatory and stress responses (e.g. IL-17 signalling,
+TLR-signalling, glucocorticoid receptor signalling) around 3 weeks after
+infection when parasites begin producing eggs (see ~\nameref{fig:circular}).
+And third, the tighter correlations between gene expression levels and parasite
+numbers at the last sampling time-point immediately prior to post-mortem
+analysis of worm burdens (day 42) point to confounding between the effects of
+vaccination and the temporal proximity between immune tissue sampling (day 42)
+and measurement of parasite counts (day 49).
+
+Further investigation therefore focused on three time-points, days 0, 7 and 21,
+which were most predictive of parasite numbers and/or fecundity, to identify
+pathways that were associated with vaccine-induced protection. Of most interest
+were protective pathways enriched in the mucosa of vaccinated lambs immediately
+prior to challenge. These included Th1, IL-6 and interferon signalling pathways
+which negatively correlated with worm burdens, and IL-17A, IL-9, CCR3 and TGF-β
+pathways associated with lower parasite egg output, and suggested that the
+systemically delivered vaccine was able to modulate the immune system at a
+distant mucosal site. This was a rather surprising observation, as while immune
+signatures have previously been reported in peripheral blood, for example
+following yellow fever and influenza
+vaccination~\supercite{Kotliarov2020,Hou2017}, systemically delivered vaccines
+are generally considered poor at inducing mucosal immune responses due to the
+inability of the vaccines to induce appropriate homing receptors on activated
+lymphocytes~\supercite{Clements2016}. Furthermore, while some adjuvants (e.g.
+TLR agonists and bacterial ADP-ribosylating toxin adjuvants) have been shown to
+confer mucosal homing properties~\supercite{Frederick2018}, this has not been
+widely reported for saponin-based adjuvants such as Quil-A used here, although
+our results are consistent with an earlier study of a systemically delivered
+\emph{Ostertagia ostertagi} subunit vaccine formulated with Quil-A that reported
+similar mucosal priming of immune cells, and in particular natural killer (NK)
+cells~\supercite{Gonzalez-Hernandez2016}.
+
+Regardless of the mechanism by which this mucosal priming operates, the vaccine
+appears to promote a protective Th1/Th17 type response within the mucosa, with
+evidence of active Th17 polarisation potentially via IL-6 and
+TGF-β~\supercite{Li2007d,Mangan2006,Zhou2007a}, as well as evidence of enrichment of
+Th2-associated pathways, CCR3 and IL-9, more established effectors of
+anti-parasite immunity~\supercite{Faulkner1997}, possibly via MIF, which was
+recently reported as essential to type 2 immunity against \emph{Heligmosomoides
+polygyrus} in mice~\supercite{Filbey2019}. Interestingly, some of these pathways
+(MIF, IL17A, and CCR3) were also associated with reduced parasite egg output in
+control lambs, suggesting that of the protective pathways induced by the
+vaccine, anti-worm Th1 responses were most unique. The association of
+vaccine-induced protection with Th1 immunity was maintained at day 7
+post-infection, with Th1 pathways being associated with both worm burdens and
+egg output. By 21 days, a wider range of protective pathways were identified,
+including those associated with tissue injury and inflammation\textcolor{red}{, which might have been driven by ongoing tissue damage caused by worms as consecutive cohorts progressed through their life cycle}. At this
+time-point, both Th1 and Th2 signalling pathways were associated with
+protection, indicating a broadening of the immune response.
+
+While these associations will require further causal validation, they suggest
+that for optimal protection, the vaccine may prime the mucosa towards a Th1 and
+potentially Th17-type response early in infection before broadening out to a
+more mixed Th1/Th2 response. This is potentially contentious, as it is
+well-established in numerous animal models that protective immunity to
+gastrointestinal parasites, including \emph{T. circumcincta}, is associated
+with Th2 immunity, whereas Th1 and Th17 immunity is associated with
+susceptibility~\supercite{Craig2007,Venturina2013,Grencis1997,Maizels2009a,Gossner2012a}.
+However, this appears to be a rather simplistic model based on
+counter-regulation of Th immune responses derived from tightly-controlled
+laboratory models and/or analysis of responses at limited time-points
+post-infection. Indeed, our longitudinal sampling at the site of parasite
+infection coupled with whole-transcriptome analysis is likely to have allowed a
+finer description of the sequence of protective responses, revealing
+contributions to the protective response of Th1, Th17 and Th2 responses at
+different phases of the infection within the same individual. These results are
+consistent with a previous study in sheep, in which natural resistance to
+\emph{T. circumcincta} was associated with early Th1 responses prior to
+development of Th2 immunity~\supercite{Hassan2011a}, and a more recent study in
+which early activation of the Th17 pathway was associated with natural
+resistance to \emph{Haemonchus contortus} in goats~\supercite{Aboshady2020}. The
+role of Th17 in protection is potentially explained by the ability of this
+pathway to elicit innate lymphoid cells and multipotent progenitor type 2 cells
+early in infection that subsequently promote CD\(4^+\) Th2 cells and associated
+cytokine expression~\supercite{Saenz2010,Saenz2013,Smith2018}. This then activates
+antiparasitic effector cells such as
+eosinophils~\supercite{Martin2000,Hernandez2020}, consistent with our finding that
+CCR3 signalling in eosinophils at D21 post challenge was negatively associated
+with egg output (\nameref{fig:enet_corr}). The previous association of Th17
+responses with susceptibility was determined after more long-standing (12 week)
+\emph{T. circumcincta} infection~\supercite{Gossner2012a}, where the association
+could be explained by triggering of Th17 responses secondary to gut barrier
+disruption~\supercite{Kempski2017}.
+
+Further investigation into how vaccination and age affected the expression of
+these immune pathways revealed that 6mo lambs increased the expression of the
+pathways to a greater level than did 3mo lambs at D21, which coincides with the
+first emergence of parasites from gastric crypts into the lumen of the
+abomasum~\supercite{Denham1969,McNeilly2017}. This age-dependant expression of
+protective immune pathways largely involved the activation and maintenance of
+the adaptive response. This late maturation of the adaptive response to
+helminths observed in lambs is consistent with reports of later maturation of T
+cells in sheep~\supercite{Outteridge1985,Colditz1996} and in other host-parasite
+systems as previously reported~\supercite{Babayan2018b}. Conversely, innate pathways
+appeared age-independent for these two cohorts. However, vaccination alone
+significantly explained the upregulation of innate pathways such as those
+involved in acute phase response signalling, LPS/IL-1 mediated inhibition of
+RXR functions, TLR signalling, and MIF regulation pathways, only a subset of
+which are reported to be enhanced by saponin-based
+adjuvants~\supercite{Ho2018,Marty-Roix2016}, the others likely induced by the
+infection.
+
+In conclusion, most protective-associated pathways were induced by vaccination
+and in older animals; the immune pathways found to control adult worms and eggs
+only partially overlapped and were activated at different phases of the
+challenge infection, indicating the need for anthelmintic vaccines to stimulate
+a broad set of pathways, rather than just antibody production alone; protective
+pathways enriched pre-challenge in vaccinates suggest specific adjuvants, such
+as those promoting Th1/Th17 responses may be useful to improve vaccine
+performance.
+
+
+\begingroup
+% Use smaller sans font
+\sffamily
+\small
+% Double-space the methods section.
+\baselineskip24pt
+
+\section{Methods }
+
+\subsection{Lambs \& Infection}
+
+Texel cross lambs \textcolor{red}{reared under conditions to exclude helminth
+infection (confirmed by FEC analysis)} were randomly allocated to four groups
+which were balanced for weight and sex. \textcolor{red}{Two lambs were removed
+from the experiment early due to health concerns.} The \textcolor{red}{final}
+groups comprised vaccinated 3-month-old lambs (n~\(=\)~15 \textcolor{red}{[7
+females, 8 males]}), control (adjuvant only) 3-month-old lambs (n~\(=\)~16
+\textcolor{red}{[8 females, 8 males]}), vaccinated 6-month-old lambs (n~\(=\)~15
+\textcolor{red}{[8 females, 7 males]}), and control (adjuvant only) 6-month-old
+lambs (n~\(=\)~16 \textcolor{red}{[8 females, 8 males]}). All lambs were
+infected with 2,000 \emph{T. circumcincta} L3 stage larvae three times per week
+for four weeks beginning on the day of the final immunisation.
+
+\subsection{Prototype vaccine formulation}
+
+Each lamb in the vaccinated groups was injected with 400 µg of a recombinant
+protein mix as described previously~\supercite{Nisbet2013}, containing 50µg of
+each protein. PBS soluble proteins Tci-ASP-1, Tci-MIF-1, Tci-TGH-2,
+Tci-APY-1, Tci-SAA-1, Tci-CF-1 and Tci-ES20 were administered as a single
+injection with 5mg Quil-A (Brenntag Biosector). Tci-MEP-1 was administered
+separately in PBS with 2M urea and 5mg Quil-A. Injections were given
+subcutaneously at two sites on the neck. \textcolor{red}{To test the antigen-specific effects of the vaccine, c}ontrol animals received injections
+containing PBS/urea and Quil-A only. Lambs received three immunisations at
+three-weekly intervals (day 0, 21, 42) with the first immunisation at 3 or 6
+months of age (Fig.~\ref{suppfig:timeline}).
+
+\subsection{Sampling}
+
+Seven animals in each vaccine group and eight animals in the control groups
+were fitted with abomasal cannulae, as previously described~\supercite{Huntley2004},
+to allow repeated biopsy of the abomasal mucosa throughout the trickle
+infection period. Briefly, peri-operative analgesia was administered prior to
+anaesthetic induction using Meloxicam (Metacam®, Boehringer Ingleheim) at 1
+mg/kg body weight (BW). Anaesthesia was induced by intra-venous Propofol
+(PropoFlo™, Zoetis) at 3mg/kg BW and maintained using Isoflurane (IsoFlo™,
+Zoetis). Following surgical preparation of the site, the abomasum was located
+and exteriorised. Abomasal cannulae, constructed from a modified disposable
+10 ml syringe barrels (PlastiPak™, Becton and Dickinson)~\supercite{Huntley2004},
+were fitted midway between the mesenteric border and the greater curvature of
+the lateral wall, approximately 7 cm cranial to the pylorus. The free end of
+the cannulae were exteriorised through a laparotomy incision in the abdominal
+wall, then anchored using external neoprene flanges. Surgery to fit the
+cannulae was performed between the second and third immunisation time-points.
+Over 49 days, abomasal biopsies were taken using a pair of 30 cm long 5 mm ×
+2 mm punch mucosal biopsy forceps (Richard Wolf GmBH), inserted via the
+cannulae as follows: three biopsies per animal at each time-point on days 0,
+7, 14, 21, 28, 42, and 49 (Fig.~\ref{suppfig:timeline}). The three biopsies
+per animal were taken in a clockwise manner to ensure different sites of the
+abomasal mucosa were sampled. Samples were placed immediately into RNAlater
+(Sigma-Aldrich) and stored at -80 °C for subsequent RNA extraction.
+
+\subsection{RNA-Seq library preparation and sequencing}
+
+Total RNA was extracted from the abomasal biopsies as follows: the 645
+abomasal biopsy samples were homogenised in RLT buffer (Qiagen Ltd, UK) using
+a Precellys bead basher (Bertin Instruments, UK) with CK28 bead tubes
+(Stretton Scientific, UK). Samples were centrifuged at 14,000~g at 4°C for 10
+mins and the supernatant collected for processing using a RNeasy
+mini-isolation kit (Qiagen Ltd, UK) according to the manufacturers’ protocol,
+including an on-column DNase digestion. RNA quality and integrity were
+assessed using a Nanodrop spectrophotometer (Thermo Fisher, UK) and a
+Bioanalyser RNA Nanochip (Agilent Technologies Ltd, UK). The yield of total
+RNA was determined on a Qubit Fluorometer (Thermo Fisher, UK) using the Broad
+Range RNA kit (Thermo Fisher, UK). The RNA isolated from three biopsies per
+animal for each time-point was pooled 1:1:1 by weight to generate the final
+samples for RNA-seq assessment. \textcolor{red}{All samples exceeded RIN ≥ 8.2.} The resulting 180 RNA samples were sequenced
+on an Illumina NextSeq 500 by Glasgow Polyomics~\supercite{PolyomicsURL}
+generating 75 bp paired-end reads at an average sequencing depth of
+25~Mbp/sample. \textcolor{red}{FastQC analysis indicated that all sequences exceeded Phred Scores of 30 along all 75bp.}
+
+\subsection{RNA-Seq quality control and alignment}
+
+The sequencing quality controls were finished by FastQC (v0.11.5), which
+provides a comprehensive report for each RNA-Seq sample. Base calls were made
+using the Illumina CASAVA 1.8 pipeline. All 180 samples passed the QC filters
+(MultiQC~\supercite{Ewels2016} report, \nameref{supdata:multiqc}), suggesting that
+RNA extraction and subsequent sequencing were of good quality and cutadapt
+(v1.11) was used for adapter trimming. Pseudo alignment of the read data to
+the latest version of the sheep transcriptome (cDNA) (Oar-v3.1) was performed
+with Kallisto v0.46.2~\supercite{Bray2016}, generating read count data for each
+transcript across all samples. The R package tximport~\supercite{Soneson2015} was
+used to prepare the abundance matrix for downstream analysis. All samples
+were normalised using DESeq2~\supercite{Love2014} and genes with read counts
+greater than five across at least two samples were selected for downstream
+analysis.
+
+\subsection{Gene network analysis and machine learning}
+
+We first evaluated whether any structure in gene expression could be
+visualised using t-Distributed Stochastic Neighbour Embedding (t-SNE). To
+reduce the dimensionality of the transcriptome, we then used the R package
+Weighted Correlation Network Analysis (WGCNA)~\supercite{Langfelder2008} to
+generate gene co-expression networks from vaccinated groups (3mo-Vax and
+6mo-Vax) at six time-points after start of the challenge (Days 0 – 42), using
+the full transcriptome. WGCNA groups genes and builds networks using the
+co-expression similarity measure defined as \(
+S_{i,j}=\left(\frac{1}{2}+\frac{1}{2}corr\left(x_i, x_j\right)\right)^\alpha
+\), where \(S_{i,j}\) is the correlation between gene expressions \(x_i\) and
+\(x_j\), and \(\alpha\) is the soft threshold weight selected by scale-free
+topology criterion~\supercite{Zhang2005,Langfelder2008} set at 6 (Day 0), 8 (Day
+7), 7 (Day 14), 12 (Day 21), 8 (Day 28), and 9 (Day 42). The eigengene of
+each cluster was used to quantify its overall expression. To select the genes
+which best predicted the parasitological read-out of interest (i.e., worm
+burdens and cFEC), we used the ElasticNet algorithm~\supercite{Zou2005a} from
+Python’s Scikit-Learn software library to fit a linear regression between the
+eigengenes and worm burdens or cFEC, and then ranked the gene clusters by
+their resulting coefficients. All WGCNA modules for which the ElasticNet
+coefficient was not null were retained for further pathway analysis.
+
+\subsection{Pathway analysis}
+
+Pathway enrichment was generated with Ingenuity Pathway Analysis (IPA, QIAGEN
+Inc.)~\supercite{Kramer2014} in which each gene identifier was mapped to its
+corresponding gene object in Ingenuity’s Knowledge Base using canonical
+pathway analysis to identify the biological pathways of most significance.
+Only immune pathways among those identified in IPA (\nameref{supdata:ipa})
+were retained for further analysis.
+
+\subsection{Time series differential gene expression analysis}
+
+The R package maSigPro~\supercite{Nueda2014}, a two-step regression to find
+significant differences between treatments over time, was used for gene
+differential expression analysis with multiple time-points (\nameref{supdata:diffexp}).
+
+\subsection{Statistical analysis of age and vaccination effects on parasite counts and gene pathway expression}
+
+The effects of age and immunisation on both worm burdens and cFEC were assessed
+with generalised linear models for negative binomial distributions with a log
+link, and residuals tested for normality using the Jarque-Bera test for
+normality. The effects of age, immunisation, and their interaction on the
+eigengene of each immune pathway were assessed with linear mixed models using
+sampling date adn sheep ID as a random effects to account for repeated sampling.
+The t statistic was used to indicate effect sizes as fold deviation between
+group means~\supercite{Bates2015}.
+
+\subsection{Ethics statement}
+
+All animal procedures were performed at Moredun Research Institute (MRI) under
+Home Office licence 70/7914. Ethical approval was obtained from the MRI Animal
+Welfare and Ethical Review Body (E22/15).
+
+\section{Data availability}
+
+All links to transcriptomes and code for bioinformatics, machine learning, and
+statistical analysis are available at \url{https://github.com/SimonAB/Liu2021}.
+
+\section{Acknowledgements}
+
+We thank Leigh Andrews, Alison Morrison and Dave Bartley, Moredun Research
+Institute, for their help in conducting animal studies and in the provision of
+parasite material and the Bioservices Unit, Moredun Research Institute, for
+expert care of the animals. We also thank Manus Graham and Roy Davie, Moredun
+Research Institute, for assistance with gastric cannulation surgeries.
+\textcolor{red}{The authors thank two anonymous reviewers for their insightful
+and constructive feedback.} This work was supported by the Biotechnology and
+Biological Sciences Research Council (Grant references BB/M011968/1 and
+BB/M012956/1 to JBM and SAB, respectively).
+
+\section{Competing Interests}
+The authors declare that there are no competing interests.
+
+\section{Author contributions}
+
+TMN, STGB, AJN, JBM, and SAB conceived of and designed the study; TNM and MM performed the experiments; WL and SAB performed the analyses; TMN, STGB, AJN, JBM, and SAB wrote the manuscript. \textcolor{red}{WL and TNM contributed equally as co-first authors; JBM and SAB contributed equally as senior authors.}
+
+
+\endgroup
+
+\section{References}
+\printbibliography[heading=none]
+
+\section{Figure Legends}
+
+\subsection{Fig. 1} \label{fig:parasites}
+
+\textbf{Vaccine- and age-mediated control of \emph{T. circumcincta} infection.} \textbf{a}, Worm burdens and \textbf{b}, total egg output in 3 month-old lambs with vaccination (3mo-Vax), 3 month-old lambs with adjuvant only (3mo-Ctrl), 6 month-old lambs with vaccination (6mo-Vax), and 6 month-old lambs with adjuvant only (6mo-Ctrl). Immunisation with the prototype vaccine led to a median 73.7\% reduction (P\textsubscript{vacc}~$=$~0.002, GLM) in worm counts and 50\% reduction (P\textsubscript{vacc}~$=$~0.026, GLM) in cumulative egg output.
+
+
+
+\subsection{Fig. 2} \label{fig:circular}
+
+\textbf{Temporal dynamics of the expression of immune
+        pathways that predict either post-mortem worm burden or
+        cFEC identified by supervised machine learning
+        ElasticNet.} Heat map indicates the pathway enrichment
+        reported as negative $log_{10}^{\mathrm{P-value}}$,
+        where the dark red denotes stronger enrichment within
+        each pathway. Each concentric circle represents one of
+        six time-points at which abomasal biopsies were taken
+        after challenge infection. Worm burdens predicted by these
+        pathways were measured at D49 post challenge.
+
+\subsection{Fig. 3} \label{fig:enet_corr}
+
+\textbf{Heat map of correlation coefficients} between
+        \textbf{a}, worm burdens or \textbf{b}, cFEC and gene
+        expression in the selected pathways before challenge
+        (D0), seven (D7) and 21 (D21) days post challenge in
+        vaccinated and control lambs. Colours represent negative
+        (red) and positive (blue) Pearson correlation
+        coefficients for each comparison. The immune pathways
+        were clustered using k-means according to their
+        correlation patterns over time in the vaccinated group.
+
+\subsection{Fig. 4} \label{fig:WGCNA_gene_expression}
+\textbf{Gene expression within immune pathways
+    significantly affected by immunisation, age, or both.}
+        \textbf{a} Heat map of gene expression over time within
+        the four treatments (3mo-Vax, 3mo-Ctrl, 6mo-Vax, and
+        6mo-Ctrl). High to low scaled expression is denoted with
+        blue to white hues. \textbf{b} Heat map of a generalised
+        mixed model t value statistic (number of standard
+        deviations from the mean)~\supercite{Bates2015} indicating
+        the effect of age, vaccination, and the interaction
+        between age and vaccination on the expression of each
+        pathway. Purple indicates a dampening effect on the
+        expression of the pathway while yellow indicates
+        increased expression of that pathway relative to the
+        global average. Pathways included are those presented in
+        \nameref{fig:circular}. The full list of gene expression
+        is available in Fig.~\ref{suppfig:PathwayDynamics}.
+
+\pagebreak
+
+\newcommand{\sectionbreak}{\clearpage}
+
+\section{Supplementary information}
+\setcounter{page}{1}
+\renewcommand{\thepage}{S\arabic{page}}
+\setcounter{table}{0}
+\renewcommand{\thetable}{S\arabic{table}}
+\setcounter{figure}{0}
+\renewcommand{\thefigure}{S\arabic{figure}}
+
+\subsection{Supplementary Data 1}\label{supdata:multiqc}
+\texttt{multiqc-report-biopsy.html}: Quality check report of 180 RNA-seq sample FastQC reports using MultiQC~\supercite{Ewels2016}.
+
+\subsection{Supplementary Data 2}\label{supdata:ipa}
+\texttt{ipa\_3V\_6V.ods}: Ingenuity Pathway analysis (IPA) results for all the WGCNA clusters shown in ~\nameref{fig:circular}.
+
+\subsection{Supplementary Data 3}\label{supdata:diffexp}
+\texttt{gene-cluster-masigpro.ods}: Differentially expressed gene list between the age groups. The expression levels are shown in ~Fig.~\ref{suppfig:diff_exp}C.
+
+\subsection{Supplementary Figures}
+\newcommand{\subsectionbreak}{\clearpage}
+
+\subsection{Study design}
+
+\SuppFigTimeline
+
+\subsection{Methods flow overview}
+
+\SuppFigFlow
+
+\subsection{Clustering of all transcriptomes using t-SNE.}
+
+\SuppFigTSNE
+
+\subsection{Weight of WGCNA modules predicting parasite burdens.}
+
+\SuppFigEnetmodules
+
+\subsection{Differential expression analysis of genes included in WGCNA modules.}
+
+\SuppFigDiffexp
+
+\subsection{Time-course of immune pathways significantly
+represented in abomasal transcriptomes}
+
+\SuppFigPathwayDynamics
+
+\end{document}
