@@ -3,8 +3,8 @@
 %%%     author          = "Russell Standish"
 %%%  }
 %%% ====================================================================
-% This is "pnas-new.bst", adapted from 
-% "pnas2016.bst", "pnas2011.bst" "pnas2009.bst" and "pnas.bst", 
+% This is "pnas-new.bst", adapted from
+% "pnas2016.bst", "pnas2011.bst" "pnas2009.bst" and "pnas.bst",
 % modified from "unsrt.bst"
 % April 2019: Bold article volume numbers, ignore issue numbers, move publication year to end, abbreviate journal names.
 % August 2021: Issue warning if an @article is missing the volume field.
@@ -470,7 +470,7 @@ FUNCTION {format.vol.num.pages}
   % 'skip$
   { "empty volume in " cite$ * warning$ ""}
   { "\textbf{" volume field.or.null * "}" * }
-  if$ 
+  if$
   pages empty$
   {
     eid empty$
@@ -562,8 +562,8 @@ FUNCTION {format.article.crossref}
 	  warning$
 	  ""
 	}
-%	{ "In {\em " journal * "\/}" * }
-    { "In " format.journal * "\/" * }
+	{ "In {\em " journal * "\/}" * }
+%    { "In " format.journal * "\/" * }
       if$
     }
     { "In " key * }
