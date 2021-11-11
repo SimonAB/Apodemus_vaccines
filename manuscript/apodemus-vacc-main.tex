@@ -6,18 +6,18 @@
 % {pnasmathematics} %= Template for a one-column mathematics article
 % {pnasinvited} %= Template for a PNAS invited submission
 
-\title{Template for preparing your research report submission to PNAS using Overleaf}
+\title{Causes of variation in vaccine efficacy in a natural rodent population.}
 
 % Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
 \author[a,c,1]{Saudamini Venkatesan}
 \author[b,1,2]{Ewan Smith}
-\author[a,\dagger]{Amy Pedersen}
-\author[a,\dagger]{Simon Babayan}
+\author[a,*]{Amy Pedersen}
+\author[b,*]{Simon Babayan}
 
 \affil[a]{Affiliation One}
 \affil[b]{Affiliation Two}
 \affil[c]{Affiliation Three}
-\affil[\dagger]{Joint authorship}
+\affil[*]{Joint authorship}
 
 % Please give the surname of the lead author for the running footer
 \leadauthor{Babayan}
@@ -44,6 +44,7 @@ Please provide an abstract of no more than 250 words in a single paragraph. Abst
 \begin{document}
 
 \maketitle
+
 \thispagestyle{firststyle}
 \ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
 
