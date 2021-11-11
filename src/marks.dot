@@ -1,0 +1,18 @@
+digraph vacc_dag {
+  Env -> repro;
+  Env -> Fat_Scores_Sum;
+  Env -> OD;
+  repro -> Weight;
+  repro -> Fat_Scores_Sum;
+  Treatment -> Weight;
+  Treatment -> Fat_Scores_Sum;
+  Treatment -> OD;
+  Sex -> Weight;
+  Sex -> Fat_Scores_Sum;
+  Sex -> OD;
+  Diet -> Weight;
+  Diet -> OD;
+  Weight -> OD;
+  Fat_Scores_Sum -> OD;
+  days_since_1st_D_inj -> OD;
+}
