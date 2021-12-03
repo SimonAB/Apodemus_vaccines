@@ -1,183 +1,279 @@
-\documentclass[9pt,twocolumn,twoside,lineno]{pnas-new}
-% Use the lineno option to display guide line numbers if required.
+%! TEX program = lualatex
+% For exporting as word use:
+% pandoc -s apodemus-vacc-main.tex --filter pandoc-crossref --citeproc --csl nature.csl --bibliography=apodemus-vacc-refs.bib -o ../Venkatesan_et_al_R1.docx
 
-\templatetype{pnasresearcharticle} % Choose template
-% {pnasresearcharticle} = Template for a two-column research article
-% {pnasmathematics} %= Template for a one-column mathematics article
-% {pnasinvited} %= Template for a PNAS invited submission
+\documentclass[a4paper, hidelinks, 11pt]{article}
 
-\title{Causes of variation in vaccine efficacy in a natural rodent population}
+%%%%%%%%%%%%%%%%% LOAD PACKAGES %%%%%%%%%%%%%%%%
+\usepackage[british]{babel}
+\usepackage{microtype}
 
-% Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
-\author[a]{Saudamini Venkatesan}
-\author[b]{Ewan Smith}
-\author[a,1]{Amy B. Pedersen}
-\author[b,1,2]{Simon A. Babayan}
+% font settings
+\usepackage{fontspec}
+\usepackage{mathtools}
+\usepackage{textcomp}
+\usepackage{eurosym}
+\usepackage{unicode-math}
 
-\affil[a]{Affiliation One}
-\affil[b]{Affiliation Two}
-\affil[c]{Affiliation Three}
+\defaultfontfeatures{Ligatures=TeX}
 
-% Please give the surname of the lead author for the running footer
-\leadauthor{Venkatesan}
+\setmainfont[
+    Extension=.otf,
+    UprightFont= *-regular,
+    BoldFont=*-bold,
+    ItalicFont=*-italic,
+    BoldItalicFont=*-bolditalic,
+    ]{TeX Gyre Pagella}
 
-% Please add a significance statement to explain the relevance of your work
-\significancestatement{Authors must submit a 120-word maximum statement about the significance of their research paper written at a level understandable to an undergraduate educated scientist outside their field of speciality. The primary goal of the significance statement is to explain the relevance of the work in broad context to a broad readership. The significance statement appears in the paper itself and is required for all research papers.}
+\setsansfont[
+        Extension=.otf,
+        UprightFont= *-regular,
+        BoldFont=*-bold,
+        ItalicFont=*-italic,
+        BoldItalicFont=*-bolditalic,
+        ]{TeX Gyre Heros}
 
-% Please include corresponding author, author contribution and author declaration information
-\authorcontributions{Please provide details of author contributions here.}
-\authordeclaration{Please declare any competing interests here.}
-\equalauthors{\textsuperscript{1}ABP contributed equally to this work with SAB.}
-\correspondingauthor{\textsuperscript{2}To whom correspondence should be addressed. E-mail: simon.babayan\@glasgow.ac.uk}
+\setmathfont{TeX Gyre Pagella Math}
 
-% At least three keywords are required at submission. Please provide three to five keywords, separated by the pipe symbol.
-\keywords{Keyword 1 $|$ Keyword 2 $|$ Keyword 3 $|$ ...}
+\setmonofont{TeX Gyre Cursor}[Scale=1]
 
-\begin{abstract}
-Please provide an abstract of no more than 250 words in a single paragraph. Abstracts should explain to the general reader the major contributions of the article. References in the abstract must be cited in full within the abstract itself and cited in the text.
-\end{abstract}
 
-\dates{This manuscript was compiled on \today}
-\doi{\url{www.pnas.org/cgi/doi/10.1073/pnas.XXXXXXXXXX}}
+% headings
+\usepackage{titlesec}
+
+\titleformat*{\section}{\large\bfseries\sffamily\MakeUppercase}
+\titleformat*{\subsection}{\normalsize\bfseries\sffamily}
+\titleformat*{\subsubsection}{\normalsize\bfseries\sffamily}
+\titleformat*{\paragraph}{\normalsize\bfseries\sffamily}
+\titleformat*{\subparagraph}{\normalsize\bfseries\sffamily}
+
+% page setup
+\usepackage{fancyhdr}
+\usepackage{authblk}
+\usepackage{booktabs} % For prettier tables
+\usepackage{color}
+\usepackage{lineno}
+% \modulolinenumbers[5]
+\usepackage{csquotes}
+\linenumbers
+
+% Text alignment (comment out for fully justified)
+\usepackage[document]{ragged2e}
+
+% prevent widows and orphans
+\usepackage[defaultlines=2,all]{nowidow}
+\usepackage{needspace}
+
+% create outline and links in pdf
+\usepackage{hyperref}
+\usepackage[numbered]{bookmark}
+\makeatletter
+\renewcommand\@seccntformat[1]{}
+\makeatother
+
+% debug warnings
+% \overfullrule=1cm
+
+
+%%%%%%%%%%%%%%%%% TABLES & FIGURES %%%%%%%%%%%%%%%%
+% captions
+\usepackage[labelfont=footnotesize,textfont=footnotesize,singlelinecheck=off,justification=raggedright]{subcaption}
+\DeclareCaptionLabelSeparator{pipe}{\textrm{ | }}
+\usepackage[figurename=Fig.,
+            font={sf,footnotesize},
+            labelfont=bf,
+            labelsep=quad]{caption}
+
+% figures:
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{floatrow}
+\usepackage{tikz}
+
+% tables:
+\usepackage{tabulary}
+\usepackage{multirow}
+\usepackage{ltablex}
+\usepackage{longtable} % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+% \usepackage[table,xcdraw]{xcolor}
+\usepackage{threeparttable}
+
+%%%%%%%%%%%%%%%%% BIBLIOGRAPHY %%%%%%%%%%%%%%%%
+\usepackage[
+    style=nature,
+    sorting=none,
+    backend=biber,
+    ]{biblatex}
+\addbibresource{apodemus-vacc-refs.bib}
+\renewcommand*{\bibfont}{\sffamily\footnotesize}
+
+%%%%%%%%%%%%%%%%% ANNOTATIONS %%%%%%%%%%%%%%%%
+\usepackage{soul} % highlighting & strikeout
+\setlength{\marginparwidth}{2cm} % make room for comments
+\usepackage[colorinlistoftodos, textsize=tiny]{todonotes}
+
+%%%%%%%%%%%%%%%%% PAGE SETUP %%%%%%%%%%%%%%%%
+\topmargin0.3cm
+\oddsidemargin0.0cm
+\textwidth15cm
+\textheight22cm
+\footskip1.3cm
+
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[RO]{\emph{Teladorsagia circumcincta} vaccinomics}
+% \fancyfoot[RO, LE]{\thepage{}}
+\fancyfoot[c]{\thepage{}}
+
+\setlength{\headheight}{14pt}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+%%%%%%%%%%%%%%%%% TITLE PAGE %%%%%%%%%%%%%%%%
+
+\title{Causes of variation in vaccine efficacy in a wild rodent population}
+
+\author[1]{Saudamini Venkatesan}
+\author[2]{Ewan Smith}
+\author[1,\dag]{Amy B. Pedersen}
+\author[2,\dag,*]{Simon A. Babayan} % 0000-0002-4949-1117
+
+\affil[1]{The Moredun Research Institute, Pentlands Science Park, EH26 0PZ, Scotland, UK,}
+\affil[2]{Institute of Biodiversity, Animal Health and Comparative Medicine, University of Glasgow, Glasgow, G12 8QQ, Scotland, UK,}
+\affil[ \dag]{These authors contributed equally to this work}
+\affil[*]{Corresponding authors: amy.pedersen@ed.ac.uk, simon.babayan@glasgow.ac.uk}
+
+% \renewcommand\Authfont{\normalsize}
+\renewcommand\Affilfont{\normalsize}
+
+% Include the date command, but leave its argument blank.
+\date{}
+
+% Set title for the abstract (default is "Abstract")
+\addto\captionsbritish{\renewcommand\abstractname{\vspace{-\baselineskip}}}
+
+%%%%%%%%%%%%%%%%% END OF PREAMBLE %%%%%%%%%%%%%%%%
 
 \begin{document}
+% Import list of figures
 
+
+% Double-space the manuscript.
+\baselineskip24pt
+
+% Make the title.
 \maketitle
 
-\thispagestyle{firststyle}
-\ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
+% \listoftodos
 
-% If your first paragraph (i.e. with the \dropcap) contains a list environment (quote, quotation, theorem, definition, enumerate, itemize...), the line after the list may have some extra indentation. If this is the case, add \parshape=0 to the end of the list environment.
-\dropcap{T}his PNAS journal template is provided to help you write your work in the correct journal format. Instructions for use are provided below.
+\begin{abstract}
 
-Note: please start your introduction without including the word ``Introduction'' as a section heading (except for math articles in the Physical Sciences section); this heading is implied in the first paragraphs.
+\noindent\bf\textsf{Individuals vary broadly in their response to vaccination and subsequent challenge infection, with poor vaccine responders causing persistence of both infection and transmission in populations.}
 
-\section*{Guide to using this template on Overleaf}
+\end{abstract}
 
-Please note that whilst this template provides a preview of the typeset manuscript for submission, to help in this preparation, it will not necessarily be the final publication layout. For more detailed information please see the \href{https://www.pnas.org/page/authors/format}{PNAS Information for Authors}.
+\textbf{Keywords:} Helminth; vaccine; immunoparasitology; machine learning; pathway analysis; ageing.
 
-If you have a question while using this template on Overleaf, please use the help menu (``?'') on the top bar to search for \href{https://www.overleaf.com/help}{help and tutorials}. You can also \href{https://www.overleaf.com/contact}{contact the Overleaf support team} at any time with specific questions about your manuscript or feedback on the template.
+\pagebreak
+\section{Introduction}
 
-\subsection*{Author Affiliations}
+Individuals vary widely in their responses to vaccination and little is known
+about the causes underlying low vaccine efficacy, nor how effective a vaccine
+will be ``in the real world'' against the pathogen for which it has been
+developed.\cite{belkin2002using}
 
-Include department, institution, and complete address, with the ZIP/postal code, for each author. Use lower case letters to match authors with institutions, as shown in the example. PNAS strongly encourages authors to supply an \href{https://orcid.org/}{ORCID identifier} for each author. Individual authors must link their ORCID account to their PNAS account at \href{http://www.pnascentral.org/}{www.pnascentral.org}. For proper authentication, authors must provide their ORCID at submission and are not permitted to add ORCIDs on proofs.
+\section{Results}
 
-\subsection*{Submitting Manuscripts}
-
-All authors must submit their articles at \href{http://www.pnascentral.org/cgi-bin/main.plex}{PNAScentral}. If you are using Overleaf to write your article, you can use the ``Submit to PNAS'' option in the top bar of the editor window.
-
-\subsection*{Format}
-
-Many authors find it useful to organize their manuscripts with the following order of sections;  title, author line and affiliations, keywords, abstract, significance statement, introduction, results, discussion, materials and methods, acknowledgments, and references. Other orders and headings are permitted.
-
-\subsection*{Manuscript Length}
-
-A standard 6-page article is approximately 4,000 words, 50 references, and 4 medium-size graphical elements (i.e., figures and tables). The preferred length of articles remains at 6 pages, but PNAS will allow articles up to a maximum of 12 pages.
-
-\subsection*{References}
-
-References should be cited in numerical order as they appear in text; this will be done automatically via bibtex, e.g. \cite{belkin2002using} and \cite{berard1994embedding,coifman2005geometric}. All references cited in the main text should be included in the main manuscript file.
-
-\subsection*{Data Archival}
-
-PNAS must be able to archive the data essential to a published article. Where such archiving is not possible, deposition of data in public databases, such as GenBank, ArrayExpress, Protein Data Bank, Unidata, and others outlined in the \href{https://www.pnas.org/page/authors/journal-policies#xi}{Information for Authors}, is acceptable.
-
-\subsection*{Language-Editing Services}
-Prior to submission, authors who believe their manuscripts would benefit from professional editing are encouraged to use a language-editing service (see list at www.pnas.org/page/authors/language-editing). PNAS does not take responsibility for or endorse these services, and their use has no bearing on acceptance of a manuscript for publication.
-
-\begin{figure}%[tbhp]
-\centering
-\includegraphics[width=.8\linewidth]{frog}
-\caption{Placeholder image of a frog with a long example legend to show justification setting.}
-\label{fig:frog}
-\end{figure}
-
-
-\begin{SCfigure*}[\sidecaptionrelwidth][t]
-\centering
-\includegraphics[width=11.4cm,height=11.4cm]{frog}
-\caption{This legend would be placed at the side of the figure, rather than below it.}\label{fig:side}
-\end{SCfigure*}
-
-\subsection*{Digital Figures}
-
-EPS, high-resolution PDF, and PowerPoint are preferred formats for figures that will be used in the main manuscript. Authors may submit PRC or U3D files for 3D images; these must be accompanied by 2D representations in TIFF, EPS, or high-resolution PDF format. Color images must be in RGB (red, green, blue) mode. Include the font files for any text.
-
-Images must be provided at final size, preferably 1 column width (8.7cm). Figures wider than 1 column should be sized to 11.4cm or 17.8cm wide. Numbers, letters, and symbols should be no smaller than 6 points (2mm) and no larger than 12 points (6mm) after reduction and must be consistent.
-
-Figures and tables should be labelled and referenced in the standard way using the \verb|\label{}| and \verb|\ref{}| commands.
-
-Figure \ref{fig:frog} shows an example of how to insert a column-wide figure. To insert a figure wider than one column, please use the \verb|\begin{figure*}...\end{figure*}| environment. Figures wider than one column should be sized to 11.4 cm or 17.8 cm wide. Use \verb|\begin{SCfigure*}...\end{SCfigure*}| for a wide figure with side legends.
-
-\subsection*{Tables}
-Tables should be included in the main manuscript file and should not be uploaded separately.
-
-\subsection*{Single column equations}
-
-Authors may use 1- or 2-column equations in their article, according to their preference.
-
-To allow an equation to span both columns, use the \verb|\begin{figure*}...\end{figure*}| environment mentioned above for figures.
-
-Note that the use of the \verb|widetext| environment for equations is not recommended, and should not be used.
-
-\begin{figure*}[bt!]
-\begin{align*}
-(x+y)^3&=(x+y)(x+y)^2\\
-       &=(x+y)(x^2+2xy+y^2) \numberthis \label{eqn:example} \\
-       &=x^3+3x^2y+3xy^3+x^3.
-\end{align*}
-\end{figure*}
+% This code uses the tikz package
+\begin{tikzpicture}
+        \node (v0) at (-0.929,1.39) {D};
+        \node (v1) at (2.22,-0.558) {E};
+        \node (v2) at (-0.0288,-0.0799) {F};
+        \node (v3) at (0.944,0.750) {M};
+        \node (v4) at (0.783,1.86) {R};
+        \node (v5) at (2.22,0.756) {S};
+        \node (v6) at (-1.02,-0.216) {T};
+        \node (v7) at (-2.05,-0.523) {V};
+        \node (v8) at (-1.30,0.807) {W};
+        \draw [->] (v0) edge (v1);
+        \draw [->] (v0) edge (v2);
+        \draw [->] (v0) edge (v3);
+        \draw [->] (v0) edge (v4);
+        \draw [->] (v2) edge (v1);
+        \draw [->] (v2) edge (v3);
+        \draw [->] (v3) edge (v1);
+        \draw [->] (v4) edge (v1);
+        \draw [->] (v4) edge (v2);
+        \draw [->] (v4) edge (v3);
+        \draw [->] (v5) edge (v1);
+        \draw [->] (v5) edge (v2);
+        \draw [->] (v5) edge (v3);
+        \draw [->] (v5) edge (v4);
+        \draw [->] (v6) edge (v1);
+        \draw [->] (v6) edge (v2);
+        \draw [->] (v7) edge (v1);
+        \draw [->] (v8) edge (v1);
+        \draw [->] (v8) edge (v2);
+        \draw [->] (v8) edge (v4);
+        \draw [->] (v6) edge (v4);
+        \draw [->] (v6) edge (v3);
+        \draw [->] (v7) edge (v6);
+        \draw [->] (v8) edge (v3);
+        \end{tikzpicture}
 
 
-\begin{table}%[tbhp]
-\centering
-\caption{Comparison of the fitted potential energy surfaces and ab initio benchmark electronic energy calculations}
-\begin{tabular}{lrrr}
-Species & CBS & CV & G3 \\
-\midrule
-1. Acetaldehyde & 0.0 & 0.0 & 0.0 \\
-2. Vinyl alcohol & 9.1 & 9.6 & 13.5 \\
-3. Hydroxyethylidene & 50.8 & 51.2 & 54.0\\
-\bottomrule
-\end{tabular}
+\begingroup
+% Use smaller sans font
+\sffamily
+\small
+% Double-space the methods section.
+\baselineskip24pt
 
-\addtabletext{nomenclature for the TSs refers to the numbered species in the table.}
-\end{table}
-
-\subsection*{Supporting Information Appendix (SI)}
-
-Authors should submit SI as a single separate SI Appendix PDF file, combining all text, figures, tables, movie legends, and SI references. SI will be published as provided by the authors; it will not be edited or composed. Additional details can be found in the \href{https://www.pnas.org/authors/submitting-your-manuscript#manuscript-formatting-guidelines}{PNAS Author Center}. The PNAS Overleaf SI template can be found \href{https://www.overleaf.com/latex/templates/pnas-template-for-supplementary-information/wqfsfqwyjtsd}{here}. Refer to the SI Appendix in the manuscript at an appropriate point in the text. Number supporting figures and tables starting with S1, S2, etc.
-
-Authors who place detailed materials and methods in an SI Appendix must provide sufficient detail in the main text methods to enable a reader to follow the logic of the procedures and results and also must reference the SI methods. If a paper is fundamentally a study of a new method or technique, then the methods must be described completely in the main text.
-
-\subsubsection*{SI Datasets}
-
-Supply .xlsx, .csv, .txt, .rtf, or .pdf files. This file type will be published in raw format and will not be edited or composed.
+\section{Methods }
 
 
-\subsubsection*{SI Movies}
 
-Supply Audio Video Interleave (avi), Quicktime (mov), Windows Media (wmv), animated GIF (gif), or MPEG files. Movie legends should be included in the SI Appendix file. All movies should be submitted at the desired reproduction size and length. Movies should be no more than 10MB in size.
-
-
-\subsubsection*{3D Figures}
-
-Supply a composable U3D or PRC file so that it may be edited and composed. Authors may submit a PDF file but please note it will be published in raw format and will not be edited or composed.
+\section{Acknowledgements}
 
 
-\matmethods{Please describe your materials and methods here. This can be more than one paragraph, and may contain subsections and equations as required.
+\section{Competing Interests}
+The authors declare that there are no competing interests.
 
-\subsection*{Subsection for Method}
-Example text for subsection.
-}
+\section{Author contributions}
 
-\showmatmethods{} % Display the Materials and Methods section
 
-\acknow{Please include your acknowledgments here, set in a single paragraph. Please do not include any acknowledgments in the Supporting Information, or anywhere else in the manuscript.}
 
-\showacknow{} % Display the acknowledgments section
+\endgroup
 
-% Bibliography
-\bibliography{apodemus-vacc-refs}
+\section{References}
+\printbibliography[heading=none]
+
+\section{Figure Legends}
+
+
+
+\pagebreak
+
+\newcommand{\sectionbreak}{\clearpage}
+
+\section{Supplementary information}
+\setcounter{page}{1}
+\renewcommand{\thepage}{S\arabic{page}}
+\setcounter{table}{0}
+\renewcommand{\thetable}{S\arabic{table}}
+\setcounter{figure}{0}
+\renewcommand{\thefigure}{S\arabic{figure}}
+
+\subsection{Supplementary Data 1}\label{supdata:1}
+
+\subsection{Supplementary Data 2}\label{supdata:2}
+\
+
+\subsection{Supplementary Data 3}\label{supdata:3}
+
+
+\subsection{Supplementary Figures}
+\newcommand{\subsectionbreak}{\clearpage}
+
 
 \end{document}
