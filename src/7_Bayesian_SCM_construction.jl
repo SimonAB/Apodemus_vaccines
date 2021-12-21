@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.2
+# v0.17.3
 
 using Markdown
 using InteractiveUtils
@@ -30,6 +30,9 @@ end
 
 # ╔═╡ 1521f146-1473-11ec-0dde-d172a83b0632
 md"# Bayesian Structural Causal Models: model construction"
+
+# ╔═╡ 5091bbf0-8bca-495c-8683-4c2c945a886a
+PlutoUI.TableOfContents(aside=true)
 
 # ╔═╡ 0ce9a69e-6547-40d6-a61f-6d9e60e24511
 md"## Update & load packages"
@@ -120,7 +123,8 @@ md"### Select features that we shall use for the DAG"
 begin
 	dag_df = DataFrame(
 		:ID => data[:, :ID],
-		:W => data[:, :Env_int],
+		# :W => data[:, :Env_int], # encode Wild=1 and Lab=2
+		:W => data[:, :iswild], # Wild=true, Lab=false
 		:V => data[:, :isvax],
 		:D => data[:, :issupplemented],
 		:R => data[:, :isreproductive],
@@ -128,6 +132,8 @@ begin
 		:M => data[:, :Weight],
 		:F => data[:, :Fat_Scores_Sum],
 		:T => data[:, :days_since_1st_D_or_A],
+		:P => data[:, :isHp],
+		:nP => data[:, :nHp],
 		:E => data[:, :OD],
 	);
 	describe(dag_df)
@@ -141,8 +147,11 @@ md"### Fix data types"
 dag_df[!, :T] = convert(Vector{Float64}, dag_df[!, :T])
 
 # ╔═╡ 70867c37-2224-4ac2-a4a4-87b7ca8142d7
-# Convert 1 / 0 to true / false
-dag_df[!, :V] = convert(Vector{Bool}, dag_df[!, :V])
+begin
+	# Convert 1 / 0 to true / false
+	dag_df[!, :V] = convert(Vector{Bool}, dag_df[!, :V])
+	dag_df[!, :P] = convert(Vector{Bool}, dag_df[!, :P])
+end
 
 # ╔═╡ bd998e1e-4282-4f9c-9d61-04248a69e403
 #  make sure data types look OK
@@ -208,16 +217,19 @@ dag = StatisticalRethinking.DAG("dag","dag {
 D -> E;
 D -> F;
 D -> M;
+D -> P;
 D -> R;
 F -> E;
 F -> M;
 M -> E;
+P -> E;
 R -> E;
 R -> F;
 R -> M;
 S -> E;
 S -> F;
 S -> M;
+S -> P;
 S -> R;
 T -> E;
 T -> F;
@@ -228,7 +240,9 @@ V -> T;
 W -> E;
 W -> F;
 W -> M;
-W -> R
+W -> P;
+W -> R;
+W -> T
 }")
 
 # ╔═╡ 1c6982b8-2993-478e-a9da-21dd93ca56a8
@@ -353,10 +367,10 @@ describe(dag_df)
 # ╔═╡ e024da52-2530-49ca-94d7-b9f2059f35e4
 # rescale continuous variables
 begin
-	M = standardize(ZScoreTransform, dag_df[!, :M])
-	F = standardize(ZScoreTransform, dag_df[!, :F])
-	T = standardize(ZScoreTransform, dag_df[!, :T])
-	W = standardize(ZScoreTransform, convert(Vector{Float64},dag_df[!, :W]))
+	scaled_M = standardize(ZScoreTransform, dag_df[!, :M])
+	scaled_F = standardize(ZScoreTransform, dag_df[!, :F])
+	scaled_T = standardize(ZScoreTransform, dag_df[!, :T])
+	scaled_W = standardize(ZScoreTransform, convert(Vector{Float64},dag_df[!, :W]))
 end
 
 # ╔═╡ f32a6574-a972-491a-a92a-4f9c3c22a866
@@ -376,7 +390,7 @@ md"""
 end
 
 # ╔═╡ 865809b3-8250-4de5-a8a4-b9898028bf1d
-post_V_T = sample(V_T(dag_df.V, T), NUTS(0.65), MCMCThreads(), 1000, 4);
+post_V_T = sample(V_T(dag_df.V, scaled_T), NUTS(0.65), MCMCThreads(), 1000, 4);
 
 # ╔═╡ 65aea2b2-69e7-4b72-96f9-041e479fd627
 PRECIS(DataFrame(post_V_T))
@@ -403,7 +417,7 @@ adjustment_sets(dag, :R, :V)
 end
 
 # ╔═╡ 0cc89ddd-39d6-4b4e-a581-4db889dfbf05
-post_R_V = sample(R_V(dag_df.R, dag_df.V, T), NUTS(0.65), MCMCThreads(), 1000, 4);
+post_R_V = sample(R_V(dag_df.R, dag_df.V, scaled_T), NUTS(0.65), MCMCThreads(), 1000, 4);
 
 # ╔═╡ 9afe34e0-b32b-423b-a30d-8aec994af6f6
 coeftab_plot(DataFrame(post_R_V); legend=false)
@@ -420,7 +434,8 @@ adjustment_sets(dag, :F, :V)
 	α ~ Normal(0, sqrt(3))
 	βV ~ Normal(0, sqrt(10))
 	βT ~ Normal(0, sqrt(10))
-	σ² ~ truncated(Normal(0, 100), 0, Inf)
+	# σ² ~ truncated(Normal(0, 100), 0, Inf)
+	σ² ~ TruncatedNormal(0, 100, 0, Inf)
 
 	# likelihood
 	F̂ = @. α + βV*V + βT*T
@@ -428,7 +443,7 @@ adjustment_sets(dag, :F, :V)
 end
 
 # ╔═╡ 2266e720-2ce1-4891-b983-4e5d030d5b49
-post_F_V = sample(F_V(F, dag_df.V, T), NUTS(0.65), MCMCThreads(), 1000, 4);
+post_F_V = sample(F_V(scaled_F, dag_df.V, scaled_T), NUTS(0.65), MCMCThreads(), 1000, 4);
 
 # ╔═╡ 4f1ac0aa-9312-410e-9f80-7c2463d6f495
 begin
@@ -459,7 +474,7 @@ adjustment_sets(dag, :M, :V)
 end
 
 # ╔═╡ a4ea20a9-527a-4481-b57d-f52841052225
-post_M_V = sample(M_V(M, dag_df.V, T), NUTS(0.65), MCMCThreads(), 1000, 4);
+post_M_V = sample(M_V(scaled_M, dag_df.V, scaled_T), NUTS(0.65), MCMCThreads(), 1000, 4);
 
 # ╔═╡ ef61d26e-a713-43bc-8fa2-9acbd2cc018e
 begin
@@ -486,7 +501,7 @@ md"""##### ``R \not\perp T``
 end
 
 # ╔═╡ 034c9453-0ca1-488f-8a56-1729cf5af8fd
-post_R_T = sample(R_T(dag_df.R, T), NUTS(0.65), MCMCThreads(), 1000, 4);
+post_R_T = sample(R_T(dag_df.R, scaled_T), NUTS(0.65), MCMCThreads(), 1000, 4);
 
 # ╔═╡ 0bb7ae22-d785-47be-b8dc-75bad3088d59
 PRECIS(DataFrame(post_R_T))
@@ -508,7 +523,7 @@ This is not expected to be independent; can we detect non-independance?
 
 # ╔═╡ 2824e184-3ccf-4de6-994f-700d9f7d2d51
 begin
-	post_F_T = sample(bayeslinreg(T, F), NUTS(0.65), MCMCThreads(), 2000, 4)
+	post_F_T = sample(bayeslinreg(scaled_T, scaled_F), NUTS(0.65), MCMCThreads(), 2000, 4)
 	post_F_T_df = DataFrame(post_F_T)
 end;
 
@@ -557,7 +572,7 @@ md"##### Effect of being in the Wild on body Mass ``M \perp W | D, F, R, S, T`` 
 end
 
 # ╔═╡ 91c5b69c-5162-4831-a05d-2777e3ef5d7e
-post_M_W = sample(M_W(dag_df.M, W, dag_df.D, F, dag_df.R, dag_df.S, T), NUTS(0.65), MCMCThreads(), 1000, 4);
+post_M_W = sample(M_W(dag_df.M, scaled_W, dag_df.D, scaled_F, dag_df.R, dag_df.S, scaled_T), NUTS(0.65), MCMCThreads(), 1000, 4);
 
 # ╔═╡ 1b16eb91-e895-4b69-8ec2-134f2cf16565
 PRECIS(DataFrame(post_M_W))
@@ -594,7 +609,7 @@ md"##### Effect of time on body Mass ``M \not⊥ T | D, F, R, S``"
 end
 
 # ╔═╡ 03fe440f-dfab-48c9-8122-d0cebc8299e5
-post_M_T = sample(M_T(dag_df.M, T, dag_df.D, F, dag_df.R, dag_df.S), NUTS(0.65), MCMCThreads(), 1000, 4);
+post_M_T = sample(M_T(dag_df.M, scaled_T, dag_df.D, scaled_F, dag_df.R, dag_df.S), NUTS(0.65), MCMCThreads(), 1000, 4);
 
 # ╔═╡ 981cbd69-439e-490a-ac3c-fef4e2949952
 PRECIS(DataFrame(post_M_T))
@@ -2482,6 +2497,7 @@ version = "0.9.1+5"
 
 # ╔═╡ Cell order:
 # ╟─1521f146-1473-11ec-0dde-d172a83b0632
+# ╟─5091bbf0-8bca-495c-8683-4c2c945a886a
 # ╟─0ce9a69e-6547-40d6-a61f-6d9e60e24511
 # ╠═16ac1c46-7108-4a66-afcf-46402c533c53
 # ╠═ff543d39-daa0-4d9c-aa97-5141a23a90d2
