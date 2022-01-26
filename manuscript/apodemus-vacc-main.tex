@@ -14,6 +14,7 @@
 \usepackage{textcomp}
 \usepackage{eurosym}
 \usepackage{unicode-math}
+\usepackage{lipsum}
 
 \defaultfontfeatures{Ligatures=TeX}
 
@@ -35,8 +36,8 @@
 
 \setmathfont{TeX Gyre Pagella Math}
 
-\setmonofont{TeX Gyre Cursor}[Scale=1]
-
+\setmonofont{IBM Plex Mono Text}
+% \setmonofont{TeX Gyre Cursor}[Scale=1]
 
 % headings
 \usepackage{titlesec}
@@ -58,7 +59,7 @@
 \linenumbers
 
 % Text alignment (comment out for fully justified)
-\usepackage[document]{ragged2e}
+% \usepackage[document]{ragged2e}
 
 % prevent widows and orphans
 \usepackage[defaultlines=2,all]{nowidow}
@@ -72,7 +73,7 @@
 \makeatother
 
 % debug warnings
-% \overfullrule=1cm
+\overfullrule=1cm
 
 
 %%%%%%%%%%%%%%%%% TABLES & FIGURES %%%%%%%%%%%%%%%%
@@ -98,6 +99,11 @@
 % \usepackage[table,xcdraw]{xcolor}
 \usepackage{threeparttable}
 
+%%%%%%%%%%%%%%%%% ANNOTATIONS %%%%%%%%%%%%%%%%
+\usepackage{soul} % highlighting & strikeout
+\setlength{\marginparwidth}{2cm} % make room for comments
+\usepackage[colorinlistoftodos, textsize=tiny]{todonotes}
+
 %%%%%%%%%%%%%%%%% BIBLIOGRAPHY %%%%%%%%%%%%%%%%
 \usepackage[
     style=nature,
@@ -106,11 +112,6 @@
     ]{biblatex}
 \addbibresource{apodemus-vacc-refs.bib}
 \renewcommand*{\bibfont}{\sffamily\footnotesize}
-
-%%%%%%%%%%%%%%%%% ANNOTATIONS %%%%%%%%%%%%%%%%
-\usepackage{soul} % highlighting & strikeout
-\setlength{\marginparwidth}{2cm} % make room for comments
-\usepackage[colorinlistoftodos, textsize=tiny]{todonotes}
 
 %%%%%%%%%%%%%%%%% PAGE SETUP %%%%%%%%%%%%%%%%
 \topmargin0.3cm
@@ -121,7 +122,7 @@
 
 \pagestyle{fancy}
 \fancyhead{}
-\fancyhead[RO]{\emph{Teladorsagia circumcincta} vaccinomics}
+\fancyhead[RO]{\emph{Wild vaccines}}
 % \fancyfoot[RO, LE]{\thepage{}}
 \fancyfoot[c]{\thepage{}}
 
@@ -138,7 +139,7 @@
 \author[1,\dag]{Amy B. Pedersen}
 \author[2,\dag,*]{Simon A. Babayan} % 0000-0002-4949-1117
 
-\affil[1]{The Moredun Research Institute, Pentlands Science Park, EH26 0PZ, Scotland, UK,}
+\affil[1]{Institute of Evolutionary Biology, University of Edinburgh, Scotland, UK, EH9 3JT}
 \affil[2]{Institute of Biodiversity, Animal Health and Comparative Medicine, University of Glasgow, Glasgow, G12 8QQ, Scotland, UK,}
 \affil[ \dag]{These authors contributed equally to this work}
 \affil[*]{Corresponding authors: amy.pedersen@ed.ac.uk, simon.babayan@glasgow.ac.uk}
@@ -164,7 +165,9 @@
 % Make the title.
 \maketitle
 
-% \listoftodos
+\listoftodos
+
+\todo{Fix author list \& affiliations}
 
 \begin{abstract}
 
@@ -180,46 +183,56 @@
 Individuals vary widely in their responses to vaccination and little is known
 about the causes underlying low vaccine efficacy, nor how effective a vaccine
 will be ``in the real world'' against the pathogen for which it has been
-developed.\cite{belkin2002using}
+developed.~\supercite{belkin2002using}
+
+\lipsum[1]
 
 \section{Results}
 
+\lipsum[2-3]
+
 % This code uses the tikz package
-\begin{tikzpicture}
-        \node (v0) at (-0.929,1.39) {D};
-        \node (v1) at (2.22,-0.558) {E};
-        \node (v2) at (-0.0288,-0.0799) {F};
-        \node (v3) at (0.944,0.750) {M};
-        \node (v4) at (0.783,1.86) {R};
-        \node (v5) at (2.22,0.756) {S};
-        \node (v6) at (-1.02,-0.216) {T};
-        \node (v7) at (-2.05,-0.523) {V};
-        \node (v8) at (-1.30,0.807) {W};
-        \draw [->] (v0) edge (v1);
-        \draw [->] (v0) edge (v2);
-        \draw [->] (v0) edge (v3);
-        \draw [->] (v0) edge (v4);
-        \draw [->] (v2) edge (v1);
-        \draw [->] (v2) edge (v3);
-        \draw [->] (v3) edge (v1);
-        \draw [->] (v4) edge (v1);
-        \draw [->] (v4) edge (v2);
-        \draw [->] (v4) edge (v3);
-        \draw [->] (v5) edge (v1);
-        \draw [->] (v5) edge (v2);
-        \draw [->] (v5) edge (v3);
-        \draw [->] (v5) edge (v4);
-        \draw [->] (v6) edge (v1);
-        \draw [->] (v6) edge (v2);
-        \draw [->] (v7) edge (v1);
-        \draw [->] (v8) edge (v1);
-        \draw [->] (v8) edge (v2);
-        \draw [->] (v8) edge (v4);
-        \draw [->] (v6) edge (v4);
-        \draw [->] (v6) edge (v3);
-        \draw [->] (v7) edge (v6);
-        \draw [->] (v8) edge (v3);
-        \end{tikzpicture}
+\begin{tikzpicture}[scale=1.5]
+    \node (v0) at (-1.15,1.58) {D};
+    \node (v1) at (1.61,-0.552) {E};
+    \node (v2) at (-0.137,-0.0856) {F};
+    \node (v3) at (-0.149,0.523) {M};
+    \node (v4) at (-0.195,1.95) {P};
+    \node (v5) at (-0.170,1.31) {R};
+    \node (v6) at (1.03,0.836) {S};
+    \node (v7) at (-1.12,-0.211) {T};
+    \node (v8) at (-1.71,-0.563) {V};
+    \node (v9) at (-1.28,0.659) {W};
+    \draw [->] (v0) edge (v1);
+    \draw [->] (v0) edge (v2);
+    \draw [->] (v0) edge (v3);
+    \draw [->] (v0) edge (v4);
+    \draw [->] (v0) edge (v5);
+    \draw [->] (v2) edge (v1);
+    \draw [->] (v2) edge (v3);
+    \draw [->] (v3) edge (v1);
+    \draw [->] (v4) edge (v1);
+    \draw [->] (v5) edge (v1);
+    \draw [->] (v5) edge (v3);
+    \draw [->] (v6) edge (v1);
+    \draw [->] (v6) edge (v2);
+    \draw [->] (v6) edge (v3);
+    \draw [->] (v6) edge (v4);
+    \draw [->] (v6) edge (v5);
+    \draw [->] (v7) edge (v1);
+    \draw [->] (v7) edge (v2);
+    \draw [->] (v7) edge (v3);
+    \draw [->] (v7) edge (v5);
+    \draw [->] (v8) edge (v1);
+    \draw [->] (v8) edge (v7);
+    \draw [->] (v9) edge (v1);
+    \draw [->] (v9) edge (v2);
+    \draw [->] (v9) edge (v3);
+    \draw [->] (v9) edge (v4);
+    \draw [->] (v9) edge (v5);
+    \draw [->] (v9) edge (v7);
+    \draw [->] (v5) edge (v4);
+\end{tikzpicture}
 
 
 \begingroup
