@@ -1,42 +1,42 @@
 ### A Pluto.jl notebook ###
-# v0.17.4
+# v0.17.5
 
 using Markdown
 using InteractiveUtils
 
 # ╔═╡ ff543d39-daa0-4d9c-aa97-5141a23a90d2
 begin
-	# Update packages (comment out to avoid long startup times)
-	using Pkg
-	Pkg.update()
-	
-	# allow more interactivity
-	using PlutoUI
+    # Update packages (comment out to avoid long startup times)
+    using Pkg
+    Pkg.update()
 
-	# data manipulation
-	using CSV, DataFrames, Query
+    # allow more interactivity
+    using PlutoUI
+
+    # data manipulation
+    using CSV, DataFrames, Query
     using LazyArrays
     using ScientificTypes
 
-	# splitting an normalising data
-	using MLDataUtils: shuffleobs, splitobs, stratifiedobs, rescale!
+    # splitting an normalising data
+    using MLDataUtils: shuffleobs, splitobs, stratifiedobs, rescale!
 
-	# modelling
-	using GLM, MixedModels
-	using Distributions
-	using NNlib: softmax # for classification tasks
-	using Turing
+    # modelling
+    using GLM, MixedModels
+    using Distributions
+    using NNlib: softmax # for classification tasks
+    using Turing
     using StatisticalRethinking, StructuralCausalModels
 
-	# # plotting & diagnostics
-	using MCMCChains, StatsPlots, StatisticalRethinkingPlots
+    # # plotting & diagnostics
+    using MCMCChains, StatsPlots, StatisticalRethinkingPlots
 end
 
 # ╔═╡ 1521f146-1473-11ec-0dde-d172a83b0632
 md"# Bayesian Structural Causal Models: model construction"
 
 # ╔═╡ 5091bbf0-8bca-495c-8683-4c2c945a886a
-PlutoUI.TableOfContents(aside=true)
+PlutoUI.TableOfContents(aside = true)
 
 # ╔═╡ 0ce9a69e-6547-40d6-a61f-6d9e60e24511
 md"## Update & load packages"
@@ -53,38 +53,39 @@ md"### Import dataset"
 
 # ╔═╡ 929da46e-51fb-46e0-bd9e-4dc8cad7eeda
 rawdata = CSV.File("../data/joint_dataset_4analysis.csv";
-	missingstring="NA", pool=true) |>
-    DataFrame
+    missingstring = "NA", pool = true) |>
+          DataFrame
 
 # ╔═╡ b1da3f6f-3265-4fee-aed7-5ad30a1b0c3d
 md"### Clean data"
 
 # ╔═╡ 0503ebed-e434-4af8-bc8e-e016256af8a8
 # filter for vaccination & seroconversion
-dataclean = rawdata |>
-	@dropna(:ID) |> # remove entries which lack lab ID or PIT tag IDs
-	@filter(_.vax_history != "DD") |> # keep only mice with a single vaccination or adjuvant only
-	@filter(_.days_since_1st_D_or_A > 7) |> # remove entries which were measured less than a week after vaccination
-	@dropna(:Weight) |> # remove entries which lack a body mass measurement
-	@dropna(:Diet) |> # remove entries which lack a Diet value
-	@dropna(:repro_bin) |> # remove entries which lack a repro value
-	@dropna(:Fat_Scores_Sum) |> # drop missing fat scores
-	# @filter(_.OD > 0) |> # remove individuals who didn't seroconvert
-DataFrame
+dataclean =
+    rawdata |>
+    @dropna(:ID) |> # remove entries which lack lab ID or PIT tag IDs
+    @filter(_.vax_history != "DD") |> # keep only mice with a single vaccination or adjuvant only
+    @filter(_.days_since_1st_D_or_A > 7) |> # remove entries which were measured less than a week after vaccination
+    @dropna(:Weight) |> # remove entries which lack a body mass measurement
+    @dropna(:Diet) |> # remove entries which lack a Diet value
+    @dropna(:repro_bin) |> # remove entries which lack a repro value
+    @dropna(:Fat_Scores_Sum) |> # drop missing fat scores
+    # @filter(_.OD > 0) |> # remove individuals who didn't seroconvert
+    DataFrame
 
 # ╔═╡ afcc428e-81b6-4726-beb7-e75faa296837
 # select only the last complete entry for each mouse
 dataunique = dataclean |>
-	@groupby(_.ID) |> 
-	@map({ID=key(_), days_since_1st_D_or_A=maximum(_.days_since_1st_D_or_A)}) |>
-DataFrame
+             @groupby(_.ID) |>
+             @map({ID = key(_), days_since_1st_D_or_A = maximum(_.days_since_1st_D_or_A)}) |>
+             DataFrame
 
 # ╔═╡ a3da0975-f50c-486a-982a-3e1b112802aa
 # join the rest of the columns
-data = dataclean |> 
-	@join(dataunique, _.ID, _.ID, {_..., __...}) |> 
-	@unique(_.ID) |> # ensure no repeated measures
-DataFrame
+data = dataclean |>
+       @join(dataunique, _.ID, _.ID, {_..., __...}) |>
+       @unique(_.ID) |> # ensure no repeated measures
+       DataFrame
 
 # ╔═╡ e77671f5-3be7-41b9-9d35-c9b163b86d15
 md"Total number of individual wood mice: $(length(unique(data.ID)))"
@@ -94,20 +95,20 @@ md"### Encode and standardise features"
 
 # ╔═╡ e5211181-9e7c-49ed-982a-088a04591859
 begin
-	# create log OD response variable
+    # create log OD response variable
     data.logOD = log.(10, 1 .+ data.OD)
-	# encoding
-	data.ismale = data.Sex .∈ Ref(["M"])
-	data.issupplemented = data.Diet .∈ Ref(["High"])
-	data.isreproductive = data.repro_bin .∈ Ref(["Reproductive"])
-	data.iswild = data.Env .∈ Ref(["Wild"])
+    # encoding
+    data.ismale = data.Sex .∈ Ref(["M"])
+    data.issupplemented = data.Diet .∈ Ref(["High"])
+    data.isreproductive = data.repro_bin .∈ Ref(["Reproductive"])
+    data.iswild = data.Env .∈ Ref(["Wild"])
 end
 
 # ╔═╡ cb766d15-0b83-4621-aa6c-3a90f8fa79e5
 # Convert Env strings to Int
 data[:, :Env_int] = map(data[:, :Env]) do w
-	w == "Wild" ? 1 :
-	w == "Lab" ? 2 : missing
+    w == "Wild" ? 1 :
+    w == "Lab" ? 2 : missing
 end
 
 # ╔═╡ f22e5b80-1dc8-47b4-bbdd-2a0263ee6e99
@@ -118,22 +119,22 @@ md"### Select features that we shall use for the DAG"
 
 # ╔═╡ e633301b-c452-4a6b-b702-8457fa4ccd92
 begin
-	dag_df = DataFrame(
-		:ID => data[:, :ID],
-		# :W => data[:, :Env_int], # encode Wild=1 and Lab=2
-		:W => data[:, :iswild], # Wild=true, Lab=false
-		:V => data[:, :isvax],
-		:D => data[:, :issupplemented],
-		:R => data[:, :isreproductive],
-		:S => data[:, :ismale],
-		:M => data[:, :Weight],
-		:F => data[:, :Fat_Scores_Sum],
-		:T => data[:, :days_since_1st_D_or_A],
-		:P => data[:, :isHp],
-		:nP => data[:, :nHp],
-		:E => data[:, :OD],
-	);
-	describe(dag_df)
+    dag_df = DataFrame(
+        :ID => data[:, :ID],
+        # :W => data[:, :Env_int], # encode Wild=1 and Lab=2
+        :W => data[:, :iswild], # Wild=true, Lab=false
+        :V => data[:, :isvax],
+        :D => data[:, :issupplemented],
+        :R => data[:, :isreproductive],
+        :S => data[:, :ismale],
+        :M => data[:, :Weight],
+        :F => data[:, :Fat_Scores_Sum],
+        :T => data[:, :days_since_1st_D_or_A],
+        :P => data[:, :isHp],
+        :nP => data[:, :nHp],
+        :E => data[:, :OD],
+    )
+    describe(dag_df)
 end
 
 # ╔═╡ 2fb3c303-f438-43e2-a4a5-b81d0cde1aba
@@ -145,9 +146,9 @@ dag_df[!, :T] = convert(Vector{Float64}, dag_df[!, :T])
 
 # ╔═╡ 70867c37-2224-4ac2-a4a4-87b7ca8142d7
 begin
-	# Convert 1 / 0 to true / false
-	dag_df[!, :V] = convert(Vector{Bool}, dag_df[!, :V])
-	dag_df[!, :P] = convert(Vector{Bool}, dag_df[!, :P])
+    # Convert 1 / 0 to true / false
+    dag_df[!, :V] = convert(Vector{Bool}, dag_df[!, :V])
+    dag_df[!, :P] = convert(Vector{Bool}, dag_df[!, :P])
 end
 
 # ╔═╡ bd998e1e-4282-4f9c-9d61-04248a69e403
@@ -156,9 +157,9 @@ describe(dag_df)
 
 # ╔═╡ b09e5a2a-3b73-437c-acc6-9670f8f3af87
 begin
-	# check the data one last time and write to disk
-	CSV.write("../data/dag_df.csv", dag_df)
-	dag_df
+    # check the data one last time and write to disk
+    CSV.write("../data/dag_df.csv", dag_df)
+    dag_df
 end
 
 # ╔═╡ 8800062f-9941-4965-9b34-2fd83cfbf679
@@ -172,28 +173,32 @@ This is the causal hypothesis that we shall test with the observed data.
 
 dag {
 bb="-2.633,-3.002,3.168,4.373"
-D [exposure,pos="-1.075,-2.081"]
+D [exposure,pos="-0.597,-1.461"]
 E [outcome,pos="1.054,0.603"]
 F [pos="-0.219,-0.159"]
-M [pos="0.403,-1.000"]
-R [pos="0.337,-2.257"]
-S [pos="1.815,-0.693"]
-T [pos="-1.426,0.228"]
-V [exposure,pos="-2.282,0.563"]
-W [pos="-2.150,-0.585"]
+M [pos="-0.187,-0.745"]
+P [pos="0.119,-1.711"]
+R [pos="0.060,-1.330"]
+S [pos="0.768,-0.614"]
+T [pos="-1.121,0.211"]
+V [exposure,pos="-1.707,0.563"]
+W [pos="-1.226,-0.284"]
 D -> E
 D -> F
 D -> M
+D -> P
 D -> R
 F -> E
 F -> M
 M -> E
+P -> E
 R -> E
 R -> F
 R -> M
 S -> E
 S -> F
 S -> M
+S -> P
 S -> R
 T -> E
 T -> F
@@ -204,13 +209,18 @@ V -> T
 W -> E
 W -> F
 W -> M
+W -> P
 W -> R
+W -> T
 }
+
 
 =#
 
 # ╔═╡ 06e8df45-f82a-49f8-b5b2-2f40a9cc513a
-dag = StatisticalRethinking.DAG("dag","dag {
+dag = StatisticalRethinking.DAG(
+    "dag",
+    "dag {
 D -> E;
 D -> F;
 D -> M;
@@ -240,7 +250,8 @@ W -> M;
 W -> P;
 W -> R;
 W -> T
-}")
+}"
+)
 
 # ╔═╡ 1c6982b8-2993-478e-a9da-21dd93ca56a8
 #=
@@ -339,15 +350,15 @@ md"### Utils"
 
 # ╔═╡ 36e8c531-65df-4ca8-8902-bc230ead7b16
 # Bayesian linear regression
-@model function bayeslinreg(X, y; nfeat=size(X, 2))
-	 # priors
-	α ~ Normal(mean(y), sqrt(3))
-	β ~ Normal(mean(y), sqrt(10))
-	σ² ~ truncated(Normal(mean(y), 100), 0, Inf)
-	ŷ = @. α + β*X
+@model function bayeslinreg(X, y; nfeat = size(X, 2))
+    # priors
+    α ~ Normal(mean(y), sqrt(3))
+    β ~ Normal(mean(y), sqrt(10))
+    σ² ~ truncated(Normal(mean(y), 100), 0, Inf)
+    ŷ = @. α + β * X
 
-	# likelihood
-	y ~ MvNormal(ŷ, sqrt(σ²))
+    # likelihood
+    y ~ MvNormal(ŷ, sqrt(σ²))
 end
 
 # ╔═╡ 6f360b2c-b19d-434b-9f60-a989c345db0f
@@ -364,10 +375,10 @@ describe(dag_df)
 # ╔═╡ e024da52-2530-49ca-94d7-b9f2059f35e4
 # rescale continuous variables
 begin
-	scaled_M = standardize(ZScoreTransform, dag_df[!, :M])
-	scaled_F = standardize(ZScoreTransform, dag_df[!, :F])
-	scaled_T = standardize(ZScoreTransform, dag_df[!, :T])
-	scaled_W = standardize(ZScoreTransform, convert(Vector{Float64},dag_df[!, :W]))
+    scaled_M = standardize(ZScoreTransform, dag_df[!, :M])
+    scaled_F = standardize(ZScoreTransform, dag_df[!, :F])
+    scaled_T = standardize(ZScoreTransform, dag_df[!, :T])
+    scaled_W = standardize(ZScoreTransform, convert(Vector{Float64}, dag_df[!, :W]))
 end
 
 # ╔═╡ f32a6574-a972-491a-a92a-4f9c3c22a866
@@ -377,13 +388,13 @@ md"""
 
 # ╔═╡ 8ffe2273-4be7-4315-ab40-bbb688784b74
 @model function V_T(y, X)
-	# priors
-	α ~ Normal(0, sqrt(10)) # population-level intercept
-	β ~ Normal(0, sqrt(10)) # population-level coefficients
-	
-	# likelihood
-	ŷ = α .+ β.*X
-	y ~ arraydist(LazyArray(@~ BernoulliLogit.(ŷ)))
+    # priors
+    α ~ Normal(0, sqrt(10)) # population-level intercept
+    β ~ Normal(0, sqrt(10)) # population-level coefficients
+
+    # likelihood
+    ŷ = α .+ β .* X
+    y ~ arraydist(LazyArray(@~ BernoulliLogit.(ŷ)))
 end
 
 # ╔═╡ 865809b3-8250-4de5-a8a4-b9898028bf1d
@@ -393,7 +404,7 @@ post_V_T = sample(V_T(dag_df.V, scaled_T), NUTS(0.65), MCMCThreads(), 1000, 4);
 PRECIS(DataFrame(post_V_T))
 
 # ╔═╡ b8f8e2f9-2515-4d98-9491-5f731cd0507a
-coeftab_plot(DataFrame(post_V_T); legend=false)
+coeftab_plot(DataFrame(post_V_T); legend = false)
 
 # ╔═╡ 74c0f4ed-5f0a-42e8-8faa-77d445270fdc
 md"``R \perp V | T`` ✓"
@@ -403,21 +414,21 @@ adjustment_sets(dag, :R, :V)
 
 # ╔═╡ 7e7d51d7-d122-490d-9c11-83f360167cd8
 @model function R_V(R, V, T)
-	# priors
-	α ~ Normal(0, sqrt(3))
-	βV ~ Normal(0, sqrt(10))
-	βT ~ Normal(0, sqrt(10))
+    # priors
+    α ~ Normal(0, sqrt(3))
+    βV ~ Normal(0, sqrt(10))
+    βT ~ Normal(0, sqrt(10))
 
-	# likelihood
-	μR =@. α + βV*T + βT*T
-	R ~ arraydist(LazyArray(@~ BernoulliLogit.(μR)))
+    # likelihood
+    μR = @. α + βV * T + βT * T
+    R ~ arraydist(LazyArray(@~ BernoulliLogit.(μR)))
 end
 
 # ╔═╡ 0cc89ddd-39d6-4b4e-a581-4db889dfbf05
 post_R_V = sample(R_V(dag_df.R, dag_df.V, scaled_T), NUTS(0.65), MCMCThreads(), 1000, 4);
 
 # ╔═╡ 9afe34e0-b32b-423b-a30d-8aec994af6f6
-coeftab_plot(DataFrame(post_R_V); legend=false)
+coeftab_plot(DataFrame(post_R_V); legend = false)
 
 # ╔═╡ 9e4a73d0-9e16-4758-a87f-370f54efd632
 md"``F ⊥ V | T`` ✓"
@@ -427,16 +438,16 @@ adjustment_sets(dag, :F, :V)
 
 # ╔═╡ aa43e7e0-e6d5-4dee-83ee-24dff889062d
 @model function F_V(F, V, T)
-	# priors
-	α ~ Normal(0, sqrt(3))
-	βV ~ Normal(0, sqrt(10))
-	βT ~ Normal(0, sqrt(10))
-	# σ² ~ truncated(Normal(0, 100), 0, Inf)
-	σ² ~ TruncatedNormal(0, 100, 0, Inf)
+    # priors
+    α ~ Normal(0, sqrt(3))
+    βV ~ Normal(0, sqrt(10))
+    βT ~ Normal(0, sqrt(10))
+    # σ² ~ truncated(Normal(0, 100), 0, Inf)
+    σ² ~ TruncatedNormal(0, 100, 0, Inf)
 
-	# likelihood
-	F̂ = @. α + βV*V + βT*T
-	F ~ MvNormal(F̂, sqrt(σ²))
+    # likelihood
+    F̂ = @. α + βV * V + βT * T
+    F ~ MvNormal(F̂, sqrt(σ²))
 end
 
 # ╔═╡ 2266e720-2ce1-4891-b983-4e5d030d5b49
@@ -444,8 +455,8 @@ post_F_V = sample(F_V(scaled_F, dag_df.V, scaled_T), NUTS(0.65), MCMCThreads(), 
 
 # ╔═╡ 4f1ac0aa-9312-410e-9f80-7c2463d6f495
 begin
-	post_F_V_df = DataFrame(post_F_V)
-	PRECIS(post_F_V_df)
+    post_F_V_df = DataFrame(post_F_V)
+    PRECIS(post_F_V_df)
 end
 
 # ╔═╡ 2282786f-d52e-49e3-b0cc-836672c34517
@@ -459,15 +470,15 @@ adjustment_sets(dag, :M, :V)
 
 # ╔═╡ bf7d196f-0abf-4df0-8999-66951ab7146a
 @model function M_V(M, V, T)
-	# priors
-	α ~ Normal(0, sqrt(3))
-	βV ~ Normal(0, sqrt(10))
-	βT ~ Normal(0, sqrt(10))
-	σ² ~ truncated(Normal(0, 100), 0, Inf)
+    # priors
+    α ~ Normal(0, sqrt(3))
+    βV ~ Normal(0, sqrt(10))
+    βT ~ Normal(0, sqrt(10))
+    σ² ~ truncated(Normal(0, 100), 0, Inf)
 
-	# likelihood
-	M̂ = @. α + βV*V + βT*T
-	M ~ MvNormal(M̂, sqrt(σ²))
+    # likelihood
+    M̂ = @. α + βV * V + βT * T
+    M ~ MvNormal(M̂, sqrt(σ²))
 end
 
 # ╔═╡ a4ea20a9-527a-4481-b57d-f52841052225
@@ -475,12 +486,12 @@ post_M_V = sample(M_V(scaled_M, dag_df.V, scaled_T), NUTS(0.65), MCMCThreads(), 
 
 # ╔═╡ ef61d26e-a713-43bc-8fa2-9acbd2cc018e
 begin
-	post_M_V_df = DataFrame(post_M_V)
-	PRECIS(post_M_V_df)
+    post_M_V_df = DataFrame(post_M_V)
+    PRECIS(post_M_V_df)
 end
 
 # ╔═╡ 189c5047-0744-4b8c-b1c9-008c274a22c4
-coeftab_plot(post_M_V_df; legend=false)
+coeftab_plot(post_M_V_df; legend = false)
 
 # ╔═╡ 28d75251-e334-4f4a-8d95-ca7607e778d5
 md"""##### ``R \not\perp T``
@@ -488,13 +499,13 @@ md"""##### ``R \not\perp T``
 
 # ╔═╡ 383ad5d9-ea28-4002-9056-9a797780673a
 @model function R_T(R, T)
-	# priors
-	α ~ Normal(0, sqrt(3))
-	βT ~ Normal(0, sqrt(10))
+    # priors
+    α ~ Normal(0, sqrt(3))
+    βT ~ Normal(0, sqrt(10))
 
-	# likelihood
-	R̂ = α .+ βT.*T
-	R ~ arraydist(LazyArray(@~ BernoulliLogit.(R̂)))
+    # likelihood
+    R̂ = α .+ βT .* T
+    R ~ arraydist(LazyArray(@~ BernoulliLogit.(R̂)))
 end
 
 # ╔═╡ 034c9453-0ca1-488f-8a56-1729cf5af8fd
@@ -507,7 +518,7 @@ PRECIS(DataFrame(post_R_T))
 plot(post_R_T)
 
 # ╔═╡ 0207d40f-dafb-4739-ad55-e62f2d9f32eb
-coeftab_plot(DataFrame(post_R_T); legend=false)
+coeftab_plot(DataFrame(post_R_T); legend = false)
 
 # ╔═╡ f9782efc-2090-4d7a-862b-93c484074a17
 md"⇒ R is NOT independent of time; need to add ``T → R`` to the dag"
@@ -520,8 +531,8 @@ This is not expected to be independent; can we detect non-independance?
 
 # ╔═╡ 2824e184-3ccf-4de6-994f-700d9f7d2d51
 begin
-	post_F_T = sample(bayeslinreg(scaled_T, scaled_F), NUTS(0.65), MCMCThreads(), 2000, 4)
-	post_F_T_df = DataFrame(post_F_T)
+    post_F_T = sample(bayeslinreg(scaled_T, scaled_F), NUTS(0.65), MCMCThreads(), 2000, 4)
+    post_F_T_df = DataFrame(post_F_T)
 end;
 
 # ╔═╡ 99706342-e4d2-4196-a34b-6611f281dc46
@@ -531,7 +542,7 @@ PRECIS(post_F_T_df)
 plot(post_F_T)
 
 # ╔═╡ 8eda1b61-2509-4e05-8287-5b179df3bc9f
-coeftab_plot(post_F_T_df; legend=false)
+coeftab_plot(post_F_T_df; legend = false)
 
 # ╔═╡ dd8b07cb-8d45-494a-98dc-e8443b45d2e3
 ols_F_T = lm(@formula(F ~ T), dag_df) # just checking results are consistent
@@ -553,19 +564,19 @@ md"##### Effect of being in the Wild on body Mass ``M \perp W | D, F, R, S, T`` 
 
 # ╔═╡ 1bd52709-8b45-4461-9b21-7bc461040448
 @model function M_W(M, W, D, F, R, S, T)
-	# priors
-	α ~ Normal(0, sqrt(3))
-	βW ~ Normal(0, sqrt(10))
-	βD ~ Normal(0, sqrt(10))
-	βF ~ Normal(0, sqrt(10))
-	βR ~ Normal(0, sqrt(10))
-	βS ~ Normal(0, sqrt(10))
-	βT ~ Normal(0, sqrt(10))
-	σ² ~ truncated(Normal(0, 100), 0, Inf)
+    # priors
+    α ~ Normal(0, sqrt(3))
+    βW ~ Normal(0, sqrt(10))
+    βD ~ Normal(0, sqrt(10))
+    βF ~ Normal(0, sqrt(10))
+    βR ~ Normal(0, sqrt(10))
+    βS ~ Normal(0, sqrt(10))
+    βT ~ Normal(0, sqrt(10))
+    σ² ~ truncated(Normal(0, 100), 0, Inf)
 
-	# likelihood
-	M̂ = @. α + βW*W + βD*D + βF*F + βR*R + βS*S + βT*T
-	M ~ MvNormal(M̂, sqrt(σ²))
+    # likelihood
+    M̂ = @. α + βW * W + βD * D + βF * F + βR * R + βS * S + βT * T
+    M ~ MvNormal(M̂, sqrt(σ²))
 end
 
 # ╔═╡ 91c5b69c-5162-4831-a05d-2777e3ef5d7e
@@ -578,7 +589,7 @@ PRECIS(DataFrame(post_M_W))
 plot(post_M_W)
 
 # ╔═╡ 53c9d24a-59b7-4026-99d0-aedbf44f84c1
-coeftab_plot(DataFrame(post_M_W); legend=false)
+coeftab_plot(DataFrame(post_M_W); legend = false)
 
 # ╔═╡ cdcf7fe7-212f-4590-b4d2-d9c2fc807771
 md"``βW ± std`` not within 1 std of 0 => there is a causal effect ``W → M``"
@@ -591,18 +602,18 @@ md"##### Effect of time on body Mass ``M \not⊥ T | D, F, R, S``"
 
 # ╔═╡ 4b2b31c5-a973-424c-bc0f-63297e02da2f
 @model function M_T(M, T, D, F, R, S)
-	# priors
-	σ² ~ truncated(Normal(0, 100), 0, Inf)
-	α ~ Normal(0, sqrt(3))
-	βT ~ Normal(0, sqrt(10))
-	βD ~ Normal(0, sqrt(10))
-	βF ~ Normal(0, sqrt(10))
-	βR ~ Normal(0, sqrt(10))
-	βS ~ Normal(0, sqrt(10))
+    # priors
+    σ² ~ truncated(Normal(0, 100), 0, Inf)
+    α ~ Normal(0, sqrt(3))
+    βT ~ Normal(0, sqrt(10))
+    βD ~ Normal(0, sqrt(10))
+    βF ~ Normal(0, sqrt(10))
+    βR ~ Normal(0, sqrt(10))
+    βS ~ Normal(0, sqrt(10))
 
-	# likelihood
-	M̂ = @. α + βT*T + βD*D + βF*F + βR*R + βS*S
-	M ~ MvNormal(M̂, sqrt(σ²))
+    # likelihood
+    M̂ = @. α + βT * T + βD * D + βF * F + βR * R + βS * S
+    M ~ MvNormal(M̂, sqrt(σ²))
 end
 
 # ╔═╡ 03fe440f-dfab-48c9-8122-d0cebc8299e5
@@ -612,7 +623,7 @@ post_M_T = sample(M_T(dag_df.M, scaled_T, dag_df.D, scaled_F, dag_df.R, dag_df.S
 PRECIS(DataFrame(post_M_T))
 
 # ╔═╡ 87cfba68-abb5-481f-b746-7d7d6aca7a6c
-coeftab_plot(DataFrame(post_M_T); legend=false)
+coeftab_plot(DataFrame(post_M_T); legend = false)
 
 # ╔═╡ aec76a7e-9bec-4997-b36b-8eb397370f7a
 md"⇒ should probably include ``T \rightarrow M`` effect in dag"
@@ -691,9 +702,9 @@ version = "0.3.4"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra"]
-git-tree-sha1 = "9faf218ea18c51fcccaf956c8d39614c9d30fe8b"
+git-tree-sha1 = "af92965fb30777147966f58acb05da51c5616b5f"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "3.3.2"
+version = "3.3.3"
 
 [[deps.AdvancedHMC]]
 deps = ["ArgCheck", "DocStringExtensions", "InplaceOps", "LinearAlgebra", "Parameters", "ProgressMeter", "Random", "Requires", "Statistics", "StatsBase", "StatsFuns"]
@@ -780,9 +791,9 @@ version = "0.3.2"
 
 [[deps.BangBang]]
 deps = ["Compat", "ConstructionBase", "Future", "InitialValues", "LinearAlgebra", "Requires", "Setfield", "Tables", "ZygoteRules"]
-git-tree-sha1 = "95831c49cf801756a922e50641361e3b4476a782"
+git-tree-sha1 = "a33794b483965bf49deaeec110378640609062b1"
 uuid = "198e06fe-97b7-11e9-32a5-e1d131e6ad66"
-version = "0.3.33"
+version = "0.3.34"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -895,9 +906,9 @@ version = "0.7.2"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "Colors", "FixedPointNumbers", "Random"]
-git-tree-sha1 = "a851fec56cb73cfdf43762999ec72eff5b86882a"
+git-tree-sha1 = "6b6f04f93710c71550ec7e16b650c1b9a612d0b6"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-version = "3.15.0"
+version = "3.16.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -961,9 +972,9 @@ uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.5.7"
 
 [[deps.Crayons]]
-git-tree-sha1 = "3f71217b538d7aaee0b69ab47d9b7724ca8afa0d"
+git-tree-sha1 = "b618084b49e78985ffa8422f32b9838e397b9fc2"
 uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
-version = "4.0.4"
+version = "4.1.0"
 
 [[deps.DataAPI]]
 git-tree-sha1 = "cc70b17275652eb47bc9e5f81635981f13cea5c8"
@@ -1092,9 +1103,9 @@ uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
 version = "2.2.10+0"
 
 [[deps.ExprTools]]
-git-tree-sha1 = "b7e3d17636b348f005f11040025ae8c6f645fe92"
+git-tree-sha1 = "24565044e60bc48a7562e75bcf14f084901dc0b6"
 uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
-version = "0.1.6"
+version = "0.1.7"
 
 [[deps.FFMPEG]]
 deps = ["FFMPEG_jll"]
@@ -1134,9 +1145,9 @@ version = "0.11.9"
 
 [[deps.FiniteDiff]]
 deps = ["ArrayInterface", "LinearAlgebra", "Requires", "SparseArrays", "StaticArrays"]
-git-tree-sha1 = "8b3c09b56acaf3c0e581c66638b85c8650ee9dca"
+git-tree-sha1 = "6eae72e9943d8992d14359c32aed5f892bda1569"
 uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
-version = "2.8.1"
+version = "2.10.0"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -1204,9 +1215,9 @@ version = "0.59.0"
 
 [[deps.GR_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Pkg", "Qt5Base_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "f97acd98255568c3c9b416c5a3cf246c1315771b"
+git-tree-sha1 = "aa22e1ee9e722f1da183eb33370df4c1aeb6c2cd"
 uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
-version = "0.63.0+0"
+version = "0.63.1+0"
 
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
@@ -1257,9 +1268,9 @@ version = "1.3.0"
 
 [[deps.Hwloc_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "3395d4d4aeb3c9d31f5929d32760d8baeee88aaf"
+git-tree-sha1 = "d8bccde6fc8300703673ef9e1383b11403ac1313"
 uuid = "e33a78d0-f292-5ffc-b300-72abe9b543c8"
-version = "2.5.0+0"
+version = "2.7.0+0"
 
 [[deps.IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
@@ -1273,9 +1284,9 @@ uuid = "83e8ac13-25f8-5344-8a64-a9f2b223428f"
 version = "0.5.0"
 
 [[deps.InitialValues]]
-git-tree-sha1 = "40c555f961d7ccf86d8ccd150b9eef379cbfa0a3"
+git-tree-sha1 = "4da0f88e9a39111c2fa3add390ab15f3a44f3ca3"
 uuid = "22cec73e-a1b8-11e9-2c92-598750a2cf9c"
-version = "0.3.0"
+version = "0.3.1"
 
 [[deps.InplaceOps]]
 deps = ["LinearAlgebra", "Test"]
@@ -1339,9 +1350,9 @@ version = "1.0.0"
 
 [[deps.JLLWrappers]]
 deps = ["Preferences"]
-git-tree-sha1 = "642a199af8b68253517b80bd3bfd17eb4e84df6e"
+git-tree-sha1 = "22df5b96feef82434b07327e2d3c770a9b21e023"
 uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
-version = "1.3.0"
+version = "1.4.0"
 
 [[deps.JSON]]
 deps = ["Dates", "Mmap", "Parsers", "Unicode"]
@@ -1581,9 +1592,9 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [[deps.MathOptInterface]]
 deps = ["BenchmarkTools", "CodecBzip2", "CodecZlib", "JSON", "LinearAlgebra", "MutableArithmetics", "OrderedCollections", "Printf", "SparseArrays", "Test", "Unicode"]
-git-tree-sha1 = "92b7de61ecb616562fd2501334f729cc9db2a9a6"
+git-tree-sha1 = "38062215a56109442d4ec25a0a2970cbfef55bbc"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
-version = "0.10.6"
+version = "0.10.7"
 
 [[deps.MathProgBase]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1613,10 +1624,10 @@ uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
 version = "0.3.1"
 
 [[deps.MicroCollections]]
-deps = ["BangBang", "Setfield"]
-git-tree-sha1 = "4f65bdbbe93475f6ff9ea6969b21532f88d359be"
+deps = ["BangBang", "InitialValues", "Setfield"]
+git-tree-sha1 = "6bb7786e4f24d44b4e29df03c69add1b63d88f01"
 uuid = "128add7d-3638-4c79-886c-908ea0c25c34"
-version = "0.1.1"
+version = "0.1.2"
 
 [[deps.Missings]]
 deps = ["DataAPI"]
@@ -1641,9 +1652,9 @@ version = "0.7.3"
 
 [[deps.MonteCarloMeasurements]]
 deps = ["Distributed", "Distributions", "LinearAlgebra", "MacroTools", "Random", "RecipesBase", "Requires", "SLEEFPirates", "StaticArrays", "Statistics", "StatsBase", "Test"]
-git-tree-sha1 = "8ad6d36895eecd6c184b37bc9d5a23c5ec0bd24a"
+git-tree-sha1 = "a438746036111a49ba2cb435681aeef0f1d8e9bc"
 uuid = "0987c9cc-fe09-11e8-30f0-b96dd679fdca"
-version = "1.0.4"
+version = "1.0.6"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
@@ -1680,9 +1691,9 @@ version = "2.7.1+0"
 
 [[deps.NNlib]]
 deps = ["Adapt", "ChainRulesCore", "Compat", "LinearAlgebra", "Pkg", "Requires", "Statistics"]
-git-tree-sha1 = "2eb305b13eaed91d7da14269bf17ce6664bfee3d"
+git-tree-sha1 = "9a9e8947f96640d089c4e8696882c211325061c4"
 uuid = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
-version = "0.7.31"
+version = "0.7.33"
 
 [[deps.NaNMath]]
 git-tree-sha1 = "f755f36b19a5116bb580de457cda0c140153f283"
@@ -1716,9 +1727,9 @@ uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 
 [[deps.NonlinearSolve]]
 deps = ["ArrayInterface", "FiniteDiff", "ForwardDiff", "IterativeSolvers", "LinearAlgebra", "RecursiveArrayTools", "RecursiveFactorization", "Reexport", "SciMLBase", "Setfield", "StaticArrays", "UnPack"]
-git-tree-sha1 = "8dc3be3e9edf976a3e79363b3bd2ad776a627c31"
+git-tree-sha1 = "200321809e94ba9eb70e7d7c3de8a7a6679a18b3"
 uuid = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
-version = "0.3.12"
+version = "0.3.13"
 
 [[deps.Observables]]
 git-tree-sha1 = "fe29afdef3d0c4a8286128d4e45cc50621b1e43d"
@@ -1733,9 +1744,9 @@ version = "1.10.8"
 
 [[deps.Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "7937eda4681660b4d6aeeecc2f7e1c81c8ee4e2f"
+git-tree-sha1 = "887579a3eb005446d514ab7aeac5d1d027658b8f"
 uuid = "e7412a2a-1a6e-54c0-be00-318e2571c051"
-version = "1.3.5+0"
+version = "1.3.5+1"
 
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
@@ -1743,9 +1754,9 @@ uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "15003dcb7d8db3c6c857fda14891a539a8f2705a"
+git-tree-sha1 = "648107615c15d4e09f7eca16307bc821c1f718d8"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-version = "1.1.10+0"
+version = "1.1.13+0"
 
 [[deps.OpenSpecFun_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
@@ -1948,9 +1959,9 @@ version = "0.2.0"
 
 [[deps.Requires]]
 deps = ["UUIDs"]
-git-tree-sha1 = "8f82019e525f4d5c669692772a6f4b0a58b06a6a"
+git-tree-sha1 = "838a3a4188e2ded87a4f9f184b4b0d78a1e91cb7"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
-version = "1.2.0"
+version = "1.3.0"
 
 [[deps.Rmath]]
 deps = ["Random", "Rmath_jll"]
@@ -1998,9 +2009,9 @@ version = "1.1.0"
 
 [[deps.SentinelArrays]]
 deps = ["Dates", "Random"]
-git-tree-sha1 = "244586bc07462d22aed0113af9c731f2a518c93e"
+git-tree-sha1 = "15dfe6b103c2a993be24404124b8791a09460983"
 uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
-version = "1.3.10"
+version = "1.3.11"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -2053,9 +2064,9 @@ version = "0.1.14"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
-git-tree-sha1 = "de9e88179b584ba9cf3cc5edbb7a41f26ce42cda"
+git-tree-sha1 = "2ae4fe21e97cd13efd857462c1869b73c9f61be3"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.3.0"
+version = "1.3.2"
 
 [[deps.StatisticalRethinking]]
 deps = ["AxisArrays", "BSplines", "BrowseTables", "CSV", "DataFrames", "Distributions", "DocStringExtensions", "Formatting", "GLM", "KernelDensity", "LaTeXStrings", "LinearAlgebra", "MCMCChains", "MonteCarloMeasurements", "NamedArrays", "NamedTupleTools", "Optim", "OrderedCollections", "Parameters", "PrettyTables", "Random", "Reexport", "Requires", "Statistics", "StatsBase", "StatsFuns", "StatsModelComparisons", "StatsPlots", "StructuralCausalModels", "Tables", "Test", "Unicode"]
@@ -2116,9 +2127,9 @@ version = "0.14.30"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
-git-tree-sha1 = "2ce41e0d042c60ecd131e9fb7154a3bfadbf50d3"
+git-tree-sha1 = "d21f2c564b21a202f4677c0fba5b5ee431058544"
 uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-version = "0.6.3"
+version = "0.6.4"
 
 [[deps.StructTypes]]
 deps = ["Dates", "UUIDs"]
