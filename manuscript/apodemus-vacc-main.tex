@@ -164,9 +164,10 @@
 
 % Make the title.
 \maketitle
-\todo{Fix author list \& affiliations}
 
 \listoftodos
+
+\todo{Fix author list \& affiliations}
 
 \begin{abstract}
 
@@ -175,6 +176,38 @@
 \end{abstract}
 
 \textbf{Keywords:} Helminth; vaccine; immunoparasitology; machine learning; pathway analysis; ageing.
+
+\pagebreak
+
+\section{Outline}
+
+Two main classes of vaccination: [AD, DA] vs [DD]. DD is the booster (can we rescue poor responders?). We are focussing on the variation within vaccine regimens: why do individuals vary despite identical vaccines?
+
+Aims:
+
+\begin{itemize}
+    \item what drives variation in immune response?
+    \item why do vaccine lose efficacy in the wild?
+    \item can we recover the non-responders, with boosters, diet, other interventions\dots
+    \item vaccination to probe wild immune systems
+    \item methods development
+\end{itemize}
+
+\begin{enumerate}
+    \item Partition differences between adjuvant and dose regimen
+    \begin{itemize}
+        \item Be clear that we chose alum to elicit type 2 antibody responses, because we can really only measure IgG1 in this system. Discussion: we might see different relationships between diet and antibody response if we measure other antibody isotypes.
+        \item Comparison between AD, DA, DD
+    \end{itemize}
+    \item Total effects of interventions
+    \begin{itemize}
+        \item \(OD \sim V + W + D + V:W + V:D + W:D\) on all mice => plot of OD by Diet (D) and Lab vs Wild (W)
+        \item \(OD \sim V + P + D + V:P + V:D + P:D\) on wild mice only
+        \item Depending on the results of the models above, break down further.
+    \end{itemize}
+    \item Disentangling effects of environmental covariates with SCM: how do Sex, Weight, Parasite infection, reproductive status, and time since vaccination affect immunisation efficacy?
+\end{enumerate}
+
 
 \pagebreak
 \section{Introduction}
