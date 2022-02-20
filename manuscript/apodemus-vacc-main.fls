@@ -544,6 +544,10 @@ OUTPUT apodemus-vacc-main.tdo
 INPUT /usr/local/texlive/2021/texmf-var/fonts/map/pdftex/updmap/pdftex.map
 INPUT /usr/local/texlive/2021/texmf-dist/tex/generic/hyph-utf8/loadhyph/loadhyph-la.tex
 INPUT /usr/local/texlive/2021/texmf-dist/tex/generic/hyph-utf8/patterns/tex/hyph-la.tex
+INPUT /usr/local/texlive/2021/texmf-dist/fonts/tfm/public/cm/cmmi10.tfm
+INPUT /usr/local/texlive/2021/texmf-dist/fonts/tfm/public/cm/cmmi7.tfm
+INPUT /usr/local/texlive/2021/texmf-dist/fonts/tfm/public/cm/cmmi5.tfm
+INPUT /usr/local/texlive/2021/texmf-dist/fonts/tfm/public/cm/cmmi9.tfm
 INPUT ./apodemus-vacc-main.aux
 INPUT ./apodemus-vacc-main.run.xml
 OUTPUT apodemus-vacc-main.run.xml
