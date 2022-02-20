@@ -491,6 +491,9 @@ INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/cbx/numeric-comp.cbx
 INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/cbx/numeric-comp.cbx
 INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/biblatex.cfg
 INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/biblatex.cfg
+INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/blx-case-expl3.sty
+INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/blx-case-expl3.sty
+INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/blx-case-expl3.sty
 INPUT ./apodemus-vacc-main.aux
 INPUT ./apodemus-vacc-main.aux
 OUTPUT apodemus-vacc-main.aux
@@ -501,9 +504,6 @@ INPUT /usr/local/texlive/2021/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
-INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/grfext/grfext.sty
-INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/grfext/grfext.sty
-INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/grfext/grfext.sty
 INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/hyperref/nameref.sty
@@ -527,9 +527,6 @@ INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/lbx/british.lbx
 INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/lbx/british.lbx
 INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/lbx/english.lbx
 INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/lbx/english.lbx
-INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/blx-case-expl3.sty
-INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/blx-case-expl3.sty
-INPUT /usr/local/texlive/2021/texmf-dist/tex/latex/biblatex/blx-case-expl3.sty
 OUTPUT apodemus-vacc-main.bcf
 INPUT ./apodemus-vacc-main.bbl
 INPUT ./apodemus-vacc-main.bbl
