@@ -12,3 +12,6 @@ ScientificTypes = "321657f4-b219-11e9-178b-2701a2544e81"
 StatisticalRethinking = "2d09df54-9d0f-5258-8220-54c2a3d4fbee"
 StatisticalRethinkingPlots = "e1a513d0-d9d9-49ff-a6dd-9d2e9db473da"
 Turing = "fce5fe82-541a-59a6-adf8-730c64b5f9a0"
+
+[extras]
+CPUSummary = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
