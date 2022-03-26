@@ -14,6 +14,7 @@
 \usepackage{textcomp}
 \usepackage{eurosym}
 \usepackage{unicode-math}
+\usepackage{MnSymbol} % provides independence symbol
 \usepackage{lipsum}
 
 \defaultfontfeatures{Ligatures=TeX}
@@ -48,7 +49,13 @@
 \titleformat*{\paragraph}{\normalsize\bfseries\sffamily}
 \titleformat*{\subparagraph}{\normalsize\bfseries\sffamily}
 
+% \titlespacing\section{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+% \titlespacing\subsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+% \titlespacing\subsubsection{6pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\paragraph{12pt}{0pt plus 4pt minus 2pt}{4pt plus 2pt minus 2pt}
+
 % page setup
+\usepackage{titling} % to use \maketitle more than once
 \usepackage{fancyhdr}
 \usepackage{authblk}
 \usepackage{booktabs} % For prettier tables
@@ -158,9 +165,11 @@
 \begin{document}
 % Import list of figures
 
-
 % Double-space the manuscript.
 \baselineskip24pt
+
+% Don't number lines on title page
+\nolinenumbers
 
 % Make the title.
 \maketitle
@@ -168,6 +177,9 @@
 \listoftodos
 
 \todo{Fix author list \& affiliations}
+
+% Start numbering lines here
+\linenumbers
 
 \begin{abstract}
 
@@ -215,57 +227,56 @@ Aims:
 Individuals vary widely in their responses to vaccination and little is known
 about the causes underlying low vaccine efficacy, nor how effective a vaccine
 will be ``in the real world'' against the pathogen for which it has been
-developed.~\supercite{belkin2002using}
+developed.
 
-\lipsum[1]
+\begin{figure}
+    % This code uses the tikz package
+    \begin{tikzpicture}[scale=1.5]
+        \node (v0) at (-1.15,1.58) {D};
+        \node (v1) at (1.61,-0.552) {E};
+        \node (v2) at (-0.137,-0.0856) {F};
+        \node (v3) at (-0.149,0.523) {M};
+        \node (v4) at (-0.195,1.95) {P};
+        \node (v5) at (-0.170,1.31) {R};
+        \node (v6) at (1.03,0.836) {S};
+        \node (v7) at (-1.12,-0.211) {T};
+        \node (v8) at (-1.71,-0.563) {V};
+        \node (v9) at (-1.28,0.659) {W};
+        \draw [->] (v0) edge (v1);
+        \draw [->] (v0) edge (v2);
+        \draw [->] (v0) edge (v3);
+        \draw [->] (v0) edge (v4);
+        \draw [->] (v0) edge (v5);
+        \draw [->] (v2) edge (v1);
+        \draw [->] (v2) edge (v3);
+        \draw [->] (v3) edge (v1);
+        \draw [->] (v4) edge (v1);
+        \draw [->] (v4) edge (v5);
+        \draw [->] (v5) edge (v1);
+        \draw [->] (v5) edge (v3);
+        \draw [->] (v6) edge (v1);
+        \draw [->] (v6) edge (v2);
+        \draw [->] (v6) edge (v3);
+        \draw [->] (v6) edge (v4);
+        \draw [->] (v6) edge (v5);
+        \draw [->] (v7) edge (v1);
+        \draw [->] (v7) edge (v2);
+        \draw [->] (v7) edge (v3);
+        \draw [->] (v7) edge (v5);
+        \draw [->] (v8) edge (v1);
+        \draw [->] (v8) edge (v7);
+        \draw [->] (v9) edge (v1);
+        \draw [->] (v9) edge (v2);
+        \draw [->] (v9) edge (v3);
+        \draw [->] (v9) edge (v4);
+        \draw [->] (v9) edge (v5);
+        \draw [->] (v9) edge (v7);
+    \end{tikzpicture}
+    \caption{Structural Causal Model}
+    \label{fig:SCM}
+\end{figure}
 
 \section{Results}
-
-\lipsum[2-3]
-
-% This code uses the tikz package
-\begin{tikzpicture}[scale=1.5]
-    \node (v0) at (-1.15,1.58) {D};
-    \node (v1) at (1.61,-0.552) {E};
-    \node (v2) at (-0.137,-0.0856) {F};
-    \node (v3) at (-0.149,0.523) {M};
-    \node (v4) at (-0.195,1.95) {P};
-    \node (v5) at (-0.170,1.31) {R};
-    \node (v6) at (1.03,0.836) {S};
-    \node (v7) at (-1.12,-0.211) {T};
-    \node (v8) at (-1.71,-0.563) {V};
-    \node (v9) at (-1.28,0.659) {W};
-    \draw [->] (v0) edge (v1);
-    \draw [->] (v0) edge (v2);
-    \draw [->] (v0) edge (v3);
-    \draw [->] (v0) edge (v4);
-    \draw [->] (v0) edge (v5);
-    \draw [->] (v2) edge (v1);
-    \draw [->] (v2) edge (v3);
-    \draw [->] (v3) edge (v1);
-    \draw [->] (v4) edge (v1);
-    \draw [->] (v5) edge (v1);
-    \draw [->] (v5) edge (v3);
-    \draw [->] (v6) edge (v1);
-    \draw [->] (v6) edge (v2);
-    \draw [->] (v6) edge (v3);
-    \draw [->] (v6) edge (v4);
-    \draw [->] (v6) edge (v5);
-    \draw [->] (v7) edge (v1);
-    \draw [->] (v7) edge (v2);
-    \draw [->] (v7) edge (v3);
-    \draw [->] (v7) edge (v5);
-    \draw [->] (v8) edge (v1);
-    \draw [->] (v8) edge (v7);
-    \draw [->] (v9) edge (v1);
-    \draw [->] (v9) edge (v2);
-    \draw [->] (v9) edge (v3);
-    \draw [->] (v9) edge (v4);
-    \draw [->] (v9) edge (v5);
-    \draw [->] (v9) edge (v7);
-    \draw [->] (v5) edge (v4);
-\end{tikzpicture}
-
 
 \begingroup
 % Use smaller sans font
@@ -274,9 +285,24 @@ developed.~\supercite{belkin2002using}
 % Double-space the methods section.
 \baselineskip24pt
 
-\section{Methods }
+\section{Methods}
 
-Notebooks produced using Pluto.jl v.0.17.7~\supercite{Pluto2022}
+\subsection{Data processing}
+
+DT-specific antibody ELISA optical densities \(E\) were \(log_{10}\)-transformed, and along body weight \(M\) and days post-vaccination \(T\), were centred around the mean and standardised to unit variance. Fat scores \(F\) are the sum of pelvic and dorsal five-point scales, and were modelled using a Dirichlet distribution. All other variables are treated as binary.
+
+\subsection{Structural Causal Models}
+
+\subsubsection{Model construction}
+\subsubsection{Model structure validation}
+
+To validate the causal structure hypothesised above, we tested the independencies it implies following chain, fork and collider rules~\supercite{Pearl2009b,Cinelli2021}. Specifically, we used the observed values for each of the nodes of the causal graph (Fig.~\ref{fig:SCM}) to test the truth of the following 15 implied independences derived from the graph: (\(D \upmodels S\)), (\(D \upmodels T\)), (\(D \upmodels V\)), (\(D \upmodels W\)), (\(F \upmodels P \mid D, R, S, T, W\)), (\(F \upmodels V \mid T, W\)), (\(M \upmodels P \mid D, R, S, T, W\)), (\(M \upmodels V \mid T, W\)), (\(P \upmodels T \mid W\)), (\(P \mid V\)), (\(R \upmodels V \mid T, W\)), (\(S \upmodels T\)), (\(S \upmodels V\)), (\(S \upmodels W\)), and (\(V \upmodels W\)). For each of the tests above, we constructed a generalised linear model with the appropriate link function and considered the statement true if \(P_X \greater 0.1\), where \(X\) is the response variable of interest (\nameref{supdata:SCMconstruction}).
+
+\subsubsection{Model parameterisation}
+
+\paragraph{Choice of Bayesian priors.} Priors were chosen by simulating draws from priors and comparing them to observed data, with variance sufficiently large to contain all biologically plausible values for each variable.
+\paragraph{Missing data.} Twenty-two mice had no fat scores and one lacked a weight measurement. Their values were imputed from the priors updated by the full structural causal model, where \(F \coloneq f(T, W, D, S)\) and \(M \coloneq f(T, W, D, R, S)\) (Fig.~\ref{fig:SCM}).
+\paragraph{Model updating and sampling.}
 
 \section{Acknowledgements}
 
@@ -300,6 +326,10 @@ The authors declare that there are no competing interests.
 \pagebreak
 
 \newcommand{\sectionbreak}{\clearpage}
+\newrefsection
+\nolinenumbers
+
+\maketitle
 
 \section{Supplementary information}
 \setcounter{page}{1}
@@ -309,12 +339,15 @@ The authors declare that there are no competing interests.
 \setcounter{figure}{0}
 \renewcommand{\thefigure}{S\arabic{figure}}
 
-\subsection{Supplementary Data 1}\label{supdata:1}
+\subsection{Supplementary Data: SCM construction}\label{supdata:SCMconstruction}
 
-\subsection{Supplementary Data 2}\label{supdata:2}
-\
+\texttt{1\_Bayesian\_SCM\_construction.ipynb}
 
-\subsection{Supplementary Data 3}\label{supdata:3}
+\subsection{Supplementary Data: SCM specification}\label{supdata:SCMspecification}
+
+\texttt{2\_Bayesian\_SCM\_specification.ipynb}
+
+\subsection{Supplementary Data: Wood mouse data}\label{supdata:WM}
 
 
 \subsection{Supplementary Figures}

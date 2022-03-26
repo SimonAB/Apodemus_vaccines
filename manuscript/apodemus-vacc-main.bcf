@@ -2349,10 +2349,19 @@
     <bcf:datasource type="file" datatype="bibtex" glob="false">apodemus-vacc-refs.bib</bcf:datasource>
   </bcf:bibdata>
   <bcf:section number="0">
-    <bcf:citekey order="1">belkin2002using</bcf:citekey>
-    <bcf:citekey order="2">Pluto2022</bcf:citekey>
-    <bcf:citekey order="3">belkin2002using</bcf:citekey>
-    <bcf:citekey order="4">Pluto2022</bcf:citekey>
+    <bcf:citekey order="1">Pearl2009b</bcf:citekey>
+    <bcf:citekey order="1">Cinelli2021</bcf:citekey>
+  </bcf:section>
+  <!-- SECTION 1 -->
+  <bcf:bibdata section="1">
+    <bcf:datasource type="file" datatype="bibtex" glob="false">apodemus-vacc-refs.bib</bcf:datasource>
+  </bcf:bibdata>
+  <bcf:section number="1">
+  </bcf:section>
+  <!-- SECTION 0 (cont.) -->
+  <bcf:section number="0">
+    <bcf:citekey order="2">Pearl2009b</bcf:citekey>
+    <bcf:citekey order="3">Cinelli2021</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">

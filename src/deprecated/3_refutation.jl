@@ -4,737 +4,501 @@ using Cairo
 using Random
 import Missings
 using Missings
-import Tar
-using Tar
-export Tar
 
 include("1_data_import_cleanup.jl")
 include("2_independence_checks_DAG_weights.jl")
 
-#generate random normal OD response variable and merge into new dataframe
-randnormalOD = DataFrame(randn(rng, Float64, (nrow(train), 1)), :auto)
-rng = MersenneTwister(820480);
-rename!(randnormalOD,:x1 => :randOD)
-randnormalOD.Row = (train.Row)
+# generate random normal  variable
+rng = MersenneTwister(141687);
+randnormal = DataFrame(randn(rng, Float64, (nrow(train), 1)), :auto)
+train.randnormal = randnormal.x1
 
-# merge dummy response into new dataframe
-refute = copy(train; copycols=true)
-refute.randOD = (randnormalOD.randOD)
-
-# generate all-zero variable (placebo treatment) 
-placebo = DataFrame(Array{Union{Missing, Int}}(missing, nrow(train), 1), :auto)
-rename!(placebo,:x1 => :placebo)
-for col in names(placebo)
-   placebo[col] = Missings.coalesce.(placebo[col], 0)
-end
-
-# merge placebo treatment into refute dataframe
-refute.placebo = placebo.placebo
-
-# generate random normal variable (common cause) and merge into refute dataframe
-commoncause = DataFrame(randn(rng, Float64, (nrow(train), 1)), :auto)
-rename!(commoncause,:x1 => :commoncause)
-
-# merge common cause variable into refute dataframe
-refute.commoncause = (commoncause.commoncause)
-
-# generate Weight dummy response variable and merge into refute dataframe
-randnormalWeight = DataFrame(randn(rng, Float64, (nrow(train), 1)), :auto)
-rng = MersenneTwister(729302);
-rename!(randnormalWeight, :x1 => :randWeight)
-refute.randWeight = (randnormalWeight.randWeight)
-lm(@formula(randOD ~ randWeight), refute) #checking the random variables are different
-refute.commoncause = (commoncause.commoncause)
-
-# generate repro dummy response variable and merge into refute dataframe
-rng = MersenneTwister(194740);
-randnormalRepro = DataFrame(randn(rng, Float64, (nrow(train), 1)))
-rename!(randnormalRepro, :x1 => :randRepro)
-refute.randRepro = (randnormalRepro.randRepro)
-lm(@formula(randWeight ~ randRepro), refute) #checking the random variables are different
-
-# generate Fat dummy response variable and merge into refute dataframe
-rng = MersenneTwister(103840);
-randnormalFat = DataFrame(randn(rng, Float64, (nrow(train), 1)))
-rename!(randnormalFat, :x1 => :randFat)
-refute.randFat = (randnormalFat.randFat)
-lm(@formula(randOD ~ randFat), refute) #checking the random variables are different
-
-
-# placebo treatment for diet
-coerce!(refute, :Diet => Union{Missing,Multiclass},)
-fit(MixedModel, @formula(Weight ~ placebo + Env + (1 | ID)), refute)
-fit(
-    MixedModel,
-    @formula(OD ~ placebo + Weight + days_since_1st_D_inj + Env + (1 | ID)),
-    refute,)
-
-# placebo treatment for Sex 
-fit(MixedModel, @formula(Weight ~ placebo + Fat_Scores_Sum + (1 | ID)), refute)
-fit(MixedModel, @formula(Fat_Scores_Sum ~ placebo + Env + (1 | ID)), refute)
-fit(
-    MixedModel,
-    @formula(OD ~ placebo + Weight + days_since_1st_D_inj + (1 | ID)),
-    refute,)
-
-# placebo treatment for environment 
-fit(MixedModel, @formula(isrepro ~ placebo + (1 | ID)), refute)
-fit(MixedModel, @formula(Fat_Scores_Sum ~ placebo + (1 | ID)), refute)
-fit(
-    MixedModel,
-    @formula(
-        OD ~
-            placebo +
-            Fat_Scores_Sum +
-            isrepro +
-            days_since_1st_D_inj +
-            (1 | ID)),
-    refute,)
+# generate all-zero variable
+placebo = DataFrame(x1=Int64[])
+push!(placebo, [0])
+repeat!(placebo, nrows(train))
+train.placebo = placebo.x1
 
 # common cause in all adjustment sets 
 # fit weights models with random normal common cause variable (c)
-categorical(train.ID)
-c1 = fit(MixedModel, @formula(Weight ~ Env + commoncause + (1 | ID)), refute)
+c1 = fit(MixedModel, @formula(Weight ~ Env + randnormal + (1 | ID)), train)
 
 c2 = fit(
     MixedModel,
-    @formula(Weight ~ Fat_Scores_Sum + Env + commoncause + (1 | ID)),
-    refute,
+    @formula(Weight ~ Fat_Scores_Sum + Env + randnormal + (1 | ID)),
+    train,
 )
 
 c3 = fit(
     MixedModel,
-    @formula(Weight ~ Sex + Fat_Scores_Sum + commoncause + (1 | ID)),
-    refute,
+    @formula(Weight ~ Sex + Fat_Scores_Sum + randnormal + (1 | ID)),
+    train,
 )
 
 c4 = fit(
     MixedModel,
-    @formula(Weight ~ Diet + Env + commoncause + (1 | ID)),
-    refute,
+    @formula(Weight ~ Diet + Env + randnormal + (1 | ID)),
+    train,
 )
 
 c5 = fit(
     MixedModel,
-    @formula(Fat_Scores_Sum ~ Env + commoncause + (1 | ID)),
-    refute,
+    @formula(Fat_Scores_Sum ~ Env + randnormal + (1 | ID)),
+    train,
 )
 
 c6 = fit(
     MixedModel,
-    @formula(Fat_Scores_Sum ~ Sex + Env + commoncause + (1 | ID)),
-    refute,
+    @formula(Fat_Scores_Sum ~ Sex + Env + randnormal + (1 | ID)),
+    train,
 )
 
 c7 = fit(
     MixedModel,
     @formula(
-        Fat_Scores_Sum ~ days_since_1st_trt + Env + commoncause + (1 | ID)
+        Fat_Scores_Sum ~ days_since_1st_trt + Env + randnormal + (1 | ID)
     ),
-    refute,
+    train,
 )
 
 c8 = fit(
     MixedModel,
     @formula(
-        OD ~
-            Diet + Weight + days_since_1st_D_inj + Env + commoncause + (1 | ID)
+        logOD ~
+            Diet + Weight + days_since_1st_D_inj + Env + randnormal + (1 | ID)
     ),
-    refute,
+    train,
 )
 
 c9 = fit(
     MixedModel,
     @formula(
-        OD ~
+        logOD ~
             Weight +
             Diet +
             Sex +
             Env +
             days_since_1st_D_inj +
-            commoncause +
+            randnormal +
             (1 | ID)
     ),
-    refute,
+    train,
 )
 
 c10 = fit(
     MixedModel,
-    @formula(OD ~ Sex + Weight + days_since_1st_D_inj + commoncause + (1 | ID)),
-    refute,
+    @formula(logOD ~ Sex + Weight + days_since_1st_D_inj + randnormal + (1 | ID)),
+    train,
 )
 
 c11 = fit(
     MixedModel,
     @formula(
-        OD ~
+        logOD ~
             Env +
             Fat_Scores_Sum +
             days_since_1st_D_inj +
-            commoncause +
+            randnormal +
             (1 | ID)
     ),
-    refute,
+    train,
 )
 
 c12 = fit(
     MixedModel,
-    @formula(OD ~ days_since_1st_D_inj + Env + commoncause + (1 | ID)),
-    refute,
+    @formula(logOD ~ days_since_1st_D_inj + Env + randnormal + (1 | ID)),
+    train,
 )
-
 
 # create fits dataframe with percentage difference in weights after common cause added to adjustment set
 commoncausefits = DataFrame(
-    W = Float64[],
-    C = Float64[],
-    Diff = Float64[],
-    PcDiff = Float64[],
-    Edge = String[],
+    W=Float64[],
+    C=Float64[],
+    Diff=Float64[],
+    PcDiff=Float64[],
+    Edge=String[],
 )
 
 
 push!(
     commoncausefits,
     (
-        w1.β[2],
-        c1.β[2],
-        w1.β[2] - c1.β[2],
-        abs(((w1.β[2] - c1.β[2]) / w1.β[2]) * 100),
+        (w1.beta[2]),
+        (c1.beta[2]),
+        (w1.beta[2]) - (c1.beta[2]),
+        ((((w1.beta[2]) - (c1.beta[2])) / (w1.beta[2])) * 100),
         "env -> weight",
     ),
 )
 push!(
     commoncausefits,
     (
-        w2.β[2],
-        c2.β[2],
-        w2.β[2] - c2.β[2],
-        abs(((w2.β[2] - c2.β[2]) / w2.β[2]) * 100),
+        (w2.beta[2]),
+        (c2.beta[2]),
+        (w2.beta[2]) - (c2.beta[2]),
+        ((((w2.beta[2]) - (c2.beta[2])) / (w2.beta[2])) * 100),
         "fat -> weight",
-    ),
+        ),
 )
 push!(
     commoncausefits,
     (
-        w3.β[2],
-        c3.β[2],
-        w3.β[2] - c3.β[2],
-        abs(((w3.β[2] - c3.β[2]) / w3.β[2]) * 100),
+        (w3.beta[2]),
+        (c3.beta[2]),
+        (w3.beta[2]) - (c3.beta[2]),
+        ((((w3.beta[2]) - (c3.beta[2])) / (w3.beta[2])) * 100),
         "sex -> weight",
     ),
 )
 push!(
     commoncausefits,
     (
-        w4.β[2],
-        c4.β[2],
-        w4.β[2] - c4.β[2],
-        abs(((w4.β[2] - c4.β[2]) / w4.β[2]) * 100),
+        (w4.beta[2]),
+        (c4.beta[2]),
+        (w4.beta[2]) - (c4.beta[2]),
+        ((((w4.beta[2]) - (c4.beta[2])) / (w4.beta[2])) * 100),
         "diet -> weight",
     ),
 )
 push!(
     commoncausefits,
     (
-        w5.β[2],
-        c5.β[2],
-        w5.β[2] - c5.β[2],
-        abs(((w5.β[2] - c5.β[2]) / w5.β[2]) * 100),
+        (w5.beta[2]),
+        (c5.beta[2]),
+        (w5.beta[2]) - (c5.beta[2]),
+        ((((w5.beta[2]) - (c5.beta[2])) / (w5.beta[2])) * 100),
         "env -> fat",
     ),
 )
 push!(
     commoncausefits,
     (
-        w6.β[2],
-        c6.β[2],
-        w6.β[2] - c6.β[2],
-        abs(((w6.β[2] - c6.β[2]) / w6.β[2]) * 100),
+        (w6.beta[2]),
+        (c6.beta[2]),
+        (w6.beta[2]) - (c6.beta[2]),
+        ((((w6.beta[2]) - (c6.beta[2])) / (w6.beta[2])) * 100),
+        "sex -> fat"
+    ),
+)
+push!(
+    commoncausefits,
+    (
+        (w7.beta[2]),
+        (c7.beta[2]),
+        (w7.beta[2]) - (c7.beta[2]),
+        ((((w7.beta[2]) - (c7.beta[2])) / (w7.beta[2])) * 100),
         "sex -> fat",
     ),
 )
 push!(
     commoncausefits,
     (
-        w7.β[2],
-        c7.β[2],
-        w7.β[2] - c7.β[2],
-        abs(((w7.β[2] - c7.β[2]) / w7.β[2]) * 100),
-        "time -> fat",
+        (w8.beta[2]),
+        (c8.beta[2]),
+        (w8.beta[2]) - (c8.beta[2]),
+        ((((w8.beta[2]) - (c8.beta[2])) / (w8.beta[2])) * 100),
+        "diet -> logOD",
     ),
 )
 push!(
     commoncausefits,
     (
-        w8.β[2],
-        c8.β[2],
-        w8.β[2] - c8.β[2],
-        abs(((w8.β[2] - c8.β[2]) / w8.β[2]) * 100),
-        "diet -> OD",
+        (w9.beta[2]),
+        (c9.beta[2]),
+        (w9.beta[2]) - (c9.beta[2]),
+        ((((w9.beta[2]) - (c9.beta[2])) / (w9.beta[2])) * 100),
+        "weight -> logOD"
     ),
 )
 push!(
     commoncausefits,
     (
-        w9.β[2],
-        c9.β[2],
-        w9.β[2] - c9.β[2],
-        abs(((w9.β[2] - c9.β[2]) / w9.β[2]) * 100),
-        "weight -> OD",
+        (w10.beta[2]),
+        (c10.beta[2]),
+        (w10.beta[2]) - (c10.beta[2]),
+        ((((w10.beta[2]) - (c10.beta[2])) / (w10.beta[2])) * 100),
+        "sex -> logOD",
     ),
 )
 push!(
     commoncausefits,
     (
-        w10.β[2],
-        c10.β[2],
-        w10.β[2] - c10.β[2],
-        abs(((w10.β[2] - c10.β[2]) / w10.β[2]) * 100),
-        "sex -> OD",
+        (w11.beta[2]),
+        (c11.beta[2]),
+        (w11.beta[2]) - (c11.beta[2]),
+        ((((w11.beta[2]) - (c11.beta[2])) / (w11.beta[2])) * 100),
+        "sex -> logOD",
     ),
 )
 push!(
     commoncausefits,
     (
-        w11.β[2],
-        c11.β[2],
-        w11.β[2] - c11.β[2],
-        abs(((w11.β[2] - c11.β[2]) / w11.β[2]) * 100),
-        "env -> OD",
-    ),
-)
-push!(
-    commoncausefits,
-    (
-        w12.β[2],
-        c12.β[2],
-        w12.β[2] - c12.β[2],
-        abs(((w12.β[2] - c12.β[2]) / w12.β[2]) * 100),
-        "time -> OD",
+        (w12.beta[2]),
+        (c12.beta[2]),
+        (w12.beta[2]) - (c12.beta[2]),
+        ((((w12.beta[2]) - (c12.beta[2])) / (w12.beta[2])) * 100),
+        "time -> logOD",
     ),
 )
 
-p = plot(
+common_cause_fits_plot = plot(
     commoncausefits,
-    x = :Edge,
-    y = :PcDiff,
+    x=:Edge,
+    y=:PcDiff,
     Geom.bar,
     Scale.x_discrete,
     Guide.ylabel("% Difference in Effect Size"),
 )
 
 # compare % change in effect size with p-value of original model
-commoncausefits.p_value = [w1.pvalues[2],w2.pvalues[2],w3.pvalues[2],w4.pvalues[2],w5.pvalues[2],w6.pvalues[2],w7.pvalues[2],w8.pvalues[2],w9.pvalues[2],w10.pvalues[2],w11.pvalues[2],w12.pvalues[2],]
+commoncausefits.p_value = [w1.pvalues[2],w2.pvalues[2],w3.pvalues[2],w4.pvalues[2],w9.pvalues[2],w6.pvalues[2],w7.pvalues[2],w8.pvalues[2],w9.pvalues[2],w10.pvalues[2],w11.pvalues[2],w12.pvalues[2],]
 
 @rput commoncausefits
 R"cor.test(commoncausefits$p_value, commoncausefits$PcDiff)"
 commoncauseps = lm(@formula(PcDiff ~ p_value), commoncausefits)
 
-
-p2 = plot(
+common_cause_p_plot = plot(
     commoncausefits,
-    x = :p_value,
-    y = :PcDiff,
+    x=:p_value,
+    y=:PcDiff,
     Geom.point,
-    slope = [commoncauseps.model.pp.beta0[2]],
-    intercept = [commoncauseps.model.pp.beta0[1]],
-    Geom.abline(style = :dash, color = "red"),
+    slope=[commoncauseps.model.pp.beta0[2]],
+    intercept=[commoncauseps.model.pp.beta0[1]],
+    Geom.abline(style=:dash, color="red"),
 )
-
 
 # fit dummy outcome variables
 # random normal variable for weight
 d1 = fit(
     MixedModel,
-    @formula(randWeight ~ Env + (1 | ID)),
-    refute,
+    @formula(randnormal ~ Env + (1 | ID)),
+    train,
 )
 d2 = fit(
     MixedModel,
-    @formula(randWeight ~ Fat_Scores_Sum + Env + (1 | ID)),
-    refute,
+    @formula(randnormal ~ Fat_Scores_Sum + Env + (1 | ID)),
+    train,
 )
-d3 = fit(MixedModel, @formula(randWeight ~ Sex + Fat_Scores_Sum + (1 | ID)), refute)
+d3 = fit(MixedModel, @formula(randnormal ~ Sex + Fat_Scores_Sum + (1 | ID)), train)
 
-# random normal variable for repro
-d4 = fit(MixedModel, @formula(randWeight ~ Diet + Env + (1 | ID)), refute)
+d4 = fit(MixedModel, @formula(randnormal ~ Diet + Env + (1 | ID)), train)
 
 # random normal variable for fat scores
-d5 = fit(MixedModel, @formula(randFat ~ Env + (1 | ID)), refute)
-d6 = fit(MixedModel, @formula(randFat ~ Sex + Env + (1 | ID)), refute)
+d5 = fit(MixedModel, @formula(randnormal ~ Env + (1 | ID)), train)
+d6 = fit(MixedModel, @formula(randnormal ~ Sex + Env + (1 | ID)), train)
 d7 = fit(
     MixedModel,
-    @formula(randFat ~ days_since_1st_trt + Env + (1 | ID)),
-    refute,
+    @formula(randnormal ~ days_since_1st_trt + Env + (1 | ID)),
+    train,
 )
 
-# random normal variable for OD
+# random normal variable for logOD
 d8 = fit(
     MixedModel,
-    @formula(randOD ~ Diet + Weight + days_since_1st_D_inj + Env + (1 | ID)),
-    refute,
+    @formula(randnormal ~ Diet + Weight + days_since_1st_D_inj + Env + (1 | ID)),
+    train,
 )
 d9 = fit(
     MixedModel,
     @formula(
-        randOD ~
+        randnormal ~
             Weight + Diet + Sex + Env + days_since_1st_D_inj + (1 | ID)
     ),
-    refute,
+    train,
 )
 d10 = fit(
     MixedModel,
-    @formula(randOD ~ Sex + Weight + days_since_1st_D_inj + (1 | ID)),
-    refute,
+    @formula(randnormal ~ Sex + Weight + days_since_1st_D_inj + (1 | ID)),
+    train,
 )
 d11 = fit(
     MixedModel,
     @formula(
-        randOD ~
+        randnormal ~
             Env + Fat_Scores_Sum + isrepro + days_since_1st_D_inj + (1 | ID)
     ),
-    refute,
+    train,
 )
 d12 = fit(
     MixedModel,
-    @formula(randOD ~ days_since_1st_D_inj + Fat_Scores_Sum + (1 | ID)),
-    refute,
+    @formula(randnormal ~ days_since_1st_D_inj + Fat_Scores_Sum + (1 | ID)),
+    train,
 )
 
 # create fits dataframe with percentage difference in weights after dummy response variable
 dummyfits = DataFrame(
-    W = Float64[],
-    D = Float64[],
-    Diff = Float64[],
-    PcDiff = Float64[],
-    Edge = String[],
+    W=Float64[],
+    D=Float64[],
+    Diff=Float64[],
+    PcDiff=Float64[],
+    Edge=String[],
 )
 
 
 push!(
     dummyfits,
     (
-        w1.β[2],
-        d1.β[2],
-        w1.β[2] - d1.β[2],
-        (((w1.β[2] - d1.β[2]) / w1.β[2]) * 100),
-        "repro -> weight",
+        (w1.beta[2]),
+        (d1.beta[2]),
+        (w1.beta[2]) - (d1.beta[2]),
+        ((((w1.beta[2]) - (d1.beta[2])) / (w1.beta[2])) * 100),
+        "env -> weight",
     ),
 )
 push!(
     dummyfits,
     (
-        w2.β[2],
-        d2.β[2],
-        w2.β[2] - d2.β[2],
-        (((w2.β[2] - d2.β[2]) / w2.β[2]) * 100),
+        (w2.beta[2]),
+        (d2.beta[2]),
+        (w2.beta[2]) - (d2.beta[2]),
+        ((((w2.beta[2]) - (d2.beta[2])) / (w2.beta[2])) * 100),
         "fat -> weight",
     ),
 )
 push!(
     dummyfits,
     (
-        w3.β[2],
-        d3.β[2],
-        w3.β[2] - d3.β[2],
-        (((w3.β[2] - d3.β[2]) / w3.β[2]) * 100),
+        (w3.beta[2]),
+        (d3.beta[2]),
+        (w3.beta[2]) - (d3.beta[2]),
+        ((((w3.beta[2]) - (d3.beta[2])) / (w3.beta[2])) * 100),
         "sex -> weight",
     ),
 )
 push!(
     dummyfits,
     (
-        w4.β[2],
-        d4.β[2],
-        w4.β[2] - d4.β[2],
-        (((w4.β[2] - d4.β[2]) / w4.β[2]) * 100),
+        (w4.beta[2]),
+        (d4.beta[2]),
+        (w4.beta[2]) - (d4.beta[2]),
+        ((((w4.beta[2]) - (d4.beta[2])) / (w4.beta[2])) * 100),
         "diet -> weight",
     ),
 )
 push!(
     dummyfits,
     (
-        w5.β[2],
-        d5.β[2],
-        w5.β[2] - d5.β[2],
-        (((w5.β[2] - d5.β[2]) / w5.β[2]) * 100),
-        "env -> repro",
-    ),
-)
-push!(
-    dummyfits,
-    (
-        w6.β[2],
-        d6.β[2],
-        w6.β[2] - d6.β[2],
-        (((w6.β[2] - d6.β[2]) / w6.β[2]) * 100),
+        (w5.beta[2]),
+        (d5.beta[2]),
+        (w5.beta[2]) - (d5.beta[2]),
+        ((((w5.beta[2]) - (d5.beta[2])) / (w5.beta[2])) * 100),
         "env -> fat",
     ),
 )
 push!(
     dummyfits,
     (
-        w7.β[2],
-        d7.β[2],
-        w7.β[2] - d7.β[2],
-        (((w7.β[2] - d7.β[2]) / w7.β[2]) * 100),
+        (w6.beta[2]),
+        (d6.beta[2]),
+        (w6.beta[2]) - (d6.beta[2]),
+        ((((w6.beta[2]) - (d6.beta[2])) / (w6.beta[2])) * 100),
+        "sex -> fat"
+    ),
+)
+push!(
+    dummyfits,
+    (
+        (w7.beta[2]),
+        (d7.beta[2]),
+        (w7.beta[2]) - (d7.beta[2]),
+        ((((w7.beta[2]) - (d7.beta[2])) / (w7.beta[2])) * 100),
         "sex -> fat",
     ),
 )
 push!(
     dummyfits,
     (
-        w8.β[2],
-        d8.β[2],
-        w8.β[2] - d8.β[2],
-        (((w8.β[2] - d8.β[2]) / w8.β[2]) * 100),
-        "time -> fat",
+        (w8.beta[2]),
+        (d8.beta[2]),
+        (w8.beta[2]) - (d8.beta[2]),
+        ((((w8.beta[2]) - (d8.beta[2])) / (w8.beta[2])) * 100),
+        "diet -> logOD",
     ),
 )
 push!(
     dummyfits,
     (
-        w9.β[2],
-        d9.β[2],
-        w9.β[2] - d9.β[2],
-        (((w9.β[2] - d9.β[2]) / w9.β[2]) * 100),
-        "diet -> OD",
+        (w9.beta[2]),
+        (d9.beta[2]),
+        (w9.beta[2]) - (d9.beta[2]),
+        ((((w9.beta[2]) - (d9.beta[2])) / (w9.beta[2])) * 100),
+        "weight -> logOD"
     ),
 )
 push!(
     dummyfits,
     (
-        w10.β[2],
-        d10.β[2],
-        w10.β[2] - d10.β[2],
-        (((w10.β[2] - d10.β[2]) / w10.β[2]) * 100),
-        "weight -> OD",
+        (w10.beta[2]),
+        (d10.beta[2]),
+        (w10.beta[2]) - (d10.beta[2]),
+        ((((w10.beta[2]) - (d10.beta[2])) / (w10.beta[2])) * 100),
+        "sex -> logOD",
     ),
 )
 push!(
     dummyfits,
     (
-        w11.β[2],
-        d11.β[2],
-        w11.β[2] - d11.β[2],
-        (((w11.β[2] - d11.β[2]) / w11.β[2]) * 100),
-        "sex -> OD",
+        (w11.beta[2]),
+        (d11.beta[2]),
+        (w11.beta[2]) - (d11.beta[2]),
+        ((((w11.beta[2]) - (d11.beta[2])) / (w11.beta[2])) * 100),
+        "sex -> logOD",
     ),
 )
 push!(
     dummyfits,
     (
-        w12.β[2],
-        d12.β[2],
-        w12.β[2] - d12.β[2],
-        (((w12.β[2] - d12.β[2]) / w12.β[2]) * 100),
-        "env -> OD",
+        (w12.beta[2]),
+        (d12.beta[2]),
+        (w12.beta[2]) - (d12.beta[2]),
+        ((((w12.beta[2]) - (d12.beta[2])) / (w12.beta[2])) * 100),
+        "time -> logOD",
     ),
 )
 
-p3 = plot(
+dummy_fits_effect_plot = plot(
     dummyfits,
-    x = :Edge,
-    y = :PcDiff,
+    x=:Edge,
+    y=:PcDiff,
     Geom.bar,
     Scale.x_discrete,
-    Guide.ylabel("% Loss of Effect Size"),
-Guide.xlabel(nothing),
+    Guide.ylabel("% Change in Effect Size"),
 )
 
-p4 = plot(dummyfits, x = :W, y = :D, Geom.point, color = :Edge)
-
-dummyfitps = DataFrame(
-    Edge = String[],
-    Wpvalue = Float64[],
-    Dpvalue = Float64[],
-    log100DummyFC = Float64[],
-)
-push!(
-    dummyfitps,
-    (
-        "env -> weight",
-        DataFrame(coeftable(w1).cols).x4[2],
-        DataFrame(coeftable(d1).cols).x4[2],
-        log(100,(
-            (
-                DataFrame(coeftable(d1).cols).x4[2] -
-                DataFrame(coeftable(w1).cols).x4[2]
-            ) / DataFrame(coeftable(w1).cols).x4[2]
-        ),
-    ),
-),)
-push!(
-    dummyfitps,
-    (
-        "fat -> weight",
-        DataFrame(coeftable(w2).cols).x4[2],
-        DataFrame(coeftable(d2).cols).x4[2],
-        log(100,(
-            (
-                DataFrame(coeftable(d2).cols).x4[2] -
-                DataFrame(coeftable(w2).cols).x4[2]
-            ) / DataFrame(coeftable(w2).cols).x4[2]
-        ),
-    ),
-),)
-push!(
-    dummyfitps,
-    (
-        "sex -> weight",
-        DataFrame(coeftable(w3).cols).x4[2],
-        DataFrame(coeftable(d3).cols).x4[2],
-        log(100,(
-            (
-                DataFrame(coeftable(d3).cols).x4[2] -
-                DataFrame(coeftable(w3).cols).x4[2]
-            ) / DataFrame(coeftable(w3).cols).x4[2]
-        ),
-    ),
-),)
-push!(
-    dummyfitps,
-    (
-        "diet -> weight",
-        DataFrame(coeftable(w4).cols).x4[2],
-        DataFrame(coeftable(d4).cols).x4[2],
-        log(100,(
-            (
-                DataFrame(coeftable(d4).cols).x4[2] -
-                DataFrame(coeftable(w4).cols).x4[2]
-            ) / DataFrame(coeftable(w4).cols).x4[2]
-        ),
-    ),
-),)
-push!(
-    dummyfitps,
-    (
-        "env -> fat",
-        DataFrame(coeftable(w5).cols).x4[2],
-        DataFrame(coeftable(d5).cols).x4[2],
-        log(100,(
-            (
-                DataFrame(coeftable(d5).cols).x4[2] -
-                DataFrame(coeftable(w5).cols).x4[2]
-            ) / DataFrame(coeftable(w5).cols).x4[2]
-        ),
-    ),
-),)
-push!(
-    dummyfitps,
-    (
-        "sex -> fat",
-        DataFrame(coeftable(w6).cols).x4[2],
-        DataFrame(coeftable(d6).cols).x4[2],
-        log(100,(
-            (
-                DataFrame(coeftable(d6).cols).x4[2] -
-                DataFrame(coeftable(w6).cols).x4[2]
-            ) / DataFrame(coeftable(w6).cols).x4[2]
-        ),
-    ),
-),)
-push!(
-    dummyfitps,
-    (
-        "time -> fat",
-        DataFrame(coeftable(w7).cols).x4[2],
-        DataFrame(coeftable(d7).cols).x4[2],
-        log(100,(
-            (
-                DataFrame(coeftable(d7).cols).x4[2] -
-                DataFrame(coeftable(w7).cols).x4[2]
-            ) / DataFrame(coeftable(w7).cols).x4[2]
-        ),
-    ),
-),)
-push!(
-    dummyfitps,
-    (
-        "diet -> OD",
-        DataFrame(coeftable(w8).cols).x4[2],
-        DataFrame(coeftable(d8).cols).x4[2],
-        log(100,(
-            (
-                DataFrame(coeftable(d8).cols).x4[2] -
-                DataFrame(coeftable(w8).cols).x4[2]
-            ) / DataFrame(coeftable(w8).cols).x4[2]
-        ),
-    ),
-),)
-push!(
-    dummyfitps,
-    (
-        "weight -> OD",
-        DataFrame(coeftable(w9).cols).x4[2],
-        DataFrame(coeftable(d9).cols).x4[2],
-        log(100,(
-            (
-                DataFrame(coeftable(d9).cols).x4[2] -
-                DataFrame(coeftable(w9).cols).x4[2]
-            ) / DataFrame(coeftable(w9).cols).x4[2]
-        ),
-    ),
-),)
-push!(
-    dummyfitps,
-    (
-        "sex -> OD",
-        DataFrame(coeftable(w10).cols).x4[2],
-        DataFrame(coeftable(d10).cols).x4[2],
-        log(100,(
-            (
-                DataFrame(coeftable(d10).cols).x4[2] -
-                DataFrame(coeftable(w10).cols).x4[2]
-            ) / DataFrame(coeftable(w10).cols).x4[2]
-        ),
-    ),
-),)
-push!(
-    dummyfitps,
-    (
-        "env -> OD",
-        DataFrame(coeftable(w11).cols).x4[2],
-        DataFrame(coeftable(d11).cols).x4[2],
-        log(100,(
-            (
-                DataFrame(coeftable(d11).cols).x4[2] -
-                DataFrame(coeftable(w11).cols).x4[2]
-            ) / DataFrame(coeftable(w11).cols).x4[2]
-        ),
-    ),
-),)
-push!(
-    dummyfitps,
-    (
-        "time -> OD",
-        DataFrame(coeftable(w12).cols).x4[2],
-        DataFrame(coeftable(d12).cols).x4[2],
-        log(100,(
-            (
-                DataFrame(coeftable(d12).cols).x4[2] -
-                DataFrame(coeftable(w12).cols).x4[2]
-            ) / DataFrame(coeftable(w12).cols).x4[2]
-        ),
-    ),
-),)
+# not enough change in effect size on time -> OD edge
+# check p values
+w12.pvalues[2] 
+d12.pvalues[2]
+# almost no change in effect size but massive loss in significance
 
 
-dummyfitjoin = innerjoin(dummyfits, dummyfitps, on = :Edge)
-dummyfitjoin.n = 1:nrow(dummyfitjoin)
-printstyled(dummyfitjoin)
-
-p5 = plot(
-    dummyfitjoin,
-    x = :Edge,
-    y = :log100DummyFC,
-    Geom.bar,
-    Geom.hline(color = "red"),
-    yintercept = [log(100, 1)],
-    Guide.ylabel("log(100) p-value fold change", orientation = :vertical),
-    Guide.xlabel(nothing),
+# placebo treatment for diet supplementation
+# w4 = diet -> body mass
+p4 = fit(MixedModel, @formula(Weight ~ placebo + Env + (1 | ID)), train)
+placebo4 = DataFrame(
+    Effect_size=Float64[],
+    Edge=String[],
 )
 
-@rput dummyfitjoin
-R"cor.test(dummyfitjoin$W, dummyfitjoin$log100DummyFC)"
+push!(placebo4,(w4.beta[2], "diet -> body mass"))
+push!(placebo4,(p4.beta[2], "placebo -> body mass"))
+
+placebo_4_plot = plot(placebo4, y=:Effect_size, x=:Edge, Geom.bar, color=:Edge)
+
+
+
+# w8 = diet -> OD
+p8 = fit(
+    MixedModel,
+    @formula(logOD ~ placebo + Weight + days_since_1st_D_inj + Env + (1 | ID)),
+    train,
+)
+placebo8 = DataFrame(
+    Effect_size=Float64[],
+    Edge=String[],
+)
+
+push!(placebo8,(w8.beta[2], "diet -> OD"))
+push!(placebo8,(p8.beta[2], "placebo -> OD"))
+
+placebo_8_plot = plot(placebo8, y=:Effect_size, x=:Edge, Geom.bar, color=:Edge)
