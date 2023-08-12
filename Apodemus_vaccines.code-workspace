@@ -1,10 +1,11 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
-	],
-	"settings": {
-		"cSpell.words": []
-	}
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "cSpell.words": [],
+    "julia.environmentPath": "/Users/s_a_b/Documents/Work/Papers/Apodemus_vaccines"
+  }
 }
