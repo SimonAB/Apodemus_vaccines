@@ -1,0 +1,83 @@
+% \documentclass{standalone}
+% \usepackage[dvipsnames]{xcolor}
+% \usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+
+
+% \begin{document}
+    \begin{tikzpicture}[scale=0.8, inner sep=1pt]
+      \node[inner sep = 0, font=\sffamily] (panel A) at (-3,5) {\textbf{A}};
+        \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4] (V) at (-3,0) {V};
+        \node[circle, draw, fill=RedOrange, text opacity=1, fill opacity=0.4] (E) at (3,0) {E};
+        \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4] (T) at (-1.7,0.5) {T};
+        \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4] (H) at (-2.5,1) {H};
+        \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4] (D) at (-1.7,2.5) {D};
+        \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4] (F) at (0,1) {F};
+        \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4] (M) at (0,2.2) {M};
+        \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4] (R) at (0,3.4) {R};
+        \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4] (P) at (0,4.6) {P};
+        \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4] (S) at (1.7,2.5) {S};
+        \draw [-stealth] (D) edge (E);
+        \draw [-stealth] (D) edge (F);
+        \draw [-stealth] (D) edge (M);
+        \draw [-stealth] (D) edge (P);
+        \draw [-stealth] (D) edge (R);
+        \draw [-stealth] (F) edge (E);
+        \draw [-stealth] (F) edge (M);
+        \draw [-stealth] (M) edge (E);
+        \draw [-stealth] (P) edge (E);
+        \draw [-stealth] (P) .. controls (1, 2.4) .. (F);
+        \draw [-stealth] (P) .. controls (0.7, 2.6) .. (M);
+        \draw [-stealth] (R) edge (E);
+        \draw [-stealth] (R) .. controls (0.6, 2.2) .. (F);
+        \draw [-stealth] (R) edge (M);
+        \draw [-stealth] (R) edge (P);
+        \draw [-stealth] (S) edge (E);
+        \draw [-stealth] (S) edge (F);
+        \draw [-stealth] (S) edge (M);
+        \draw [-stealth] (S) edge (P);
+        \draw [-stealth] (S) edge (R);
+        \draw [-stealth] (T) edge (E);
+        \draw [-stealth] (T) edge (F);
+        \draw [-stealth] (T) edge (M);
+        \draw [-stealth] (T) edge (R);
+        \draw [-stealth] (T) edge (P);
+        \draw [-stealth] (V) edge (E);
+        \draw [-stealth] (V) edge (T);
+        \draw [-stealth] (H) edge (E);
+        \draw [-stealth] (H) edge (F);
+        \draw [-stealth] (H) edge (M);
+        \draw [-stealth] (H) edge (P);
+        \draw [-stealth] (H) edge (R);
+        \draw [-stealth] (H) edge (T);
+    \end{tikzpicture}
+\hfill
+\tikzstyle{mybox} = [inner sep=1pt]
+    \begin{tikzpicture}
+      \node[inner sep = 0, font=\sffamily] (panel B) at (4,2) {\textbf{B}};
+        \node [mybox, right =of E] (box){%
+        \begin{minipage}[!t]{0.63\textwidth}
+            \begin{equation} \label{eq:SCM}
+                \footnotesize
+                \openup -1ex % affecting the line spacing in the environment
+                \begin{split}
+                    V &\coloneq \mathcal{U}_V \\
+                    H &\coloneq \mathcal{U}_H \\
+                    S &\coloneq \mathcal{U}_S \\
+                    D &\coloneq \beta_{HD}H + \mathcal{U}_D \\
+                    T &\coloneq \beta_{VT}V + \beta_{HT}H + \mathcal{U}_T \\
+                    R &\coloneq \beta_{DR}D + \beta_{HR}H + \beta_{TR}T + \beta_{SR}S + \mathcal{U}_R \\
+                    P &\coloneq \beta_{DP}D + \beta_{HP}H + \beta_{RP}R + \beta_{SP}S + \beta_{TP}T + \mathcal{U}_P \\
+                    F &\coloneq \beta_{DF}D + \beta_{HF}H + \beta_{TF}T + \beta_{SF}S + \beta_{RF}R + \beta_{PF}P + \mathcal{U}_F \\
+                    M &\coloneq \beta_{HM}H + \beta_{TM}T + \beta_{SM}S + \beta_{RM}R + \beta_{PM}P + \beta_{FM}F + \\
+                      &\beta_{DM}D + \mathcal{U}_M \\
+                    E &\coloneq \beta_{VE}V + \beta_{TE}T + \beta_{HE}H + \beta_{FE}F + \beta_{DE}D + \beta_{ME}M + \\
+                      &\beta_{RE}R + \beta_{PE}P + \beta_{SE}S + \mathcal{U}_E
+                \end{split}
+            \end{equation}
+        \end{minipage}
+};
+\end{tikzpicture}%
+%
+
+% \end{document}
