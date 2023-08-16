@@ -214,20 +214,24 @@ end
 
 
 # This function calculates the mean, standard deviation, and 5.5% and 94.5% quantiles for each column in the DataFrame, and then prints a summary table. It also prints a histogram for each column. The values are rounded to the specified number of digits. The number of bins in the histogram is set to the minimum of the number of rows in the DataFrame and 12.
-function precis(df::DataFrame; io=stdout, digits=4, depth=Inf, alpha=0.11)
+function precis(df::DataFrame; io=stdout, digits=4, depth=Inf, alpha=0.1)
     d = DataFrame()
     cols = collect.(skipmissing.(eachcol(df)))
     d.param = names(df)
     d.mean = mean.(cols)
     d.std = std.(cols)
-    quants = quantile.(cols, ([alpha / 2, 0.5, 1 - alpha / 2],))
+    lower_q = alpha / 2
+    lower_q_pc = lower_q * 100
+    higher_q = 1 - alpha / 2
+    higher_q_pc = higher_q * 100
+    quants = quantile.(cols, ([lower_q, 0.5, higher_q],))
     quants = hcat(quants...)
-    d[:, "5.5%"] = quants[1, :]
-    d[:, "50%"] = quants[2, :]
-    d[:, "94.5%"] = quants[3, :]
+    d[:, "$lower_q_pc %"] = quants[1, :]
+    d[:, "50 %"] = quants[2, :]
+    d[:, "$higher_q_pc %"] = quants[3, :]
     d.histogram = unicode_histogram.(cols, min(size(df, 1), 12))
 
-    for col in ["mean", "std", "5.5%", "50%", "94.5%"]
+    for col in ["mean", "std", "$lower_q_pc %", "50 %", "$higher_q_pc %"]
         d[:, col] .= round.(d[:, col], digits=digits)
     end
 
