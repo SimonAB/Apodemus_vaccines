@@ -249,13 +249,11 @@ To assess how a laboratory environment, enriched diet, and vaccination protocol 
 
 \FigDesign
 
-DTV-specific IgG1 varied substantially within and between wild and laboratory-bred wood mice, immunisation protocols, and diets. Group-wise comparisons revealed substantially lower vaccine responsiveness in wild \emph{vs.} laboratory animals and in dietary supplemented \emph{vs.} individuals, as well as substantial variability across all immunisation regimens (Figure~\ref{fig:igg1}A). Only mice that were administered the DT antigen generated DTV-specific IgG1, indicating that there was no pre-existing immunity to this antigen in our study populations (Figure~\ref{fig:igg1}A, `A'). Immunisation was most effective with two doses, partially rescuing responsiveness in the wild mice (LRT of Habitat \times vaccine regimen: \(\Delta dof = 4, \chi^2 = 30.6, p < 0.001 \); Figure~\ref{fig:igg1}A, `DD'), while only lab mice mounted similar antibody levels with a single dose if given enough time (Figure~\ref{fig:igg1}A, `DA').
-
-To further quantify how habitat (lab \emph{vs.} wild), diet (supplemented \emph{vs.} control), and immunisation protocol correlated with variation in vaccine responsiveness, we constructed a multilevel Bayesian model of those factors with intercepts varying by individual and immunisation protocol. Mice in the wild generated substantially weaker antibody responses to DTV than lab-based animals (Figure \ref{fig:igg1}B, `Hgit push --force origin masterab'). Surprisingly, diet supplementation reduced antibody levels across all immunisation protocols relative to individuals on standard diet – standard chow for lab mice; natural foraging for wild mice – (Figure \ref{fig:igg1}B, `Diet').\sab{Calculate contrasts for E under H and D}
+DTV-specific IgG1 varied substantially within and between wild and laboratory-bred wood mice, immunisation protocols, and diets (Figure~\ref{fig:igg1}). Mice in the wild generated 46.9\% ± 0.1 \% lower antibody responses to DTV than lab-based animals, irrespective of vaccine regimen or diet (Figure~\ref{fig:igg1}A, \ref{fig:igg1}B `Hab'). Only mice that were administered the DT antigen generated DTV-specific IgG1, indicating that there was no pre-existing immunity to this antigen in our study populations (Figure~\ref{fig:igg1}A, group `A'). Immunisation was most effective with two doses, partially rescuing responsiveness in the wild mice (Figure~\ref{fig:igg1}A, `DD'; difference between Wild non-boosted vs. Lab non-boosted OD = 0.75 ± 0.11 while difference between Wild boosted vs. Lab boosted OD = 0.61 ± 0.18; LRT of Habitat \times vaccine regimen: \(\Delta dof = 4, \chi^2 = 30.6, p < 0.001 \)), while only lab mice mounted similar antibody levels with a single dose by the end of the experiment (Figure~\ref{fig:igg1}A, `DA' vs `DD'; Lab boosted vs. Lab non-boosted OD = 0.2 ± 0.1 whereas Wild boosted vs. Wild non-boosted OD = 1.02 ± 0.23).
 
 \FigIgG
 
-In summary, the model predicts an average loss of DTV responsiveness of $65\% ± 8\%$ when moving from the lab to the wild, and of 26\% ± 7\% on the TransBreed diet, while a booster immunisation (`DD') roughly doubled the production of DT-specific antibodies relative to a single dose during the observation period of this experiment (Table~\ref{tbl:precis}).
+To further quantify how habitat (lab \emph{vs.} wild), diet (supplemented \emph{vs.} control), and immunisation protocol correlated with variation in vaccine responsiveness to each of the vaccine formulations, we constructed a multilevel Bayesian model of those factors with intercepts varying by individual and immunisation protocol (Figure \ref{fig:igg1}B, Table~\ref{tbl:precis}). This indicated that the effects of each vaccine formulation on DTV-specific IgG1 OD were substantially more variable than those of habitat and diet. However, these effects do not account for potential effects of sex, reproductive status, body mass, body fat, or parasite burdens, which we hypothesised to contribute to variation in vaccine responsiveness.
 
 \subsection{Construction of a structural causal model of vaccine responsiveness}
 
@@ -382,7 +380,7 @@ Conceived and designed the experiments: ABP, SAB \\ Performed the experiments: S
 
 \section*{Tables}
 
-\TblPrecis \sab{Replace with final table of fully parametrised SCM} \pagebreak
+\TblPrecis \pagebreak
 
 \newcommand{\sectionbreak}{\clearpage} \newrefsection \nolinenumbers
 

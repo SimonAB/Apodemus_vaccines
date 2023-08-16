@@ -214,7 +214,7 @@ end
 
 
 # This function calculates the mean, standard deviation, and 5.5% and 94.5% quantiles for each column in the DataFrame, and then prints a summary table. It also prints a histogram for each column. The values are rounded to the specified number of digits. The number of bins in the histogram is set to the minimum of the number of rows in the DataFrame and 12.
-function precis(df::DataFrame; io=stdout, digits=4, depth=Inf, alpha=0.1)
+function precis(df::DataFrame; io=stdout, digits=3, depth=Inf, alpha=0.1)
     d = DataFrame()
     cols = collect.(skipmissing.(eachcol(df)))
     d.param = names(df)

@@ -5,13 +5,6 @@ MultiLevel Models
 - Date: 2022-08-01
 =#
 
-
-## Start REPL
-
-"""
-# Run this in terminal (ctrl-I, then ctrl-\)
-julia  --threads auto --project=.
-"""
 ## Import packages
 
 print("Running on ", Threads.nthreads(), " threads.")
@@ -53,35 +46,23 @@ df_unique =
     @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
     DataFrame
 
-
-# function Base.unique(ctg::CategoricalArray)
-#     l = levels(ctg)
-#     newctg = CategoricalArray(l)
-#     levels!(newctg, l)
-# end
-
-
 levels!(df.vax_history, ["A", "D", "AD", "DA", "DD"]);
 levels(df[!, :vax_history])
 
 # levels!(CategoricalArray(convert(Vector{String}, df.vax_history)), ["A", "D", "AD", "DA", "DD"])
 df = sort(df, :vax_history)
 
-df.IDidx = get_idx(:ID, df)[1]
+df.IDidx = get_idx(:ID, df)[1];
 
 countmap(df.vax_history)
 
 ## Check distribution of transformed E
-# Computes the z-score for each log-odds value in the dataframe
-# df.E is the dataframe of log-odds values
-# df[!, :logOD] is the logOD column of the dataframe
-# dims=1 means that we compute the z-scores for each row of the dataframe
-# the result is a dataframe with the same dimensions as df.E
 seroconv = standardize(ZScoreTransform, df.E[df[!, :logOD].>0], dims=1);
 
 f = Figure()
 hist(f[1, 1], seroconv, bins=10, normalization=:pdf)
 save("../manuscript/Figures/plots/E_hist.pdf", f)
+f
 
 ExactOneSampleKSTest(seroconv, Normal())
 """
@@ -104,22 +85,35 @@ Details:
 ## Difference between boosted, non-boosted, and control mice in lab vs wild
 
 # Wild Boosted vs Lab Boosted
-mean(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)]) - mean(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)]) # 0.6
-std(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)]) / sqrt(length(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)])) # 0.07
-
-# std(df.E[(df.vax_history .== "DD") .& (df.islab .== 1) .& (df.isvax .== 1)])/sqrt(length(df.E[(df.vax_history .== "DD") .& (df.islab .== 1) .& (df.isvax .== 1)])) - std(df.E[(df.vax_history .== "DD") .& (df.islab .== 0) .& (df.isvax .==1)])/sqrt(length(df.E[(df.vax_history .== "DD") .& (df.islab .== 0) .& (df.isvax .==1)])) # 0.1
+Δm = mean(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)]) - mean(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)]) |> x -> round(x; digits=2);
+Δstd_error = sqrt((std(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)])) + (std(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)]))) |> x -> round(x; digits=2);
+println("Wild boosted vs. Lab boosted OD: $Δm ± $Δstd_error")
 
 # Wild Non-Boosted vs Lab Non-Boosted
-mean(df.E[(df.vax_history.!="DD").&(df.islab.==1).&(df.isvax.==1)]) - mean(df.E[(df.vax_history.!="DD").&(df.islab.==0).&(df.isvax.==1)]) # 0.75
-std(df.E[(df.vax_history.!="DD").&(df.islab.==1).&(df.isvax.==1)]) / sqrt(length(df.E[(df.vax_history.!="DD").&(df.islab.==1).&(df.isvax.==1)])) # 0.07
+Δm = mean(df.E[(df.vax_history.!="DD").&(df.islab.==1).&(df.isvax.==1)]) - mean(df.E[(df.vax_history.!="DD").&(df.islab.==0).&(df.isvax.==1)]) |> x -> round(x; digits=2);
+Δstd_error = sqrt((std(df.E[(df.vax_history.!="DD").&(df.islab.==1).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.!="DD").&(df.islab.==1).&(df.isvax.==1)])) + (std(df.E[(df.vax_history.!="DD").&(df.islab.==0).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.!="DD").&(df.islab.==0).&(df.isvax.==1)]))) |> x -> round(x; digits=2);
+println("Wild non-boosted vs. Lab non-boosted OD: $Δm ± $Δstd_error")
 
 # Wild vaccinated vs Lab vaccinated
-mean(df.E[(df.islab.==1).&(df.isvax.==1)]) - mean(df.E[(df.islab.==0).&(df.isvax.==1)]) # 0.7
-std(df.E[(df.islab.==1).&(df.isvax.==1)]) / sqrt(length(df.E[(df.islab.==1).&(df.isvax.==1)])) # 0.06
+Δm = mean(df.E[(df.islab.==1).&(df.isvax.==1)]) - mean(df.E[(df.islab.==0).&(df.isvax.==1)]) |> x -> round(x; digits=2);
+Δstd_error = sqrt((std(df.E[(df.islab.==1).&(df.isvax.==1)])^2 / length(df.E[(df.islab.==1).&(df.isvax.==1)])) + (std(df.E[(df.islab.==0).&(df.isvax.==1)])^2 / length(df.E[(df.islab.==0).&(df.isvax.==1)]))) |> x -> round(x; digits=2);
+println("Wild vaccinated vs. Lab vaccinated OD: $Δm ± $Δstd_error")
+
+# Lab Non-Boosted vs Lab Boosted
+Δm = mean(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)]) - mean(df.E[(df.vax_history.=="DA").&(df.islab.==1).&(df.isvax.==1)]) |> x -> round(x; digits=2);
+Δstd_error = sqrt((std(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)])) + (std(df.E[(df.vax_history.=="DA").&(df.islab.==1).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.=="DA").&(df.islab.==1).&(df.isvax.==1)]))) |> x -> round(x; digits=2);
+println("Lab boosted vs. Lab non-boosted OD: $Δm ± $Δstd_error")
+
+# Wild Non-Boosted vs Wild Boosted
+Δm = mean(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)]) - mean(df.E[(df.vax_history.=="DA").&(df.islab.==0).&(df.isvax.==1)]) |> x -> round(x; digits=2);
+Δstd_error = sqrt((std(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)])) + (std(df.E[(df.vax_history.=="DA").&(df.islab.==0).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.=="DA").&(df.islab.==0).&(df.isvax.==1)]))) |> x -> round(x; digits=2);
+println("Wild boosted vs. Wild non-boosted OD: $Δm ± $Δstd_error")
+
 
 # Percentage drop in OD in wild vs lab (original value - new value) / original value * 100%
-(mean(df.OD[(df.islab.==1).&(df.isvax.==1)]) - mean(df.OD[(df.islab.==0).&(df.isvax.==1)])) / mean(df.OD[(df.islab.==1).&(df.isvax.==1)]) * 100 # 47%
-
+Δpc = (mean(df.OD[(df.islab.==1).&(df.isvax.==1)]) - mean(df.OD[(df.islab.==0).&(df.isvax.==1)])) / mean(df.OD[(df.islab.==1).&(df.isvax.==1)]) * 100 |> x -> round(x; digits=1); # 47%
+Δpc_std_error = sqrt((std(df.OD[(df.islab.==1).&(df.isvax.==1)])^2 / length(df.OD[(df.islab.==1).&(df.isvax.==1)])) + (std(df.OD[(df.islab.==0).&(df.isvax.==1)])^2 / length(df.OD[(df.islab.==0).&(df.isvax.==1)]))) |> x -> round(x; digits=1);
+println("Percentage drop in OD in wild vs lab: $Δpc ± $Δpc_std_error")
 
 ## Is there a significant interaction between vaccine responses and habitat? (GLMM specification)
 
@@ -207,8 +201,6 @@ Ē_ctrl = mean(df[df.vax_history.=="A", :E])
 
 @model function varying_intercept(IDidx, Vidx, T, H, D, E; n_id=length(unique(IDidx)), Ē_ref=mean(df[df.vax_history.=="A", :E]))
     vax_μ = zeros(length(unique(Vidx)))
-    # h_μ = zeros(length(unique(H)))
-    # d_μ = zeros(length(unique(D)))
 
     #priors
     α ~ Normal(mean(E), 2.5 * std(E))         # population-level intercept
@@ -239,24 +231,27 @@ vi_chn_df = DataFrame(vi_chn)[!, r"α\b|β"];
 precis(vi_chn_df)
 
 """
-┌───────┬────────────────────────────────────────────────────────────┐
-│ param │    mean     std     5.5%      50%    94.5%       histogram │
-├───────┼────────────────────────────────────────────────────────────┤
-│     α │ -0.4898  0.8507  -1.8563  -0.4846   0.8657         ▁▁▅█▅▁▁ │
-│    βd │ -0.2755  0.0776  -0.3995  -0.2761  -0.1499   ▁▁▁▂▄▇█▇▄▂▁▁▁ │
-│    βh │ -0.7043  0.0865  -0.8425  -0.7039  -0.5653        ▁▁▃██▃▁▁ │
-│    βt │  0.0246  0.0047   0.0171   0.0246   0.0321       ▁▁▁▄██▃▁▁ │
-│ βv[1] │  0.1229  0.8387  -1.2141   0.1165   1.4823  ▁▁▁▁▃▅██▇▄▂▁▁▁ │
-│ βv[2] │  1.4072  0.8362    0.067   1.4058   2.7568         ▁▁▅█▄▁▁ │
-│ βv[3] │  1.0636  0.8389   -0.282   1.0605   2.4188  ▁▁▁▁▃▆██▇▄▂▁▁▁ │
-│ βv[4] │   1.672  0.8404   0.3307   1.6648   3.0301        ▁▁▄█▆▂▁▁ │
-│ βv[5] │   2.035  0.8406   0.6897   2.0299   3.3895        ▁▁▃██▃▁▁ │
-└───────┴────────────────────────────────────────────────────────────┘
 
 """
-# vi_plt = coeftab_plot(vi_chn_df; legend=false, xgrid=false, size=(600,100))
-# savefig(vi_plt, "../plots/vi_coeftab.pdf")
-# vi_plt
+
+"""
+┌───────┬───────────────────────────────────────────────────────┐
+│ param │   mean    std   5.0 %    50 %  95.0 %       histogram │
+├───────┼───────────────────────────────────────────────────────┤
+│     α │ -0.476  0.851  -1.878   -0.47   0.902        ▁▁▁▅█▅▁▁ │
+│ βv[1] │  0.105  0.838  -1.257     0.1    1.48  ▁▁▁▃▅██▇▄▂▁▁▁▁ │
+│ βv[2] │  1.391  0.836   0.027   1.385    2.77  ▁▁▁▂▄▇██▅▃▁▁▁▁ │
+│ βv[3] │  1.046  0.838  -0.321   1.046   2.424        ▁▁▂██▃▁▁ │
+│ βv[4] │  1.655  0.839   0.288   1.652   3.037   ▁▁▁▂▅██▇▄▂▁▁▁ │
+│ βv[5] │  2.017   0.84    0.65   2.014   3.404  ▁▁▁▁▃▆██▆▃▂▁▁▁ │
+│    βt │  0.025  0.005   0.017   0.025   0.032        ▁▁▄██▃▁▁ │
+│    βh │ -0.704  0.087   -0.85  -0.703  -0.562  ▁▁▁▂▄▆██▆▃▂▁▁▁ │
+│    βd │ -0.273  0.079  -0.402  -0.274  -0.142   ▁▁▁▂▄▇█▇▄▂▁▁▁ │
+└───────┴───────────────────────────────────────────────────────┘
+
+
+
+"""
 
 ## Draw figures
 
@@ -280,7 +275,7 @@ legend!(ax1[1, 3], bps, valign=:top, patchsize=(10, 10))
 # ax2 = Axis(fig[2,1])
 # CairoMakie.density!(ax2, randn(200))
 # params = Symbol.(names(vi_chn_df))[2:end]
-params = [:βd, :βh, Symbol("βv[1]"), Symbol("βv[2]"), Symbol("βv[3]"), Symbol("βv[4]"), Symbol("βv[5]")]
+params = [:βh, :βd, Symbol("βv[1]"), Symbol("βv[2]"), Symbol("βv[3]"), Symbol("βv[4]"), Symbol("βv[5]")]
 n_chains = length(chains(vi_chn))
 n_samples = length(vi_chn)
 
@@ -288,8 +283,8 @@ n_samples = length(vi_chn)
 for (i, param) in enumerate(params)
     gl = fig[3+i, 1]
     ax = Axis(gl; ylabel=[
-        "Diet",
         "Hab",
+        "Diet",
         "A",
         "D",
         "AD",
