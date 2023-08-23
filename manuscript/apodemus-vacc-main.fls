@@ -1,6 +1,6 @@
-PWD /Users/s_a_b/Documents/Work/Papers/Apodemus_vaccines/manuscript
+PWD /Users/s_a_b/Documents/Work/Projects/Apodemus-Wild_Vaccines/Apodemus_vaccines/manuscript
 INPUT /usr/local/texlive/2023/texmf-var/web2c/luahbtex/lualatex.fmt
-INPUT /Users/s_a_b/Documents/Work/Papers/Apodemus_vaccines/manuscript/apodemus-vacc-main.tex
+INPUT /Users/s_a_b/Documents/Work/Projects/Apodemus-Wild_Vaccines/Apodemus_vaccines/manuscript/apodemus-vacc-main.tex
 OUTPUT apodemus-vacc-main.log
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/latexconfig/lualatexquotejobname.lua
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/base/ltluatex.lua
@@ -332,8 +332,8 @@ INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolD12.t
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolD8.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolD6.tfm
 INPUT ./apodemus-vacc-main.tdo
-INPUT /usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map
 OUTPUT apodemus-vacc-main.tdo
+INPUT /usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map
 INPUT ./Figures/Apodemus-vacc-figures/StudyDesign_paper.pdf
 INPUT ./Figures/Apodemus-vacc-figures/StudyDesign_paper.pdf
 INPUT ./Figures/plots/IgG1.pdf
