@@ -251,6 +251,7 @@ precis(vi_chn_df)
 
 
 
+
 """
 
 ## Draw figures
