@@ -19,7 +19,7 @@ OUTPUT /Users/s_a_b/Library/texlive/2023/texmf-var/m_t_x_t_e_s_t.tmp
 INPUT /usr/local/texlive/2023/texmf-dist/tex/luatex/luaotfload/luaotfload-parsers.lua
 INPUT /usr/local/texlive/2023/texmf-dist/tex/luatex/luaotfload/luaotfload-configuration.lua
 INPUT /usr/local/texlive/2023/texmf-dist/tex/luatex/luaotfload/luaotfload-status.lua
-INPUT /usr/local/texlive/2023/texmf-dist/tex/luatex/luaotfload/fontloader-2022-10-03.lua
+INPUT /usr/local/texlive/2023/texmf-dist/tex/luatex/luaotfload/fontloader-2023-08-19.lua
 INPUT /usr/local/texlive/2023/texmf-dist/tex/luatex/luaotfload/luaotfload-fallback.lua
 INPUT /usr/local/texlive/2023/texmf-dist/tex/luatex/luaotfload/luaotfload-multiscript.lua
 INPUT /usr/local/texlive/2023/texmf-dist/tex/luatex/luaotfload/luaotfload-scripts.lua

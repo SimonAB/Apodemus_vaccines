@@ -5,18 +5,18 @@
 
 
 % \begin{document}
-\begin{tikzpicture}[scale=0.75, inner sep=1pt]
+\begin{tikzpicture}[scale=0.75, inner sep=0pt]
   \node[inner sep = 0, font=\sffamily] (panel A) at (-3,5) {\textbf{A}};
   \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (V) at (-3,0) {\(V\)};
   \node[circle, draw, fill=RedOrange, text opacity=1, fill opacity=0.4, minimum width=16pt] (E) at (3,0) {\(E\)};
-  \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (T) at (-1.7,0.5) {\(T\)};
-  \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (H) at (-2.5,1) {\(H\)};
-  \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (D) at (-1.7,2.5) {\(D\)};
+  \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (T) at (-1.6,0.4) {\(T\)};
+  \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (H) at (-2.6,1) {\(H\)};
+  \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (D) at (-2.2,2.7) {\(D\)};
   \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (F) at (0,1) {\(F\)};
   \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (M) at (0,2.2) {\(M\)};
   \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (R) at (0,3.4) {\(R\)};
   \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (P) at (0,4.6) {\(P\)};
-  \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (S) at (1.7,2.5) {\(S\)};
+  \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (S) at (2.2,2.7) {\(S\)};
   \draw [-stealth] (D) edge (E);
   \draw [-stealth] (D) edge (F);
   \draw [-stealth] (D) edge (M);
@@ -29,7 +29,7 @@
   \draw [-stealth] (P) .. controls (1, 2.4) .. (F);
   \draw [-stealth] (P) .. controls (0.7, 2.6) .. (M);
   \draw [-stealth] (R) edge (E);
-  \draw [-stealth] (R) .. controls (0.6, 2.2) .. (F);
+  \draw [-stealth] (R) .. controls (0.7, 2.2) .. (F);
   \draw [-stealth] (R) edge (M);
   \draw [-stealth] (R) edge (P);
   \draw [-stealth] (S) edge (E);
