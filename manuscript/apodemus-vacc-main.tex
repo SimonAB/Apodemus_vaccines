@@ -260,7 +260,7 @@ To estimate vaccine responsiveness $E$ as a function of vaccination $V$, habitat
 
 We then tested the validity of the causal hypotheses described above using the DAG to construct each model. For example, the DAG in Fig.~\ref{fig:DAGtikz} implies that parasite infection should be conditionally independent of vaccination if we adjust for diet, reproductive status, sex, and habitat ($P \upmodels V \mid D, R, S, H$); we therefore fit a binomial generalised linear model $glm(P \sim \alpha + \beta_V V + \beta_D D + \beta_R R + \beta_S S + \beta_H H)$. This process was repeated for all implied independencies derived from the causal graph (see \nameref{sec:structure}), and the DAG updated until all causal paths were supported by the observed data and consistent with plausible causal expectations. This resulted in the DAG shown in Figure~\ref*{fig:DAGtikz}.
 
-\subsubsection{Total and direct causal effects driving vaccine
+\subsection{Total and direct causal effects driving vaccine
 	responsiveness}
 
 \FigDAGtikzParam
@@ -268,7 +268,11 @@ We then tested the validity of the causal hypotheses described above using the D
 We then fully parametrised $\mathfrak{C}$ (Model~\ref{eq:SCM}) using a set of Bayesian linear models containing variables required to ensure de-confounded estimation of the total and natural direct causal effects operating between the nodes of $\mathfrak{C}$ (Fig.~\ref{fig:DAGtikzParam}).
 Vaccination resulted in a total increase of 1.5 ± 0.13 ($log10 + 1$)-transformed OD units ($logOD$) from unvaccinated animals in this experiment, 1.43 ± 0.09 of which were estimated as direct (or mediated by unmeasured variables, e.g. immune pathways) with a negligible fraction (<0.1 on average) mediated by time since vaccination $T$, reproductive status $R$, body mass $M$, and body fat $F$ (Fig.~\ref*{fig:DAGtikzParam}B). However, vaccine responsiveness $E$ was strongly influenced by both the wild habitat and dietary supplementation. The wild habitat had a direct negative impact of 0.64 ± 0.17 $logOD$ on vaccine responsiveness, while dietary supplementation resulted in an average reduction of 0.28 ± 0.12 $logOD$.
 
-Furthermore, while wild wood mice were lighter (-1.3 ± 0.2 g on average) and accumulated less fat (by 2.3 points on 6-point scale), dietary supplementation increased body mass (+2.53 ± 0.3 g) though did not affect body fat scores. Interestingly, the effect of dietary supplementation on vaccine responsiveness $E$ was mostly direct (or mediated by unobserved variables) and not mediated by its effects on body mass, fat stores, reproductive status $R$, or parasite burden $P$. In fact, parasites $P$ had no clear effect on $E$ despite being strongly positively associated with the wild habitat (Fig.~\ref*{fig:DAGtikzParam}B).
+Furthermore, while wild wood mice were lighter (-1.3 ± 0.2 g on average) and accumulated less fat (by 2.3 points on 6-point scale), dietary supplementation increased body mass (+2.53 ± 0.3 g) though did not affect body fat scores. Interestingly, the effect of dietary supplementation on vaccine responsiveness $E$ was mostly direct (or mediated by unobserved variables) and not mediated by its effects on body mass, fat stores, reproductive status $R$, or parasite burden $P$. \sab{Add total effect of $S$ on $E$ here} In fact, parasites $P$ had no clear effect on $E$ despite being strongly positively associated with the wild habitat (Fig.~\ref*{fig:DAGtikzParam}B).
+
+\subsection{Effect of parasite infection among the infected}
+
+What is $P(E|P)$?
 
 \sab{Do we want to highlight more results from the SCM?}
 
