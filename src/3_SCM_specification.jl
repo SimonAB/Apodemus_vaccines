@@ -684,6 +684,97 @@ precis(D_nP_chn_df)
 p = plot_chains_df(D_nP_chn; show_intercept=true, show_traces=false)
 save("../manuscript/Figures/plots/D_nP_chn.pdf", p)
 
+## Total effect of S on E
+
+adjustmentSets(dag, "S", "E", effect="total") # { }
+
+@model function S_E_NDE(IDidx, E, S; n_id=length(unique(IDidx)))
+  # population-level priors
+  α ~ Normal(mean(E), 2.5 * std(E))  # overall intercept
+  βS_ ~ Normal(0, 0.5)  # slope of S on E
+  σ ~ Exponential(std(E))  # residual SD
+
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)     # group-level intercepts
+
+  # likelihood
+  Ê = @. α + α_ID[IDidx] + βS_ * S
+  return E ~ MvNormal(Ê, σ^2 * I)
+end
+
+S_E_NDE_model = S_E_NDE(dag_df.IDidx, dag_df.E, dag_df.S); # note log10(1+X)-transformed parasite counts.
+
+S_E_NDE_chn = sample(S_E_NDE_model, NUTS(), MCMCThreads(), 3000, 4)
+
+S_E_NDE_chn_df = DataFrame(S_E_NDE_chn)[!, r"α\b|β"];
+precis(S_E_NDE_chn_df)
+
+"""
+┌───────┬──────────────────────────────────────────────────────┐
+│ param │   mean    std   5.0 %    50 %  95.0 %      histogram │
+├───────┼──────────────────────────────────────────────────────┤
+│     α │ -0.377  0.227  -0.751  -0.377  -0.005     ▁▁▁▄██▅▁▁▁ │
+│   βS_ │  0.267  0.145   0.029   0.267   0.503  ▁▁▁▁▃▆█▇▄▂▁▁▁ │
+└───────┴──────────────────────────────────────────────────────┘
+
+"""
+
+## Direct effect of S on E
+
+adjustmentSets(dag, "S", "E", effect="direct") # { D, F, H, M, P, R, T }
+
+@model function S_E(E, S, D, Ḟ, H, M, P, R, T, IDidx; n_id=length(unique(IDidx)))
+
+  α ~ Normal(mean(E), 2.5 * std(E))
+  σ ~ Exponential(std(E))
+
+  βS ~ Normal(0, 1)
+  βD ~ Normal(0, 1)
+  βF ~ Normal(0, 1)
+  βH ~ Normal(0, 1)
+  βM ~ Normal(0, 1)
+  βP ~ Normal(0, 1)
+  βR ~ Normal(0, 1)
+  βT ~ Normal(0, 1)
+
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+
+  # missing F values
+  N_missing = sum(ismissing.(Ḟ))
+  F_impute ~ filldist(Normal(), N_missing)
+  ν ~ Normal(0.5, 1)
+  σ_F ~ Exponential()
+
+  i_missing = 1
+  for i in eachindex(Ḟ)
+    if ismissing(Ḟ[i])
+      F_impute[i_missing] ~ Normal(ν, σ_F)
+      f_imputed = F_impute[i_missing]
+      i_missing += 1
+    else
+      Ḟ[i] ~ Normal(ν, σ_F)
+      f_imputed = Ḟ[i]
+    end
+
+    # likelihood
+    µ = @. α + α_ID[IDidx][i] + βS * S[i] + βD * D[i] + βF * f_imputed + βH * H[i] + βM * M[i] + βP * P[i] + βR * R[i] + βT * T[i]
+    E[i] ~ Normal(µ, σ)
+  end
+end
+
+S_E_model = S_E(dag_df.E, dag_df.S, dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.T, dag_df.IDidx)
+
+Turing.setadbackend(:forwarddiff)
+S_E_ch = sample(S_E_model, NUTS(), MCMCThreads(), 3000, 4)
+Turing.setadbackend(:reverse_diff)
+
+S_E_df = DataFrame(S_E_ch)[!, r"α\b|β"];
+precis(S_E_df)
+
+
 ## Direct effect of S on nP
 
 adjustmentSets(dag, "S", "P", effect="direct") # {D, H, R, T}
