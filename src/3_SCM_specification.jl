@@ -688,7 +688,37 @@ save("../manuscript/Figures/plots/D_nP_chn.pdf", p)
 
 adjustmentSets(dag, "S", "E", effect="total") # { }
 
-@model function S_E_NDE(IDidx, E, S; n_id=length(unique(IDidx)))
+glmm_S_E = fit(MixedModel, @formula(E ~ 1 + S + (1 | ID)), dag_df)
+
+"""
+Linear mixed model fit by maximum likelihood
+ E ~ 1 + S + (1 | ID)
+   logLik   -2 logLik     AIC       AICc        BIC
+  -376.2616   752.5232   760.5232   760.6640   775.1889
+
+Variance components:
+            Column   Variance Std.Dev.
+ID       (Intercept)  0.387887 0.622806
+Residual              0.535476 0.731762
+ Number of obs: 289; levels of grouping factors: 110
+
+  Fixed-effects parameters:
+───────────────────────────────────────────────────
+                 Coef.  Std. Error      z  Pr(>|z|)
+───────────────────────────────────────────────────
+(Intercept)  -0.414166    0.23313   -1.78    0.0756
+S             0.292378    0.150432   1.94    0.0519
+───────────────────────────────────────────────────
+
+"""
+
+boot = parametricbootstrap(MersenneTwister(1234), 3000, glmm_S_E);
+coefplot(boot)
+ridgeplot(boot)
+
+# Bayesian model
+
+@model function S_E(IDidx, E, S; n_id=length(unique(IDidx)))
   # population-level priors
   α ~ Normal(mean(E), 2.5 * std(E))  # overall intercept
   βS_ ~ Normal(0, 0.5)  # slope of S on E
@@ -703,12 +733,12 @@ adjustmentSets(dag, "S", "E", effect="total") # { }
   return E ~ MvNormal(Ê, σ^2 * I)
 end
 
-S_E_NDE_model = S_E_NDE(dag_df.IDidx, dag_df.E, dag_df.S); # note log10(1+X)-transformed parasite counts.
+S_E_model = S_E(dag_df.IDidx, dag_df.E, dag_df.S); # note log10(1+X)-transformed parasite counts.
 
-S_E_NDE_chn = sample(S_E_NDE_model, NUTS(), MCMCThreads(), 3000, 4)
+S_E_chn = sample(S_E_model, NUTS(), MCMCThreads(), 3000, 4)
 
-S_E_NDE_chn_df = DataFrame(S_E_NDE_chn)[!, r"α\b|β"];
-precis(S_E_NDE_chn_df)
+S_E_chn_df = DataFrame(S_E_chn)[!, r"α\b|β"];
+precis(S_E_chn_df)
 
 """
 ┌───────┬──────────────────────────────────────────────────────┐
@@ -723,6 +753,41 @@ precis(S_E_NDE_chn_df)
 ## Direct effect of S on E
 
 adjustmentSets(dag, "S", "E", effect="direct") # { D, F, H, M, P, R, T }
+
+glmm_D_S_E = fit(MixedModel, @formula(E ~ 1 + S + D + Ḟ + H + M + nP + R + T + (1 | ID)), dag_df)
+
+"""
+Linear mixed model fit by maximum likelihood
+ E ~ 1 + S + D + Ḟ + H + M + nP + R + T + (1 | ID)
+   logLik   -2 logLik     AIC       AICc        BIC
+  -248.5361   497.0721   519.0721   520.3292   556.5016
+
+Variance components:
+            Column   Variance Std.Dev.
+ID       (Intercept)  0.391933 0.626045
+Residual              0.302228 0.549753
+ Number of obs: 222; levels of grouping factors: 105
+
+  Fixed-effects parameters:
+─────────────────────────────────────────────────────
+                   Coef.  Std. Error      z  Pr(>|z|)
+─────────────────────────────────────────────────────
+(Intercept)   0.00653222  0.450702     0.01    0.9884
+S             0.105497    0.171951     0.61    0.5395
+D            -0.255627    0.142518    -1.79    0.0729
+Ḟ             0.11542     0.0836066    1.38    0.1674
+H            -0.254267    0.246416    -1.03    0.3021
+M            -0.112094    0.09397     -1.19    0.2329
+nP            2.43457e-5  0.00334429   0.01    0.9942
+R            -0.182099    0.202639    -0.90    0.3688
+T             0.0296054   0.00519063   5.70    <1e-07
+─────────────────────────────────────────────────────
+
+"""
+
+boot = parametricbootstrap(MersenneTwister(1234), 3000, glmm_D_S_E);
+coefplot(boot)
+ridgeplot(boot)
 
 @model function S_E(E, S, D, Ḟ, H, M, P, R, T, IDidx; n_id=length(unique(IDidx)))
 
