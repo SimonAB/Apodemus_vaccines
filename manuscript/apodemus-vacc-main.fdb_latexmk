@@ -1,13 +1,13 @@
 # Fdb version 4
-["biber apodemus-vacc-main"] 1698218549 "apodemus-vacc-main.bcf" "apodemus-vacc-main.bbl" "apodemus-vacc-main" 1698218591 0
+["biber apodemus-vacc-main"] 1698218549 "apodemus-vacc-main.bcf" "apodemus-vacc-main.bbl" "apodemus-vacc-main" 1698228530 0
   "./apodemus-vacc-refs.bib" 1692108173 142853 266d9965e4994001f19614da852293d8 ""
-  "apodemus-vacc-main.bcf" 1698218591 112245 46be45c491a903819e056418362b48b5 "lualatex"
+  "apodemus-vacc-main.bcf" 1698228529 112245 46be45c491a903819e056418362b48b5 "lualatex"
   (generated)
   "apodemus-vacc-main.bbl"
   "apodemus-vacc-main.blg"
   (rewritten before read)
-["lualatex"] 1698218586 "/Users/s_a_b/Documents/Work/Projects/Apodemus-Wild_Vaccines/Apodemus_vaccines/manuscript/apodemus-vacc-main.tex" "apodemus-vacc-main.pdf" "apodemus-vacc-main" 1698218591 0
-  "/Users/s_a_b/Documents/Work/Projects/Apodemus-Wild_Vaccines/Apodemus_vaccines/manuscript/apodemus-vacc-main.tex" 1698218586 45545 453f5a669e66dd7a0861e017ebb55084 ""
+["lualatex"] 1698228525 "/Users/s_a_b/Documents/Work/Projects/Apodemus-Wild_Vaccines/Apodemus_vaccines/manuscript/apodemus-vacc-main.tex" "apodemus-vacc-main.pdf" "apodemus-vacc-main" 1698228530 0
+  "/Users/s_a_b/Documents/Work/Projects/Apodemus-Wild_Vaccines/Apodemus_vaccines/manuscript/apodemus-vacc-main.tex" 1698228528 45710 0d985676a9ded23da394b9b0d778917a ""
   "/Users/s_a_b/Library/texlive/2023/texmf-var/luatex-cache/generic/fonts/otl/lmroman10-bold.luc" 1693922420 128410 12f05cf771ed69dbcb8a045587c614b5 ""
   "/Users/s_a_b/Library/texlive/2023/texmf-var/luatex-cache/generic/fonts/otl/lmroman10-regular.luc" 1693922420 127327 b48f6994b4aa64d4ab84cbf23d0ffe7e ""
   "/Users/s_a_b/Library/texlive/2023/texmf-var/luatex-cache/generic/fonts/otl/texgyrecursor-bold.luc" 1693922421 128963 6656560f3bf6c1accb54735e7d0dd0e9 ""
@@ -334,17 +334,17 @@
   "/usr/local/texlive/2023/texmf-var/web2c/luahbtex/lualatex.fmt" 1693900339 12195883 11943085002d2e06f525ec4424c53de5 ""
   "Figures/Apodemus-vacc-figures/SCM_flow.pdf" 1692181273 49507 09534e8100f24d775b7fa443d77b681c ""
   "Figures/Apodemus-vacc-figures/StudyDesign_paper.pdf" 1692181273 19180 8fb0c45ae25c9cbae0e03c0521f7c44a ""
-  "Figures/DAGtikz-param.tex" 1696239750 6163 9845e48c9f66d18aa5b542003765b6a2 ""
+  "Figures/DAGtikz-param.tex" 1698228431 6067 56975d49d93665b4512ee414d16400ab ""
   "Figures/DAGtikz.tex" 1694611460 3919 204c2b7596187872c567a0dbbaebc4b1 ""
   "Figures/plots/IgG1.pdf" 1692564990 51909 4dd8f92726f41fe8c68f737ef139d009 ""
   "Figures/plots/IgG1_varint.pdf" 1692564944 598082 7612d4623735323e85f5fc94701e07c4 ""
   "Figures/plots/MultiLevel_NDE_P_E_chn_relabel.pdf" 1691863202 52173 70f9184c9fe3947414da8a3a31f687ee ""
-  "apodemus-vacc-figures.tex" 1696239751 9703 c1490babccfbafc8321b6d9e0134a53a ""
-  "apodemus-vacc-main.aux" 1698218591 48390 8cc2ab1142071c9e4f2376b1e2d00cb4 "lualatex"
+  "apodemus-vacc-figures.tex" 1698220785 9695 fd338945f65d7d87eb4b78581408bcd2 ""
+  "apodemus-vacc-main.aux" 1698228529 47703 dc34b01be2b35e81e804c37574492f0f "lualatex"
   "apodemus-vacc-main.bbl" 1698218553 207510 6b52cd8682165d9fa690181f7344a1de "biber apodemus-vacc-main"
-  "apodemus-vacc-main.run.xml" 1698218591 2578 2e3fdb3de7fdda374ba236b8db78381a "lualatex"
-  "apodemus-vacc-main.tdo" 1698218591 1097 54257ca32a2d5b3c9cb5f447ce65303d "lualatex"
-  "apodemus-vacc-main.tex" 1698218586 45545 453f5a669e66dd7a0861e017ebb55084 ""
+  "apodemus-vacc-main.run.xml" 1698228529 2578 2e3fdb3de7fdda374ba236b8db78381a "lualatex"
+  "apodemus-vacc-main.tdo" 1698228529 788 5612ede02f214bdab800756aeeeb97a6 "lualatex"
+  "apodemus-vacc-main.tex" 1698228528 45710 0d985676a9ded23da394b9b0d778917a ""
   (generated)
   "apodemus-vacc-main.aux"
   "apodemus-vacc-main.bcf"

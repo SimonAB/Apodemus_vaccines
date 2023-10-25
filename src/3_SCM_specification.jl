@@ -38,6 +38,7 @@ using RCall
 using CairoMakie
 CairoMakie.activate!(type="svg")
 using MixedModelsMakie
+using Formatting
 
 # include modules
 cd("./src/")
@@ -239,34 +240,39 @@ ridgeplot(boot)
 ## Total effect of `nP` on `E`
 adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, V}
 
-df = (; x=dag_df.nP[dag_df.P.==2], y=dag_df.E[dag_df.P.==2])
+# selected only infected mice
+dag_df_infected = dag_df[dag_df.P.==2, :] # select rows of dag_df for which dag_df.P.==2
+dag_df_infected.IDidx = get_idx(:ID, df)[1]
+
+# Plot
 layers = linear() + visual(Scatter)
-plt = data(df) * mapping(:x, :y)
-p = draw(layers * plt, axis=(xlabel="H. polygyrus worm count", ylabel="α-DT IgG1 (standardised)"))
+plt = data(dag_df_infected) * mapping(:lognP, :E)
+p = draw(layers * plt, axis=(xlabel="H. polygyrus worm count (log10(1 + nP))", ylabel="α-DT IgG1 (standardised)"))
 save("../manuscript/Figures/plots/P_E_cor.pdf", p)
 
 # Naive model (does not use adjustment set)
 # point estimate sanity check
-naive_glmm_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + (1 | ID)), dag_df; progress=false)
+naive_glmm_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + (1 | ID)), dag_df_infected; progress=false)
 """
 Linear mixed model fit by maximum likelihood
  E ~ 1 + lognP + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -375.6974   751.3948   759.3948   759.5356   774.0605
+   -60.6290   121.2581   129.2581   130.1276   136.9854
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.367267 0.606025
-Residual              0.541787 0.736062
- Number of obs: 289; levels of grouping factors: 110
+ID       (Intercept)  0.096246 0.310236
+Residual              0.549422 0.741230
+ Number of obs: 51; levels of grouping factors: 19
 
   Fixed-effects parameters:
-────────────────────────────────────────────────────
-                  Coef.  Std. Error      z  Pr(>|z|)
-────────────────────────────────────────────────────
-(Intercept)   0.0854454    0.079998   1.07    0.2855
-lognP        -0.322612     0.143614  -2.25    0.0247
-────────────────────────────────────────────────────
+───────────────────────────────────────────────────
+                 Coef.  Std. Error      z  Pr(>|z|)
+───────────────────────────────────────────────────
+(Intercept)   0.559782    0.384286   1.46    0.1452
+lognP        -0.660584    0.285738  -2.31    0.0208
+───────────────────────────────────────────────────
+
 """
 
 qqnorm(naive_glmm_P_E; qqline=:fitrobust)
@@ -276,27 +282,9 @@ cp = coefplot(boot; conf_level=0.95)
 save("../manuscript/Figures/plots/P_E_coefplot.pdf", cp)
 ridgeplot(boot; conf_level=0.95)
 save("../manuscript/Figures/plots/P_E_ridgeplot.pdf", cp)
+
 # Bayesian model
-"""
-naive_P_E(IDidx, E, P; n_id=length(unique(IDidx)))
-
-# This function performs Bayesian inference and takes the following arguments:
-- IDidx: A vector of integers. Each element of the vector corresponds
-       to the ID number of the subject to which the corresponding
-       observation belongs.
-- E: A vector of the observed values of E.
-- P: A vector of the observed values of P.
-- n_id: The number of unique ID numbers in IDidx.
-
-# The function returns the following variables:
-- α: The population-level intercept.
-- βPE: The population-level coefficient for P.
-- σ: The population-level standard deviation.
-- τ: The group-level standard deviation for the random intercepts.
-- α_ID: The group-level intercepts.
-- Ê: The expected values of E.
-"""
-@model function naive_P_E(IDidx, E, P; n_id=length(unique(IDidx)))
+@model function naive_P_E(IDidx, E, nP; n_id=length(unique(IDidx)))
   # population-level priors
   α ~ Normal(mean(E), 2.5 * std(E))
   βPE ~ Normal(0, 0.5)
@@ -308,11 +296,11 @@ naive_P_E(IDidx, E, P; n_id=length(unique(IDidx)))
   α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
 
   # likelihood
-  Ê = @. α + α_ID[IDidx] + βPE * P
+  Ê = @. α + α_ID[IDidx] + βPE * nP
   return E ~ MvNormal(Ê, σ^2 * I)
 end
 
-naive_P_E_model = naive_P_E(dag_df.IDidx, dag_df.E, log10.(1 .+ dag_df.nP)); # note log10(1+X)-transformed parasite counts.
+naive_P_E_model = naive_P_E(dag_df_infected.IDidx, dag_df_infected.E, dag_df_infected.lognP); # note log10(1+X)-transformed parasite counts.
 # naive_P_E_model = naive_P_E(dag_df.IDidx, dag_df.E, dag_df.P); # note Probability of being infected
 
 # naive_P_E_model = varying_intercept(dag_df.nP, dag_df.IDidx, dag_df.E); # note log10(1+X)-transformed parasite counts.
@@ -336,32 +324,32 @@ save("../manuscript/Figures/plots/naive_P_E_chn_df.pdf", p)
 ## Properly-adjusted model: total effect of `nP` on `E`
 adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, V }
 
-# point estimate sanity check
-glmm_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + D + H + R + S + V + (1 | ID)), dag_df)
+# Mixed Model - excluding H since length(unique(dag_df_infected.H))=1
+glmm_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + D + R + S + V + (1 | ID)), dag_df_infected)
 """
 Linear mixed model fit by maximum likelihood
- E ~ 1 + nP + D + H + R + S + V + (1 | ID)
+ E ~ 1 + lognP + D + R + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -291.4721   582.9442   600.9442   601.5893   633.9420
+   -54.1721   108.3441   124.3441   127.7727   139.7987
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.046160 0.214848
-Residual              0.398471 0.631246
- Number of obs: 289; levels of grouping factors: 110
+ID       (Intercept)  0.019575 0.139909
+Residual              0.471247 0.686474
+ Number of obs: 51; levels of grouping factors: 19
 
   Fixed-effects parameters:
-─────────────────────────────────────────────────────
-                   Coef.  Std. Error      z  Pr(>|z|)
-─────────────────────────────────────────────────────
-(Intercept)  -2.01692     0.317457    -6.35    <1e-09
-nP           -0.00176294  0.00201676  -0.87    0.3820
-D            -0.281907    0.0860935   -3.27    0.0011
-H            -0.606474    0.140824    -4.31    <1e-04
-R            -0.0632344   0.162134    -0.39    0.6965
-S             0.275767    0.0882784    3.12    0.0018
-V             1.62056     0.112449    14.41    <1e-46
-─────────────────────────────────────────────────────
+───────────────────────────────────────────────────
+                 Coef.  Std. Error      z  Pr(>|z|)
+───────────────────────────────────────────────────
+(Intercept)  -1.61109     0.960908  -1.68    0.0936
+lognP        -0.52165     0.315781  -1.65    0.0985
+D            -0.151094    0.24211   -0.62    0.5326
+R            -0.116407    0.324117  -0.36    0.7195
+S             0.157128    0.240046   0.65    0.5127
+V             1.16835     0.338118   3.46    0.0005
+───────────────────────────────────────────────────
+
 
 """
 
@@ -370,13 +358,52 @@ boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_P_E);
 coefplot(boot)
 ridgeplot(boot)
 
+# Direct effect of P on E among the infected
+adjustmentSets(dag, "P", "E", effect="direct") # { D, F, H, M, R, S, V}
+
+# Mixed model
+
+glmm_DE_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + D + Ḟ + M + R + S + V + (1 | ID)), dag_df_infected)
+
+"""
+Linear mixed model fit by maximum likelihood
+ E ~ 1 + lognP + D + Ḟ + M + R + S + V + (1 | ID)
+   logLik   -2 logLik     AIC       AICc        BIC
+   -53.9266   107.8533   127.8533   133.3533   147.1715
+
+Variance components:
+            Column   Variance Std.Dev.
+ID       (Intercept)  0.016659 0.129068
+Residual              0.469236 0.685008
+ Number of obs: 51; levels of grouping factors: 19
+
+  Fixed-effects parameters:
+────────────────────────────────────────────────────
+                  Coef.  Std. Error      z  Pr(>|z|)
+────────────────────────────────────────────────────
+(Intercept)  -1.49         1.07116   -1.39    0.1642
+lognP        -0.584714     0.35534   -1.65    0.0999
+D            -0.126434     0.249144  -0.51    0.6118
+Ḟ             0.0990188    0.154197   0.64    0.5208
+M             0.0377835    0.226099   0.17    0.8673
+R            -0.135389     0.386997  -0.35    0.7265
+S             0.177533     0.249498   0.71    0.4767
+V             1.17781      0.335573   3.51    0.0004
+────────────────────────────────────────────────────
+"""
+
+qqnorm(glmm_DE_P_E; qqline=:fitrobust)
+boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_DE_P_E);
+coefplot(boot)
+ridgeplot(boot)
+
+
 # Population-level model for the log of the expected number
-@model function P_E(IDidx, E, P, D, H, R, S, T; n_id=length(unique(IDidx)))
+@model function P_E(IDidx, E, P, D, R, S, T; n_id=length(unique(IDidx)))
   # population-level priors
   α ~ Normal(mean(E), 2.5 * std(E))
   βPE ~ Normal(0, 0.5)
   βDE ~ Normal(0, 0.5)
-  βHE ~ Normal(0, 0.5)
   βRE ~ Normal(0, 0.5)
   βSE ~ Normal(0, 0.5)
   βTE ~ Normal(0, 0.5)
@@ -388,11 +415,11 @@ ridgeplot(boot)
   α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
 
   # likelihood
-  Ê = α .+ α_ID[IDidx] .+ βPE * P .+ βDE * D .+ βHE * H .+ βRE * R .+ βSE * S .+ βTE * T
+  Ê = α .+ α_ID[IDidx] .+ βPE * P .+ βDE * D .+ βRE * R .+ βSE * S .+ βTE * T
   return E ~ MvNormal(Ê, σ^2 * I)
 end
 
-P_E_model = P_E(dag_df.IDidx, dag_df.E, log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.R, dag_df.S, dag_df.T); # note log10(1+X)-transformed parasite counts.
+P_E_model = P_E(dag_df_infected.IDidx, dag_df_infected.E, log10.(1 .+ dag_df_infected.nP), dag_df_infected.D, dag_df_infected.R, dag_df_infected.S, dag_df_infected.T); # note log10(1+X)-transformed parasite counts.
 
 P_E_priors = sample(P_E_model, Prior(), MCMCThreads(), 3000, 4);
 summarize(P_E_priors)
@@ -405,7 +432,6 @@ precis(P_E_priors_df)
 ├───────┼───────────────────────────────────────────────────────┤
 │     α │ -0.0083  2.4806  -3.9559  -0.0138  3.9856  ▁▁▂▅██▅▂▁▁ │
 │   βDE │ -0.0053  0.4986  -0.7983  -0.0052   0.784  ▁▁▁▄██▄▁▁▁ │
-│   βHE │ -0.0058  0.4996  -0.8064  -0.0027  0.7984  ▁▁▁▄██▄▁▁▁ │
 │   βPE │  0.0038  0.5024  -0.7917   0.0064  0.8134   ▁▁▄██▄▁▁▁ │
 │   βRE │  0.0029  0.5008  -0.8006   0.0001  0.8195   ▁▁▁▄██▄▁▁ │
 │   βSE │ -0.0154  0.4994  -0.8142  -0.0166  0.7811  ▁▁▄██▃▁▁▁▁ │
@@ -444,14 +470,14 @@ precis(P_E_chn_df)
 p = plot_chains_df(P_E_chn)
 save("../manuscript/Figures/plots/P_E_chn_df.pdf", p)
 
-## Natural Direct effect of `nP` on `E`
+## Direct effect of `P` on `E`
 
 # Minimal sufficient adjustment set for estimating the direct effect of P on E:
 adjustmentSets(dag, "P", "E", effect="direct") # { D, F, H, M, R, S, V }
 
 # GLMM
 
-glmm_DE_P_E = fit(MixedModel, @formula(E ~ 1 + nP + D + Ḟ + H + M + R + S + V + (1 | ID)), dag_df)
+glmm_DE_P_E = fit(MixedModel, @formula(E ~ 1 + P + D + Ḟ + H + M + R + S + V + (1 | ID)), dag_df)
 """
 Linear mixed model fit by maximum likelihood
  E ~ 1 + nP + D + Ḟ + H + M + R + S + V + (1 | ID)
@@ -529,7 +555,7 @@ ridgeplot(boot)
   end
 end
 
-DE_P_E_model = DE_P_E(dag_df.IDidx, dag_df.E, log10.(1 .+ dag_df.nP), dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, dag_df.R, dag_df.S, dag_df.V);
+DE_P_E_model = DE_P_E(dag_df.IDidx, dag_df.E, dag_df.P, dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, dag_df.R, dag_df.S, dag_df.V);
 
 Turing.setadbackend(:forwarddiff)
 # Turing.setrdcache(false)
