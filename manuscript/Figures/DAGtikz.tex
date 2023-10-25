@@ -6,17 +6,17 @@
 
 % \begin{document}
 \begin{tikzpicture}[scale=0.75, inner sep=0pt]
-  \node[inner sep = 0, font=\sffamily] (panel A) at (-3,5) {\textbf{A}};
+  \node[inner sep = 0, font=\sffamily] (panel A) at (-3,5.3) {\textbf{A}};
   \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (V) at (-3,0) {\(V\)};
   \node[circle, draw, fill=RedOrange, text opacity=1, fill opacity=0.4, minimum width=16pt] (E) at (3,0) {\(E\)};
-  \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (T) at (-1.6,0.4) {\(T\)};
-  \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (H) at (-2.6,1) {\(H\)};
-  \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (D) at (-2.2,2.7) {\(D\)};
+  % \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (T) at (-1.6,0.4) {\(T\)};
+  \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (H) at (-2.8,1.5) {\(H\)};
+  \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (D) at (-2.5,3) {\(D\)};
   \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (F) at (0,1) {\(F\)};
   \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (M) at (0,2.2) {\(M\)};
   \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (R) at (0,3.4) {\(R\)};
   \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (P) at (0,4.6) {\(P\)};
-  \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (S) at (2.2,2.7) {\(S\)};
+  \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (S) at (2.2,3) {\(S\)};
   \draw [-stealth] (D) edge (E);
   \draw [-stealth] (D) edge (F);
   \draw [-stealth] (D) edge (M);
@@ -37,24 +37,24 @@
   \draw [-stealth] (S) edge (M);
   \draw [-stealth] (S) edge (P);
   \draw [-stealth] (S) edge (R);
-  \draw [-stealth] (T) edge (E);
-  \draw [-stealth] (T) edge (F);
-  \draw [-stealth] (T) edge (M);
-  \draw [-stealth] (T) edge (R);
-  \draw [-stealth] (T) edge (P);
   \draw [-stealth] (V) edge (E);
-  \draw [-stealth] (V) edge (T);
-  \draw [-stealth] (H) edge (E);
+  \draw [-stealth] (V) edge (F);
+  \draw [-stealth] (V) edge (M);
+  \draw [-stealth] (V) edge (R);
+  \draw [-stealth] (V) edge (P);
+  \draw [-stealth] (V) edge (E);
+  % \draw [-stealth] (V) edge (T);
+  \draw [-stealth] (H) .. controls (0, 0.4) .. (E);
   \draw [-stealth] (H) edge (F);
   \draw [-stealth] (H) edge (M);
   \draw [-stealth] (H) edge (P);
   \draw [-stealth] (H) edge (R);
-  \draw [-stealth] (H) edge (T);
+  % \draw [-stealth] (H) edge (T);
 \end{tikzpicture}
 \hfill
 \tikzstyle{mybox} = [inner sep=1pt]
 \begin{tikzpicture}
-  \node[inner sep = 0, font=\sffamily] (panel B) at (4,2) {\textbf{B}};
+  \node[inner sep = 0, font=\sffamily] (panel B) at (3.5,2.2) {\textbf{B}};
   \node [mybox, right =of E] (box){%
     \begin{minipage}[!t]{0.63\textwidth}
       \begin{equation} \label{eq:SCM}
@@ -64,15 +64,15 @@
           V &\coloneq \mathcal{U}_V \\
           H &\coloneq \mathcal{U}_H \\
           S &\coloneq \mathcal{U}_S \\
-          D &\coloneq \beta_{HD}H + \mathcal{U}_D \\
-          T &\coloneq \beta_{VT}V + \beta_{HT}H + \mathcal{U}_T \\
-          R &\coloneq \beta_{DR}D + \beta_{HR}H + \beta_{TR}T + \beta_{SR}S + \mathcal{U}_R \\
-          P &\coloneq \beta_{DP}D + \beta_{HP}H + \beta_{RP}R + \beta_{SP}S + \beta_{TP}T + \mathcal{U}_P \\
-          F &\coloneq \beta_{DF}D + \beta_{HF}H + \beta_{TF}T + \beta_{SF}S + \beta_{RF}R + \beta_{PF}P + \mathcal{U}_F \\
-          M &\coloneq \beta_{HM}H + \beta_{TM}T + \beta_{SM}S + \beta_{RM}R + \beta_{PM}P + \beta_{FM}F + \\
-          &\beta_{DM}D + \mathcal{U}_M \\
-          E &\coloneq \beta_{VE}V + \beta_{TE}T + \beta_{HE}H + \beta_{FE}F + \beta_{DE}D + \beta_{ME}M + \\
-          &\beta_{RE}R + \beta_{PE}P + \beta_{SE}S + \mathcal{U}_E
+          D &\coloneq \mathcal{U}_D \\
+          % T &\coloneq \beta_{VT}V + \beta_{HT}H + \mathcal{U}_T \\
+          R &\coloneq \beta_{DR}D + \beta_{HR}H + \beta_{VR}V + \beta_{SR}S + \mathcal{U}_R \\
+          P &\coloneq \beta_{TP}V + \beta_{DP}D + \beta_{HP}H + \beta_{RP}R + \beta_{SP}S + \mathcal{U}_P \\
+          F &\coloneq \beta_{TF}V + \beta_{DF}D + \beta_{HF}H + \beta_{SF}S + \beta_{RF}R + \beta_{PF}P + \mathcal{U}_F \\
+          M &\coloneq \beta_{VM}V + \beta_{HM}H + \beta_{SM}S + \beta_{RM}R + \beta_{PM}P + \beta_{FM}F\ +\\
+          & \beta_{DM}D + \mathcal{U}_M \\
+          E &\coloneq \beta_{VE}V + \beta_{HE}H + \beta_{FE}F + \beta_{DE}D + \beta_{ME}M + \beta_{RE}R\ +\\
+          & \beta_{PE}P + \beta_{SE}S + \mathcal{U}_E
         \end{split}
       \end{equation}
     \end{minipage}

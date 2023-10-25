@@ -74,46 +74,43 @@ filtered_df = dag_df[dag_df.P.==1, :];
 filtered_unique_df = dag_df_unique[dag_df_unique.P.==1, :];
 
 
-## SCM identification
-
 # DAG specification - this is our graphical causal hypothesis
 
-dag = dagitty("dag{D -> E;
+dag = dagitty("dag{
+D -> E;
 D -> F;
 D -> M;
 D -> P;
 D -> R;
 F -> E;
 F -> M;
-M -> E;
-P -> E;
-P -> F;
-P -> M;
-R -> P;
-R -> E;
-R -> F;
-R -> M;
-S -> E;
-S -> F;
-S -> M;
-S -> P;
-S -> R;
-T -> E;
-T -> F;
-T -> M;
-T -> R;
-T -> P;
-V -> E;
-V -> T;
 H -> E;
 H -> F;
 H -> M;
 H -> P;
 H -> R;
-H -> T}")
+M -> E;
+P -> E;
+P -> F;
+P -> M;
+R -> E;
+R -> F;
+R -> M;
+R -> P;
+S -> E;
+S -> F;
+S -> M;
+S -> P;
+S -> R;
+V -> E;
+V -> F;
+V -> M;
+V -> P;
+V -> R;
+}")
 
-## Total effect of V on E
-adjustmentSets(dag, "V", "E", effect="total") # {}
+## Average causal effect of V on E
+adjustmentSets(dag, "V", "E", effect="total") # {} -> V is assumed to be a RCT
 
 @model function V_E(IDidx, E, V; n_id=length(unique(IDidx)))
   # population-level priors
@@ -151,14 +148,19 @@ plot_chains_df(V_E_chn)
 
 ## Direct effect of V on E
 
-adjustmentSets(dag, "V", "E", effect="direct") # { H, T }
+adjustmentSets(dag, "V", "E", effect="direct") # { D, F, H, M, P, R, S }
 
-@model function V_E_NDE(IDidx, E, V, H, T; n_id=length(unique(IDidx)))
+@model function V_E_NDE(IDidx, E, V, D, Ḟ, H, M, P, R, S; n_id=length(unique(IDidx)))
   # population-level priors
   α ~ Normal(mean(E), 2.5 * std(E))  # overall intercept
   βVE ~ Normal(0, 0.5)  # slope of V on E
+  βDE ~ Normal(0, 0.5)  # slope of D on E
+  βFE ~ Normal(0, 0.5)  # slope of F on E
   βHE ~ Normal(0, 0.5)  # slope of H on E
-  βTE ~ Normal(0, 0.5)  # slope of T on E
+  βME ~ Normal(0, 0.5)  # slope of M on E
+  βPE ~ Normal(0, 0.5)  # slope of P on E
+  βRE ~ Normal(0, 0.5)  # slope of R on E
+  βSE ~ Normal(0, 0.5)  # slope of S on E
   σ ~ Exponential(std(E))  # residual SD
   ν ~ LogNormal(2, 1)  # residual degrees of freedom
 
@@ -166,31 +168,76 @@ adjustmentSets(dag, "V", "E", effect="direct") # { H, T }
   τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
   α_ID ~ filldist(Normal(0, τ), n_id)     # group-level intercepts
 
-  # likelihood
-  Ê = @. α + α_ID[IDidx] + βVE * V + βHE * H + βTE * T
-  return E ~ MvTDist(ν, Ê, σ^2 * I)
+  # missing F values
+  N_missing = sum(ismissing.(Ḟ))
+  F_impute ~ filldist(Normal(0, 1), N_missing)
+  ν ~ Normal(0, 0.5) # imputed mean
+  σ_F ~ Exponential() # imputed SD
+
+  i_missing = 1
+  for i in eachindex(Ḟ)
+    if ismissing(Ḟ[i])
+      F_impute[i_missing] ~ Normal(ν, σ_F)
+      f_imputed = F_impute[i_missing]
+      i_missing += 1
+    else
+      Ḟ[i] ~ Normal(ν, σ_F)
+      f_imputed = Ḟ[i]
+    end
+    # likelihood
+    Ê = @. α + α_ID[IDidx][i] + βVE * V[i] + βDE * D[i] + βFE * f_imputed + βHE * H[i] + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i]
+    E[i] ~ Normal(Ê, σ)
+  end
 end
 
-V_E_NDE_model = V_E_NDE(dag_df.IDidx, dag_df.E, dag_df.V, dag_df.H, dag_df.T); # note log10(1+X)-transformed parasite counts.
+V_E_DE_model = V_E_NDE(dag_df.IDidx, dag_df.E, dag_df.V, dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S); # note log10(1+X)-transformed parasite counts.
 
-V_E_NDE_chn = sample(V_E_NDE_model, NUTS(), MCMCThreads(), 3000, 4)
+Turing.setadbackend(:forwarddiff)
+V_E_DE_chn = sample(V_E_DE_model, NUTS(), MCMCThreads(), 3000, 4)
 
-V_E_NDE_chn_df = DataFrame(V_E_NDE_chn)[!, r"α\b|β"];
-precis(V_E_NDE_chn_df)
+V_E_DE_chn_df = DataFrame(V_E_DE_chn)[!, r"α\b|β"];
+precis(V_E_DE_chn_df)
+
+# Mixed model
+glmm_V_E_NDE = fit(MixedModel, @formula(E ~ 1 + V + D + Ḟ + H + M + P + R + S + (1 | ID)), dag_df)
 
 """
-┌───────┬────────────────────────────────────────────────────────┐
-│ param │    mean     std     5.5%      50%    94.5%   histogram │
-├───────┼────────────────────────────────────────────────────────┤
-│     α │ -2.4246  0.2332  -2.7927  -2.4242  -2.0513  ▁▁▂▅██▄▁▁▁ │
-│   βHE │ -0.7394     0.1  -0.9006  -0.7409   -0.581   ▁▁▂▅█▆▂▁▁ │
-│   βTE │  0.0407   0.004   0.0342   0.0406   0.0472     ▁▂██▃▁▁ │
-│   βVE │   1.428  0.0927   1.2777   1.4292    1.574    ▁▁▂▆█▄▁▁ │
-└───────┴────────────────────────────────────────────────────────┘
+Linear mixed model fit by maximum likelihood
+ E ~ 1 + V + D + Ḟ + H + M + P + R + S + (1 | ID)
+   logLik   -2 logLik     AIC       AICc        BIC
+  -208.3876   416.7752   438.7752   440.0323   476.2046
+
+Variance components:
+            Column   Variance Std.Dev.
+ID       (Intercept)  0.046424 0.215463
+Residual              0.340310 0.583361
+ Number of obs: 222; levels of grouping factors: 105
+
+  Fixed-effects parameters:
+────────────────────────────────────────────────────
+                  Coef.  Std. Error      z  Pr(>|z|)
+────────────────────────────────────────────────────
+(Intercept)  -2.07923     0.361006   -5.76    <1e-08
+V             1.49444     0.111327   13.42    <1e-40
+D            -0.263531    0.0964268  -2.73    0.0063
+Ḟ             0.0136384   0.0731522   0.19    0.8521
+H            -0.627028    0.18903    -3.32    0.0009
+M            -0.111196    0.0670038  -1.66    0.0970
+P             0.180073    0.146183    1.23    0.2180
+R             0.0257785   0.170083    0.15    0.8795
+S             0.163506    0.109328    1.50    0.1348
+────────────────────────────────────────────────────
+
+
 """
+qqnorm(glmm_V_E_NDE; qqline=:fitrobust)
+boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_V_E_NDE);
+coefplot(boot)
+ridgeplot(boot)
+
 
 ## Total effect of `nP` on `E`
-adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, T}
+adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, V}
 
 df = (; x=dag_df.nP[dag_df.P.==2], y=dag_df.E[dag_df.P.==2])
 layers = linear() + visual(Scatter)
@@ -287,34 +334,35 @@ p = plot_chains_df(naive_P_E_chn; show_intercept=true, show_traces=false)
 save("../manuscript/Figures/plots/naive_P_E_chn_df.pdf", p)
 
 ## Properly-adjusted model: total effect of `nP` on `E`
-adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, T }
+adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, V }
 
 # point estimate sanity check
-glmm_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + D + H + R + S + T + (1 | ID)), dag_df)
+glmm_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + D + H + R + S + V + (1 | ID)), dag_df)
 """
 Linear mixed model fit by maximum likelihood
- E ~ 1 + lognP + D + H + R + S + T + (1 | ID)
+ E ~ 1 + nP + D + H + R + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -321.6144   643.2288   661.2288   661.8740   694.2267
+  -291.4721   582.9442   600.9442   601.5893   633.9420
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.208486 0.456603
-Residual              0.393604 0.627379
+ID       (Intercept)  0.046160 0.214848
+Residual              0.398471 0.631246
  Number of obs: 289; levels of grouping factors: 110
 
   Fixed-effects parameters:
 ─────────────────────────────────────────────────────
                    Coef.  Std. Error      z  Pr(>|z|)
 ─────────────────────────────────────────────────────
-(Intercept)   0.46459      0.328816    1.41    0.1577
-lognP         0.0182295    0.146957    0.12    0.9013
-D            -0.29573      0.113096   -2.61    0.0089
-H            -0.598015     0.18322    -3.26    0.0011
-R            -0.265882     0.192567   -1.38    0.1674
-S             0.19575      0.118908    1.65    0.0997
-T             0.0399537    0.0041178   9.70    <1e-21
+(Intercept)  -2.01692     0.317457    -6.35    <1e-09
+nP           -0.00176294  0.00201676  -0.87    0.3820
+D            -0.281907    0.0860935   -3.27    0.0011
+H            -0.606474    0.140824    -4.31    <1e-04
+R            -0.0632344   0.162134    -0.39    0.6965
+S             0.275767    0.0882784    3.12    0.0018
+V             1.62056     0.112449    14.41    <1e-46
 ─────────────────────────────────────────────────────
+
 """
 
 qqnorm(glmm_P_E; qqline=:fitrobust)
@@ -399,49 +447,48 @@ save("../manuscript/Figures/plots/P_E_chn_df.pdf", p)
 ## Natural Direct effect of `nP` on `E`
 
 # Minimal sufficient adjustment set for estimating the direct effect of P on E:
-adjustmentSets(dag, "P", "E", effect="direct") # { D, F, H, M, R, S, T }
+adjustmentSets(dag, "P", "E", effect="direct") # { D, F, H, M, R, S, V }
 
 # GLMM
 
-glmm_NDE_P_E = fit(MixedModel, @formula(E ~ 1 + P + D + Ḟ + H + M + R + S + T + (1 | ID)), dag_df)
+glmm_DE_P_E = fit(MixedModel, @formula(E ~ 1 + nP + D + Ḟ + H + M + R + S + V + (1 | ID)), dag_df)
 """
 Linear mixed model fit by maximum likelihood
- E ~ 1 + P + D + Ḟ + H + M + R + S + T + (1 | ID)
+ E ~ 1 + nP + D + Ḟ + H + M + R + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -247.9025   495.8049   517.8049   519.0621   555.2344
+  -208.8643   417.7286   439.7286   440.9857   477.1580
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.386672 0.621829
-Residual              0.301673 0.549248
+ID       (Intercept)  0.045342 0.212936
+Residual              0.342847 0.585531
  Number of obs: 222; levels of grouping factors: 105
 
   Fixed-effects parameters:
-────────────────────────────────────────────────────
-                  Coef.  Std. Error      z  Pr(>|z|)
-────────────────────────────────────────────────────
-(Intercept)  -0.164134   0.470642    -0.35    0.7273
-P             0.261449   0.231762     1.13    0.2593
-D            -0.235068   0.142834    -1.65    0.0998
-Ḟ             0.117598   0.083428     1.41    0.1587
-H            -0.361186   0.261506    -1.38    0.1672
-M            -0.120729   0.0934726   -1.29    0.1965
-R            -0.203008   0.200706    -1.01    0.3118
-S             0.114073   0.170837     0.67    0.5043
-T             0.0291177  0.00519714   5.60    <1e-07
-────────────────────────────────────────────────────
-
+─────────────────────────────────────────────────────
+                   Coef.  Std. Error      z  Pr(>|z|)
+─────────────────────────────────────────────────────
+(Intercept)  -2.0121      0.354653    -5.67    <1e-07
+nP           -0.00144412  0.00192667  -0.75    0.4535
+D            -0.272597    0.0960341   -2.84    0.0045
+Ḟ             0.00860208  0.0733332    0.12    0.9066
+H            -0.544374    0.178197    -3.05    0.0023
+M            -0.0992379   0.066968    -1.48    0.1384
+R             0.0707625   0.173147     0.41    0.6828
+S             0.148807    0.109957     1.35    0.1760
+V             1.50833     0.111397    13.54    <1e-41
+─────────────────────────────────────────────────────
 
 """
 
-qqnorm(glmm_NDE_P_E; qqline=:fitrobust)
-boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_NDE_P_E);
+qqnorm(glmm_DE_P_E; qqline=:fitrobust)
+boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_DE_P_E);
 coefplot(boot)
 ridgeplot(boot)
 
 # Bayesian model
 
-@model function NDE_P_E(IDidx, E, P, D, Ḟ, H, M, R, S, T; n_id=length(unique(IDidx)))
+@model function DE_P_E(IDidx, E, P, D, Ḟ, H, M, R, S, V; n_id=length(unique(IDidx)))
   # population-level priors
   α ~ Normal(mean(E), 2.5 * std(E))
 
@@ -452,7 +499,7 @@ ridgeplot(boot)
   βME ~ Normal(0, 0.5)
   βRE ~ Normal(0, 0.5)
   βSE ~ Normal(0, 0.5)
-  βTE ~ Normal(0, 0.5)
+  βVE ~ Normal(0, 0.5)
 
   σ ~ Exponential(std(E))
 
@@ -477,21 +524,21 @@ ridgeplot(boot)
       f_imputed = Ḟ[i]
     end
     # likelihood
-    Ê = @. α + α_ID[IDidx][i] + βPE * P[i] + βDE * D[i] + βFE * f_imputed + βHE * H[i] + βME * M[i] + βRE * R[i] + βSE * S[i] + βTE * T[i]
+    Ê = @. α + α_ID[IDidx][i] + βPE * P[i] + βDE * D[i] + βFE * f_imputed + βHE * H[i] + βME * M[i] + βRE * R[i] + βSE * S[i] + βVE * V[i]
     E[i] ~ Normal(Ê, σ)
   end
 end
 
-NDE_P_E_model = NDE_P_E(dag_df.IDidx, dag_df.E, log10.(1 .+ dag_df.nP), dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, dag_df.R, dag_df.S, dag_df.T);
+DE_P_E_model = DE_P_E(dag_df.IDidx, dag_df.E, log10.(1 .+ dag_df.nP), dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, dag_df.R, dag_df.S, dag_df.V);
 
 Turing.setadbackend(:forwarddiff)
 # Turing.setrdcache(false)
-NDE_P_E_chn = sample(NDE_P_E_model, NUTS(), MCMCThreads(), 3000, 4);
+DE_P_E_chn = sample(DE_P_E_model, NUTS(), MCMCThreads(), 3000, 4);
 Turing.setadbackend(:reversediff)
 # Turing.setrdcache(true)
 
-NDE_P_E_chn_df = DataFrame(NDE_P_E_chn)[!, r"α\b|β"];
-precis(NDE_P_E_chn_df)
+DE_P_E_chn_df = DataFrame(DE_P_E_chn)[!, r"α\b|β"];
+precis(DE_P_E_chn_df)
 
 """
 ┌───────┬───────────────────────────────────────────────────────────┐
@@ -505,61 +552,59 @@ precis(NDE_P_E_chn_df)
 │   βME │  -0.008  0.0759  -0.1278  -0.0086   0.1151  ▁▁▁▃▆██▅▂▁▁▁▁ │
 │   βRE │ -0.2614  0.1856  -0.5579  -0.2613   0.0372       ▁▁▄█▆▂▁▁ │
 │   βSE │  0.1681  0.1371  -0.0479   0.1666   0.3865  ▁▁▁▁▃▆█▇▄▂▁▁▁ │
-│   βTE │  0.0389  0.0046   0.0315   0.0389   0.0461       ▁▁▄█▇▂▁▁ │
+│   βVE │  0.0389  0.0046   0.0315   0.0389   0.0461       ▁▁▄█▇▂▁▁ │
 └───────┴───────────────────────────────────────────────────────────┘
 
 """
 
-p1 = plot_chains_df(NDE_P_E_chn; show_traces=true)
-save("../manuscript/Figures/plots/MultiLevel_NDE_P_E_chn_traces.pdf", p1)
+p1 = plot_chains_df(DE_P_E_chn; show_traces=true)
+save("../manuscript/Figures/plots/MultiLevel_DE_P_E_chn_traces.pdf", p1)
 
-p2 = plot_chains_df(NDE_P_E_chn; show_traces=false, xlab_dist="Direct Casual Effect")
-save("../manuscript/Figures/plots/MultiLevel_NDE_P_E_chn.pdf", p2)
+p2 = plot_chains_df(DE_P_E_chn; show_traces=false, xlab_dist="Direct Casual Effect")
+save("../manuscript/Figures/plots/MultiLevel_DE_P_E_chn.pdf", p2)
 
 ## Direct effect of reproductive status R on parasite burden P
 
-adjustmentSets(dag, "R", "P", effect="direct") # D, H, S, T
+adjustmentSets(dag, "R", "P", effect="direct") # D, H, S, V
 
 # GLMM
 
-glmm_R_nP = fit(MixedModel, @formula(lognP ~ R + D + H + S + T + (1 | ID)), filtered_df)
+glmm_R_nP = fit(MixedModel, @formula(lognP ~ R + D + H + S + V + (1 | ID)), dag_df)
 """
-┌ Warning: Fixed-effects matrix is rank deficient
-└ @ MixedModels ~/.julia/packages/MixedModels/ezbpk/src/Xymat.jl:41
 Linear mixed model fit by maximum likelihood
- lognP ~ 1 + R + D + H + S + T + (1 | ID)
+ lognP ~ 1 + R + D + H + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-    13.4682   -26.9364   -12.9364   -10.3317     0.5864
+    75.7468  -151.4936  -135.4936  -134.9793  -106.1621
 
 Variance components:
             Column    Variance  Std.Dev.
-ID       (Intercept)  0.1572842 0.3965908
-Residual              0.0084109 0.0917111
- Number of obs: 51; levels of grouping factors: 19
+ID       (Intercept)  0.1634105 0.4042407
+Residual              0.0077654 0.0881214
+ Number of obs: 289; levels of grouping factors: 110
 
   Fixed-effects parameters:
-─────────────────────────────────────────────────────────
-                    Coef.    Std. Error       z  Pr(>|z|)
-─────────────────────────────────────────────────────────
-(Intercept)   1.25034        0.30772       4.06    <1e-04
-R             0.0360567      0.0671512     0.54    0.5913
-D             0.0369346      0.0663094     0.56    0.5775
-H            -0.0          NaN           NaN       NaN
-S            -0.08306        0.19967      -0.42    0.6774
-T             0.000622181    0.00124202    0.50    0.6164
-─────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────
+                   Coef.  Std. Error      z  Pr(>|z|)
+─────────────────────────────────────────────────────
+(Intercept)  -0.492284     0.19141    -2.57    0.0101
+R             0.0445632    0.039308    1.13    0.2569
+D            -0.00415668   0.0433778  -0.10    0.9237
+H             0.539661     0.0851757   6.34    <1e-09
+S            -0.0713095    0.0786907  -0.91    0.3648
+V             0.0113116    0.023732    0.48    0.6336
+─────────────────────────────────────────────────────
 
 """
 
 # Bayesian model
-@model function R_nP(nP, R, D, H, S, T, IDidx; n_id=length(unique(IDidx)))
+@model function R_nP(nP, R, D, H, S, V, IDidx; n_id=length(unique(IDidx)))
   # population-level priors
   α ~ Normal(0, 2.5)
   βR ~ Normal(0, 0.5)
   βD ~ Normal(0, 0.5)
   βH ~ Normal(0, 0.5)
   βS ~ Normal(0, 0.5)
-  βT ~ Normal(0, 0.5)
+  βV ~ Normal(0, 0.5)
   σ ~ Exponential(std(nP))
 
   # priors for variance of random intercepts
@@ -567,29 +612,30 @@ T             0.000622181    0.00124202    0.50    0.6164
   α_ID ~ filldist(Normal(0, τ), n_id)
 
   # likelihood
-  nP̂ = @. α + α_ID[IDidx] + βR * R + βD * D + βH * H + βS * S + βT * T
+  nP̂ = @. α + α_ID[IDidx] + βR * R + βD * D + βH * H + βS * S + βV * V
   nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
 
-R_nP_model = R_nP(log10.(1 .+ dag_df.nP), dag_df.R, dag_df.D, dag_df.H, dag_df.S, dag_df.T, dag_df.IDidx)
+R_nP_model = R_nP(log10.(1 .+ dag_df.nP), dag_df.R, dag_df.D, dag_df.H, dag_df.S, dag_df.V, dag_df.IDidx)
 
 R_nP_chn = sample(R_nP_model, NUTS(), MCMCThreads(), 3_000, 4);
 
 R_nP_chn_df = DataFrame(R_nP_chn)[!, r"α\b|β"];
 precis(R_nP_chn_df)
+
 """
-With nP of only the infected mice:
-┌───────┬───────────────────────────────────────────────────────────┐
-│ param │    mean     std     5.5%      50%    94.5%      histogram │
-├───────┼───────────────────────────────────────────────────────────┤
-│     α │ -0.4419  0.1887  -0.7444  -0.4449  -0.1403       ▁▁▄█▇▂▁▁ │
-│    βD │ -0.0049  0.0439  -0.0747  -0.0048   0.0652       ▁▁▃██▃▁▁ │
-│    βH │  0.5206  0.0837   0.3865   0.5212    0.653       ▁▁▂▇█▃▁▁ │
-│    βR │  0.0419  0.0404  -0.0223   0.0413   0.1061        ▁▁▃█▇▂▁ │
-│    βS │ -0.0814  0.0818  -0.2129  -0.0821   0.0526  ▁▁▁▂▅██▇▄▂▁▁▁ │
-│    βT │  0.0008  0.0007  -0.0003   0.0008   0.0018   ▁▁▁▃▆█▇▃▁▁▁▁ │
-└───────┴───────────────────────────────────────────────────────────┘
+┌───────┬──────────────────────────────────────────────────────┐
+│ param │   mean    std   5.0 %    50 %  95.0 %      histogram │
+├───────┼──────────────────────────────────────────────────────┤
+│     α │  -0.48  0.195  -0.796  -0.482  -0.154      ▁▁▁▅█▆▂▁▁ │
+│    βR │  0.046   0.04  -0.019   0.045   0.113        ▁▁▃█▇▂▁ │
+│    βD │ -0.005  0.045  -0.079  -0.005   0.068      ▁▁▁▃██▂▁▁ │
+│    βH │  0.525  0.087   0.377   0.525   0.666       ▁▁▂▆█▄▁▁ │
+│    βS │ -0.067  0.077  -0.192  -0.067   0.058  ▁▁▁▂▃▇█▇▅▂▁▁▁ │
+│    βV │  0.011  0.024  -0.029   0.011   0.051    ▁▁▁▃▆█▆▃▁▁▁ │
+└───────┴──────────────────────────────────────────────────────┘
+
 
 """
 
@@ -638,16 +684,16 @@ save("../manuscript/Figures/plots/D_P_cor.pdf", p)
 
 
 ## Direct effet of D on nP
-adjustmentSets(dag, "D", "P", effect="direct") # { H, R, S, T}
+adjustmentSets(dag, "D", "P", effect="direct") # { H, R, S, V}
 
-@model function D_nP(nP, D, H, R, S, T, IDidx; n_id=length(unique(IDidx)))
+@model function D_nP(nP, D, H, R, S, V, IDidx; n_id=length(unique(IDidx)))
   # population-level priors
   α ~ Normal(0, 2.5)
   βD ~ Normal(0, 0.5)
   βH ~ Normal(0, 0.5)
   βR ~ Normal(0, 0.5)
   βS ~ Normal(0, 0.5)
-  βT ~ Normal(0, 0.5)
+  βV ~ Normal(0, 0.5)
 
   σ ~ Exponential(std(nP))
 
@@ -656,11 +702,11 @@ adjustmentSets(dag, "D", "P", effect="direct") # { H, R, S, T}
   α_ID ~ filldist(Normal(0, τ), n_id)
 
   # likelihood
-  nP̂ = @. α + α_ID[IDidx] + βD * D + βH * H + βR * R + βS * S + βT * T
+  nP̂ = @. α + α_ID[IDidx] + βD * D + βH * H + βR * R + βS * S + βV * V
   nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
-D_nP_model = D_nP(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.R, dag_df.S, dag_df.T, dag_df.IDidx)
+D_nP_model = D_nP(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.R, dag_df.S, dag_df.V, dag_df.IDidx)
 
 D_nP_chn = sample(D_nP_model, NUTS(), MCMCThreads(), 3_000, 4);
 
@@ -752,35 +798,35 @@ precis(S_E_chn_df)
 
 ## Direct effect of S on E
 
-adjustmentSets(dag, "S", "E", effect="direct") # { D, F, H, M, P, R, T }
+adjustmentSets(dag, "S", "E", effect="direct") # { D, F, H, M, P, R, V }
 
-glmm_D_S_E = fit(MixedModel, @formula(E ~ 1 + S + D + Ḟ + H + M + nP + R + T + (1 | ID)), dag_df)
+glmm_D_S_E = fit(MixedModel, @formula(E ~ 1 + S + D + Ḟ + H + M + nP + R + V + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- E ~ 1 + S + D + Ḟ + H + M + nP + R + T + (1 | ID)
+ E ~ 1 + S + D + Ḟ + H + M + nP + R + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -248.5361   497.0721   519.0721   520.3292   556.5016
+  -208.8643   417.7286   439.7286   440.9857   477.1580
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.391933 0.626045
-Residual              0.302228 0.549753
+ID       (Intercept)  0.045342 0.212936
+Residual              0.342847 0.585531
  Number of obs: 222; levels of grouping factors: 105
 
   Fixed-effects parameters:
 ─────────────────────────────────────────────────────
                    Coef.  Std. Error      z  Pr(>|z|)
 ─────────────────────────────────────────────────────
-(Intercept)   0.00653222  0.450702     0.01    0.9884
-S             0.105497    0.171951     0.61    0.5395
-D            -0.255627    0.142518    -1.79    0.0729
-Ḟ             0.11542     0.0836066    1.38    0.1674
-H            -0.254267    0.246416    -1.03    0.3021
-M            -0.112094    0.09397     -1.19    0.2329
-nP            2.43457e-5  0.00334429   0.01    0.9942
-R            -0.182099    0.202639    -0.90    0.3688
-T             0.0296054   0.00519063   5.70    <1e-07
+(Intercept)  -2.0121      0.354653    -5.67    <1e-07
+S             0.148807    0.109957     1.35    0.1760
+D            -0.272597    0.0960341   -2.84    0.0045
+Ḟ             0.00860208  0.0733332    0.12    0.9066
+H            -0.544374    0.178197    -3.05    0.0023
+M            -0.0992379   0.066968    -1.48    0.1384
+nP           -0.00144412  0.00192667  -0.75    0.4535
+R             0.0707625   0.173147     0.41    0.6828
+V             1.50833     0.111397    13.54    <1e-41
 ─────────────────────────────────────────────────────
 
 """
@@ -789,7 +835,8 @@ boot = parametricbootstrap(MersenneTwister(1234), 3000, glmm_D_S_E);
 coefplot(boot)
 ridgeplot(boot)
 
-@model function S_E(E, S, D, Ḟ, H, M, P, R, T, IDidx; n_id=length(unique(IDidx)))
+# Bayesian model
+@model function S_E(E, S, D, Ḟ, H, M, P, R, V, IDidx; n_id=length(unique(IDidx)))
 
   α ~ Normal(mean(E), 2.5 * std(E))
   σ ~ Exponential(std(E))
@@ -801,7 +848,7 @@ ridgeplot(boot)
   βM ~ Normal(0, 1)
   βP ~ Normal(0, 1)
   βR ~ Normal(0, 1)
-  βT ~ Normal(0, 1)
+  βV ~ Normal(0, 1)
 
   # priors for variance of random intercepts
   τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
@@ -825,7 +872,7 @@ ridgeplot(boot)
     end
 
     # likelihood
-    µ = @. α + α_ID[IDidx][i] + βS * S[i] + βD * D[i] + βF * f_imputed + βH * H[i] + βM * M[i] + βP * P[i] + βR * R[i] + βT * T[i]
+    µ = @. α + α_ID[IDidx][i] + βS * S[i] + βD * D[i] + βF * f_imputed + βH * H[i] + βM * M[i] + βP * P[i] + βR * R[i] + βV * V[i]
     E[i] ~ Normal(µ, σ)
   end
 end
@@ -842,16 +889,16 @@ precis(S_E_df)
 
 ## Direct effect of S on nP
 
-adjustmentSets(dag, "S", "P", effect="direct") # {D, H, R, T}
+adjustmentSets(dag, "S", "P", effect="direct") # {D, H, R, V}
 
-@model function S_nP(nP, S, D, H, R, T, IDidx; n_id=length(unique(IDidx)))
+@model function S_nP(nP, S, D, H, R, V, IDidx; n_id=length(unique(IDidx)))
   # population-level priors
   α ~ Normal(0, 2.5)
   βS ~ Normal(0, 0.5)
   βD ~ Normal(0, 0.5)
   βH ~ Normal(0, 0.5)
   βR ~ Normal(0, 0.5)
-  βT ~ Normal(0, 0.5)
+  βV ~ Normal(0, 0.5)
 
   σ ~ Exponential(std(nP))
 
@@ -860,11 +907,11 @@ adjustmentSets(dag, "S", "P", effect="direct") # {D, H, R, T}
   α_ID ~ filldist(Normal(0, τ), n_id)
 
   # likelihood
-  nP̂ = @. α + α_ID[IDidx] + βS * S + βD * D + βH * H + βR * R + βT * T
+  nP̂ = @. α + α_ID[IDidx] + βS * S + βD * D + βH * H + βR * R + βV * V
   nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
-S_nP_model = S_nP(log10.(1 .+ dag_df.nP), dag_df.S, dag_df.D, dag_df.H, dag_df.R, dag_df.T, dag_df.IDidx)
+S_nP_model = S_nP(log10.(1 .+ dag_df.nP), dag_df.S, dag_df.D, dag_df.H, dag_df.R, dag_df.V, dag_df.IDidx)
 
 S_nP_chn = sample(S_nP_model, NUTS(), MCMCThreads(), 3_000, 4);
 
@@ -872,16 +919,16 @@ S_nP_chn_df = DataFrame(S_nP_chn)[!, r"α\b|β"];
 precis(S_nP_chn_df)
 
 """
-┌───────┬───────────────────────────────────────────────────────────┐
-│ param │    mean     std     5.5%      50%    94.5%      histogram │
-├───────┼───────────────────────────────────────────────────────────┤
-│     α │ -0.4546  0.1884  -0.7568  -0.4557  -0.1508       ▁▁▄█▆▂▁▁ │
-│    βD │ -0.0043  0.0437  -0.0731  -0.0051   0.0669       ▁▁▃█▇▂▁▁ │
-│    βH │  0.5253  0.0864   0.3878   0.5238   0.6651  ▁▁▁▂▄▇█▆▄▂▁▁▁ │
-│    βR │  0.0416  0.0398  -0.0212   0.0413   0.1061       ▁▁▃█▇▂▁▁ │
-│    βS │ -0.0783  0.0771  -0.1986  -0.0784   0.0447   ▁▁▁▂▅▇█▇▄▂▁▁ │
-│    βT │  0.0008  0.0007  -0.0003   0.0008   0.0018    ▁▁▁▃▆█▇▃▁▁▁ │
-└───────┴───────────────────────────────────────────────────────────┘
+┌───────┬───────────────────────────────────────────────────────┐
+│ param │   mean    std   5.0 %    50 %  95.0 %       histogram │
+├───────┼───────────────────────────────────────────────────────┤
+│     α │  -0.47  0.203   -0.81   -0.47  -0.141       ▁▁▂▅█▆▂▁▁ │
+│    βS │ -0.072   0.08  -0.209  -0.071   0.057   ▁▁▁▂▄▇██▄▂▁▁▁ │
+│    βD │ -0.003  0.044  -0.077  -0.003   0.067         ▁▁▃██▃▁ │
+│    βH │  0.522  0.087   0.378   0.523   0.665  ▁▁▁▁▃▅▇█▇▅▂▁▁▁ │
+│    βR │  0.046   0.04  -0.019   0.045   0.112        ▁▁▃██▂▁▁ │
+│    βV │  0.011  0.024  -0.028   0.011   0.052      ▁▁▃▆█▆▃▁▁▁ │
+└───────┴───────────────────────────────────────────────────────┘
 
 """
 
@@ -934,9 +981,9 @@ save("../manuscript/Figures/plots/H_E_chn.pdf", p)
 p
 
 ## Direct effect of H on E
-adjustmentSets(dag, "H", "E", effect="direct") # { D, F, M, P, R, S, T, V } - V is treated as random effect
+adjustmentSets(dag, "H", "E", effect="direct") # { D, F, M, P, R, S, V } - V is treated as random effect
 
-@model function NDE_H_E(IDidx, Vidx, E, H, D, Ḟ, M, P, R, S, T; n_id=length(unique(IDidx)), n_vax=length(unique(Vidx)))
+@model function DE_H_E(IDidx, Vidx, E, H, D, Ḟ, M, P, R, S; n_id=length(unique(IDidx)), n_vax=length(unique(Vidx)))
   # population-level priors
   α ~ Normal(mean(E), 2.5 * std(E))
 
@@ -947,7 +994,6 @@ adjustmentSets(dag, "H", "E", effect="direct") # { D, F, M, P, R, S, T, V } - V 
   βPE ~ Normal(0, 0.5)
   βRE ~ Normal(0, 0.5)
   βSE ~ Normal(0, 0.5)
-  βTE ~ Normal(0, 0.5)
 
   σ ~ Exponential(std(E))
 
@@ -973,20 +1019,20 @@ adjustmentSets(dag, "H", "E", effect="direct") # { D, F, M, P, R, S, T, V } - V 
       f_imputed = Ḟ[i]
     end
     # likelihood
-    Ê = @. α + α_ID[IDidx][i] + α_vax[Vidx][i] + βHE * H[i] + βDE * D[i] + βFE * f_imputed + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i] + βTE * T[i]
+    Ê = @. α + α_ID[IDidx][i] + α_vax[Vidx][i] + βHE * H[i] + βDE * D[i] + βFE * f_imputed + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i]
     E[i] ~ Normal(Ê, σ)
   end
 end
 
-NDE_H_E_model = NDE_H_E(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.H, dag_df.D, dag_df.Ḟ, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S, dag_df.T);
+DE_H_E_model = DE_H_E(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.H, dag_df.D, dag_df.Ḟ, dag_df.M, dag_df.nP, dag_df.R, dag_df.S);
 
 Turing.setadbackend(:forwarddiff)
-NDE_H_E_chn = sample(NDE_H_E_model, NUTS(), MCMCThreads(), 3000, 4);
+DE_H_E_chn = sample(DE_H_E_model, NUTS(), MCMCThreads(), 3000, 4);
 Turing.setadbackend(:reverse_diff)
-summarize(NDE_H_E_chn)
+summarize(DE_H_E_chn)
 
-NDE_H_E_chn_df = DataFrame(NDE_H_E_chn)[!, r"α\b|β"];
-precis(NDE_H_E_chn_df)
+DE_H_E_chn_df = DataFrame(DE_H_E_chn)[!, r"α\b|β"];
+precis(DE_H_E_chn_df)
 
 """
 ┌───────┬────────────────────────────────────────────────────────────┐
@@ -1004,13 +1050,46 @@ precis(NDE_H_E_chn_df)
 └───────┴────────────────────────────────────────────────────────────┘
 
 """
-p1 = plot_chains_df(NDE_P_E_chn; show_traces=true)
-save("../manuscript/Figures/plots/MultiLevel_NDE_P_E_chn_traces.pdf", p1)
+p1 = plot_chains_df(DE_P_E_chn; show_traces=true)
+save("../manuscript/Figures/plots/MultiLevel_DE_P_E_chn_traces.pdf", p1)
 p1
 
-p2 = plot_chains_df(NDE_P_E_chn; show_traces=false)
-save("../manuscript/Figures/plots/MultiLevel_NDE_P_E_chn.pdf", p2)
+p2 = plot_chains_df(DE_P_E_chn; show_traces=false)
+save("../manuscript/Figures/plots/MultiLevel_DE_P_E_chn.pdf", p2)
 p2
+
+# Mixed model
+glmm_H_E = fit(MixedModel, @formula(E ~ 1 + H + D + Ḟ + M + nP + R + S + V + (1 | ID)), dag_df)
+
+"""
+Linear mixed model fit by maximum likelihood
+ E ~ 1 + H + D + Ḟ + M + nP + R + S + V + (1 | ID)
+   logLik   -2 logLik     AIC       AICc        BIC
+  -208.8643   417.7286   439.7286   440.9857   477.1580
+
+Variance components:
+            Column   Variance Std.Dev.
+ID       (Intercept)  0.045342 0.212936
+Residual              0.342847 0.585531
+ Number of obs: 222; levels of grouping factors: 105
+
+  Fixed-effects parameters:
+─────────────────────────────────────────────────────
+                   Coef.  Std. Error      z  Pr(>|z|)
+─────────────────────────────────────────────────────
+(Intercept)  -2.0121      0.354653    -5.67    <1e-07
+H            -0.544374    0.178197    -3.05    0.0023
+D            -0.272597    0.0960341   -2.84    0.0045
+Ḟ             0.00860208  0.0733332    0.12    0.9066
+M            -0.0992379   0.066968    -1.48    0.1384
+nP           -0.00144412  0.00192667  -0.75    0.4535
+R             0.0707625   0.173147     0.41    0.6828
+S             0.148807    0.109957     1.35    0.1760
+V             1.50833     0.111397    13.54    <1e-41
+─────────────────────────────────────────────────────
+
+
+"""
 
 # Total effect of Diet on E
 adjustmentSets(dag, "D", "E") # {}
@@ -1054,10 +1133,9 @@ save("../manuscript/Figures/plots/D_E_chn.pdf", p)
 p
 
 ## Direct effect of diet D on E
-adjustmentSets(dag, "D", "E", effect="direct") # { F, H, M, P, R, S, T }
+adjustmentSets(dag, "D", "E", effect="direct") # {F, H, M, P, R, S, V} - V is treated as random effect
 
-
-@model function NDE_D_E(IDidx, E, D, Ḟ, H, M, P, R, S, T; n_id=length(unique(IDidx)))
+@model function DE_D_E(IDidx, Vidx, E, D, Ḟ, H, M, P, R, S; n_id=length(unique(IDidx)), n_vax=length(unique(Vidx)))
   # population-level priors
   α ~ Normal(mean(E), 2.5 * std(E))
 
@@ -1068,13 +1146,13 @@ adjustmentSets(dag, "D", "E", effect="direct") # { F, H, M, P, R, S, T }
   βPE ~ Normal(0, 0.5)
   βRE ~ Normal(0, 0.5)
   βSE ~ Normal(0, 0.5)
-  βTE ~ Normal(0, 0.5)
 
   σ ~ Exponential(std(E))
 
   # priors for variance of random intercepts
   τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
   α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
 
   # missing F values
   N_missing = sum(ismissing.(Ḟ))
@@ -1093,17 +1171,19 @@ adjustmentSets(dag, "D", "E", effect="direct") # { F, H, M, P, R, S, T }
       f_imputed = Ḟ[i]
     end
     # likelihood
-    Ê = @. α + α_ID[IDidx][i] + βDE * D[i] + βFE * f_imputed + βHE * H[i] + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i] + βTE * T[i]
+    Ê = @. α + α_ID[IDidx][i] + α_vax[Vidx][i] + βDE * D[i] + βFE * f_imputed + βHE * H[i] + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i]
     E[i] ~ Normal(Ê, σ)
   end
 end
 
-NDE_D_E_model = NDE_D_E(dag_df.IDidx, dag_df.E, dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S, dag_df.T);
+DE_D_E_model = DE_D_E(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S);
 
-NDE_D_E_chn = sample(NDE_D_E_model, NUTS(), MCMCThreads(), 3000, 3);
+Turing.setadbackend(:reversediff)
+DE_D_E_chn = sample(DE_D_E_model, NUTS(), MCMCThreads(), 3000, 3);
 
-NDE_D_E_chn_df = DataFrame(NDE_D_E_chn)[!, r"α\b|β"];
-PRECIS(NDE_D_E_chn_df)
+DE_D_E_chn_df = DataFrame(DE_D_E_chn)[!, r"α\b|β"];
+precis(DE_D_E_chn_df)
+
 
 """
 without Vidx (this is the correct adjustment set):
@@ -1135,11 +1215,11 @@ with Vidx:
 └───────┴────────────────────────────────────────────────────────────┘
 
 """
-p1 = plot_chains_df(NDE_D_E_chn; show_traces=true)
-save("../manuscript/Figures/plots/MultiLevel_NDE_D_E_chn_traces.pdf", p1)
+p1 = plot_chains_df(DE_D_E_chn; show_traces=true)
+save("../manuscript/Figures/plots/MultiLevel_DE_D_E_chn_traces.pdf", p1)
 p1
-p2 = plot_chains_df(NDE_D_E_chn; res=(12, 10), show_traces=false)
-save("../manuscript/Figures/plots/MultiLevel_NDE_D_E_chn.pdf", p2)
+p2 = plot_chains_df(DE_D_E_chn; res=(12, 10), show_traces=false)
+save("../manuscript/Figures/plots/MultiLevel_DE_D_E_chn.pdf", p2)
 p2
 
 ## Direct effet of F on E
