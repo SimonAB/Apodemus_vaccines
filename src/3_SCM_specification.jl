@@ -242,7 +242,6 @@ adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, V}
 
 # selected only infected mice
 dag_df_infected = dag_df[dag_df.P.==2, :] # select rows of dag_df for which dag_df.P.==2
-dag_df_infected.IDidx = get_idx(:ID, df)[1]
 
 # Plot
 layers = linear() + visual(Scatter)
@@ -325,6 +324,41 @@ save("../manuscript/Figures/plots/naive_P_E_chn_df.pdf", p)
 adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, V }
 
 # Mixed Model - excluding H since length(unique(dag_df_infected.H))=1
+glmm_P_E_all = fit(MixedModel, @formula(E ~ 1 + lognP + D + R + S + V + (1 | ID)), dag_df)
+
+"""
+Linear mixed model fit by maximum likelihood
+ E ~ 1 + lognP + D + R + S + V + (1 | ID)
+   logLik   -2 logLik     AIC       AICc        BIC
+  -300.1878   600.3755   616.3755   616.8898   645.7070
+
+Variance components:
+            Column   Variance Std.Dev.
+ID       (Intercept)  0.061167 0.247321
+Residual              0.413615 0.643129
+ Number of obs: 289; levels of grouping factors: 110
+
+  Fixed-effects parameters:
+───────────────────────────────────────────────────
+                 Coef.  Std. Error      z  Pr(>|z|)
+───────────────────────────────────────────────────
+(Intercept)  -2.31676    0.327291   -7.08    <1e-11
+lognP        -0.13274    0.113216   -1.17    0.2410
+D            -0.284799   0.0898423  -3.17    0.0015
+R            -0.508572   0.13659    -3.72    0.0002
+S             0.320681   0.0921007   3.48    0.0005
+V             1.61709    0.116514   13.88    <1e-43
+───────────────────────────────────────────────────
+
+"""
+
+qqnorm(glmm_P_E_all; qqline=:fitrobust)
+boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_P_E_all);
+coefplot(glmm_P_E_all)
+coefplot(boot)
+ridgeplot(boot)
+
+# Infected only
 glmm_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + D + R + S + V + (1 | ID)), dag_df_infected)
 """
 Linear mixed model fit by maximum likelihood
@@ -357,6 +391,8 @@ qqnorm(glmm_P_E; qqline=:fitrobust)
 boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_P_E);
 coefplot(boot)
 ridgeplot(boot)
+ridge2d(boot)
+
 
 # Direct effect of P on E among the infected
 adjustmentSets(dag, "P", "E", effect="direct") # { D, F, H, M, R, S, V}
