@@ -117,68 +117,70 @@ println("Percentage drop in OD in wild vs lab: $Δpc ± $Δpc_std_error")
 
 ## Is there a significant interaction between vaccine responses and habitat? (GLMM specification)
 
-vi_form_1 = @formula(E ~ (1 | ID) + T + vax_history + H + D + vax_history & H)
-vi_form_2 = @formula(E ~ (1 | ID) + T + vax_history + H + D)
+vi_form_1 = @formula(E ~ (1 | ID) + vax_history + H + D + vax_history & H)
+vi_form_2 = @formula(E ~ (1 | ID) + vax_history + H + D)
 # vi_form = @formula(E ~ (1 | ID) + H + S + D + vax_history)
 # vi_form = @formula(E ~ (1 | ID) + vax_history + Env + Diet)
 mm1 = fit(MixedModel, vi_form_1, df)
+
 """
 Linear mixed model fit by maximum likelihood
- E ~ 1 + T + vax_history + H + D + vax_history & H + (1 | ID)
+ E ~ 1 + vax_history + H + D + vax_history & H + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -241.4731   482.9462   510.9462   512.3895   563.0764
+  -256.2118   512.4236   538.4236   539.6702   586.8302
 
 Variance components:
-            Column   Variance Std.Dev.
-ID       (Intercept)  0.044018 0.209804
-Residual              0.246225 0.496211
+            Column   VarianceStd.Dev.
+ID       (Intercept)  0.02395 0.15475
+Residual              0.29039 0.53888
  Number of obs: 306; levels of grouping factors: 111
 
   Fixed-effects parameters:
 ────────────────────────────────────────────────────────────
                           Coef.  Std. Error      z  Pr(>|z|)
 ────────────────────────────────────────────────────────────
-(Intercept)          -1.19002     0.282426   -4.21    <1e-04
-T                     0.0248495   0.0043519   5.71    <1e-07
-vax_history: D        2.0445      0.30605     6.68    <1e-10
-vax_history: AD       1.36247     0.329003    4.14    <1e-04
-vax_history: DA       3.40104     0.349849    9.72    <1e-21
-vax_history: DD       2.71039     0.348963    7.77    <1e-14
-H                    -0.0974248   0.184686   -0.53    0.5978
-D                    -0.264111    0.0700581  -3.77    0.0002
-vax_history: D & H   -0.565107    0.21841    -2.59    0.0097
-vax_history: AD & H  -0.311518    0.249347   -1.25    0.2115
-vax_history: DA & H  -1.42575     0.248882   -5.73    <1e-07
-vax_history: DD & H  -0.597119    0.246376   -2.42    0.0154
+(Intercept)          -0.903765    0.282284   -3.20    0.0014
+vax_history: D        2.1078      0.311322    6.77    <1e-10
+vax_history: AD       1.28526     0.350196    3.67    0.0002
+vax_history: DA       3.7263      0.35085    10.62    <1e-25
+vax_history: DD       3.05852     0.350563    8.72    <1e-17
+H                    -0.0183844   0.187321   -0.10    0.9218
+D                    -0.253916    0.0689616  -3.68    0.0002
+vax_history: D & H   -0.625372    0.221869   -2.82    0.0048
+vax_history: AD & H  -0.390852    0.26256    -1.49    0.1366
+vax_history: DA & H  -1.40037     0.252815   -5.54    <1e-07
+vax_history: DD & H  -0.568815    0.250797   -2.27    0.0233
 ────────────────────────────────────────────────────────────
+
 """
 
 mm2 = fit(MixedModel, vi_form_2, df)
+
 """
 Linear mixed model fit by maximum likelihood
- E ~ 1 + T + vax_history + H + D + (1 | ID)
+ E ~ 1 + vax_history + H + D + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -258.3812   516.7624   536.7624   537.5082   573.9982
+  -271.5416   543.0831   561.0831   561.6913   594.5954
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.066458 0.257794
-Residual              0.263043 0.512877
+ID       (Intercept)  0.043238 0.207937
+Residual              0.307435 0.554468
  Number of obs: 306; levels of grouping factors: 111
 
   Fixed-effects parameters:
 ────────────────────────────────────────────────────────
                       Coef.  Std. Error      z  Pr(>|z|)
 ────────────────────────────────────────────────────────
-(Intercept)      -0.367379    0.193458   -1.90    0.0576
-T                 0.0243812   0.004514    5.40    <1e-07
-vax_history: D    1.28964     0.109834   11.74    <1e-31
-vax_history: AD   0.940002    0.116067    8.10    <1e-15
-vax_history: DA   1.556       0.139947   11.12    <1e-27
-vax_history: DD   1.92162     0.140734   13.65    <1e-41
-H                -0.704293    0.0842685  -8.36    <1e-16
-D                -0.275152    0.0767219  -3.59    0.0003
+(Intercept)      -0.0559073   0.182375   -0.31    0.7592
+vax_history: D    1.27861     0.111086   11.51    <1e-29
+vax_history: AD   0.762977    0.119162    6.40    <1e-09
+vax_history: DA   1.90266     0.125024   15.22    <1e-51
+vax_history: DD   2.3019      0.124996   18.42    <1e-75
+H                -0.651016    0.0817969  -7.96    <1e-14
+D                -0.265308    0.0752443  -3.53    0.0004
 ────────────────────────────────────────────────────────
+
 """
 
 # LRT
@@ -186,26 +188,26 @@ MixedModels.likelihoodratiotest(mm1, mm2)
 
 """
 Model Formulae
-1: E ~ 1 + T + vax_history + H + D + (1 | ID)
-2: E ~ 1 + T + vax_history + H + D + vax_history & H + (1 | ID)
+1: E ~ 1 + vax_history + H + D + (1 | ID)
+2: E ~ 1 + vax_history + H + D + vax_history & H + (1 | ID)
 ──────────────────────────────────────────────────
      model-dof  -2 logLik       χ²  χ²-dof  P(>χ²)
 ──────────────────────────────────────────────────
-[1]         10   450.9151
-[2]         14   415.5037  35.4114       4  <1e-06
+[1]          9   543.0831
+[2]         13   512.4236  30.6595       4  <1e-05
 ──────────────────────────────────────────────────
+
 """
 
 ## Bayesian model
 Ē_ctrl = mean(df[df.vax_history.=="A", :E])
 
-@model function varying_intercept(IDidx, Vidx, T, H, D, E; n_id=length(unique(IDidx)), Ē_ref=mean(df[df.vax_history.=="A", :E]))
+@model function varying_intercept(IDidx, Vidx, H, D, E; n_id=length(unique(IDidx)), Ē_ref=mean(df[df.vax_history.=="A", :E]))
     vax_μ = zeros(length(unique(Vidx)))
 
     #priors
     α ~ Normal(mean(E), 2.5 * std(E))         # population-level intercept
     βv ~ MvNormal(vax_μ .- Ē_ref, 2)          # population-level slopes relative to adjuvant control
-    βt ~ Normal(0, 2)                         # population-level slopes
     βh ~ Normal(0, 2)                         # population-level slopes
     βd ~ Normal(0, 2)                         # population-level slopes
     σ ~ Exponential(std(E))                   # residual SD
@@ -215,11 +217,11 @@ Ē_ctrl = mean(df[df.vax_history.=="A", :E])
     α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
 
     #likelihood
-    Ê = @. α + α_ID[IDidx] + βv[Vidx] + βt * T + βh * H + βd * D
+    Ê = @. α + α_ID[IDidx] + βv[Vidx] + βh * H + βd * D
     E ~ MvNormal(Ê, σ^2 * I)
 end
 
-vi_model = varying_intercept(df.IDidx, df.Vidx, df.T, df.H, df.D, df.E);
+vi_model = varying_intercept(df.IDidx, df.Vidx, df.H, df.D, df.E);
 
 vi_chn = sample(vi_model, NUTS(), MCMCThreads(), 3000, 4);
 
@@ -231,26 +233,18 @@ vi_chn_df = DataFrame(vi_chn)[!, r"α\b|β"];
 precis(vi_chn_df)
 
 """
-
-"""
-
-"""
 ┌───────┬───────────────────────────────────────────────────────┐
 │ param │   mean    std   5.0 %    50 %  95.0 %       histogram │
 ├───────┼───────────────────────────────────────────────────────┤
-│     α │ -0.476  0.851  -1.878   -0.47   0.902        ▁▁▁▅█▅▁▁ │
-│ βv[1] │  0.105  0.838  -1.257     0.1    1.48  ▁▁▁▃▅██▇▄▂▁▁▁▁ │
-│ βv[2] │  1.391  0.836   0.027   1.385    2.77  ▁▁▁▂▄▇██▅▃▁▁▁▁ │
-│ βv[3] │  1.046  0.838  -0.321   1.046   2.424        ▁▁▂██▃▁▁ │
-│ βv[4] │  1.655  0.839   0.288   1.652   3.037   ▁▁▁▂▅██▇▄▂▁▁▁ │
-│ βv[5] │  2.017   0.84    0.65   2.014   3.404  ▁▁▁▁▃▆██▆▃▂▁▁▁ │
-│    βt │  0.025  0.005   0.017   0.025   0.032        ▁▁▄██▃▁▁ │
-│    βh │ -0.704  0.087   -0.85  -0.703  -0.562  ▁▁▁▂▄▆██▆▃▂▁▁▁ │
-│    βd │ -0.273  0.079  -0.402  -0.274  -0.142   ▁▁▁▂▄▇█▇▄▂▁▁▁ │
+│     α │ -0.116  0.857  -1.523  -0.114   1.291        ▁▁▃██▂▁▁ │
+│ βv[1] │  0.062  0.849  -1.343    0.06   1.471  ▁▁▁▁▃▆██▆▄▂▁▁▁ │
+│ βv[2] │  1.335  0.847  -0.066    1.34   2.737   ▁▁▁▂▄▇██▅▃▁▁▁ │
+│ βv[3] │  0.823  0.849  -0.578   0.823   2.226  ▁▁▁▁▂▄▇██▅▃▁▁▁ │
+│ βv[4] │  1.961  0.848   0.567   1.962   3.356  ▁▁▁▂▃▆██▆▃▁▁▁▁ │
+│ βv[5] │  2.357   0.85   0.949    2.36   3.763   ▁▁▁▂▄▇██▅▃▁▁▁ │
+│    βh │  -0.65  0.083  -0.788   -0.65  -0.513        ▁▁▅█▅▁▁▁ │
+│    βd │ -0.265  0.079  -0.394  -0.264  -0.137        ▁▁▁▅█▄▁▁ │
 └───────┴───────────────────────────────────────────────────────┘
-
-
-
 
 """
 
@@ -302,7 +296,7 @@ for (i, param) in enumerate(params)
     if i < length(params)
         hidexdecorations!(ax; grid=false)
     else
-        ax.xlabel = "Parameter estimate (effect on DTV-specific IgG1)"
+        ax.xlabel = "Posterior distribution of effect on DTV-specific IgG1"
     end
     vlines!(ax, 0, color=:grey40, linestyle=:dot)
     xlims!(-4, 6)
@@ -320,5 +314,5 @@ end
 rowgap!(ax1.layout, 10)
 rowsize!(ax1.layout, 2, Relative(0.4))
 
-# save("../manuscript/Figures/plots/IgG1.pdf", fig, pt_per_unit=1)
+save("../manuscript/Figures/plots/IgG1.pdf", fig, pt_per_unit=1)
 fig
