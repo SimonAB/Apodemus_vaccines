@@ -1,0 +1,433 @@
+%! TEX program = lualatex
+
+% For exporting as word use:
+% pandoc -s ./apodemus-vacc-main.tex --filter pandoc-crossref --citeproc --csl ./nature.csl --bibliography=./apodemus-vacc-refs.bib -o ../Venkatesan_et_al.docx
+
+
+\documentclass[a4paper, hidelinks, 11pt]{article}
+
+%%%%%%%%%%%%%%%%% LOAD PACKAGES %%%%%%%%%%%%%%%%
+\usepackage[british]{babel}
+\usepackage{microtype}
+
+% font settings
+\usepackage{fontspec}
+\usepackage{mathtools}
+\usepackage{textcomp}
+\usepackage{eurosym}
+\usepackage{unicode-math}
+\usepackage{MnSymbol} % provides independence symbol
+\usepackage{lipsum}
+
+\defaultfontfeatures{Ligatures=TeX}
+
+\babelfont{rm}[
+	Ligatures = TeX,
+	UprightFont= *-Regular,
+	ItalicFont = *-Italic,
+	BoldFont = *-Bold,
+	BoldItalicFont = *-BoldItalic,
+	]{TeX Gyre Pagella}
+	% ]{Gentium Plus}
+
+\babelfont{sf}[
+	Ligatures = TeX,
+	UprightFont= *-Regular,
+	BoldFont=*-Bold,
+	ItalicFont=*-Italic,
+	BoldItalicFont=*-BoldItalic,
+	Scale=0.85
+	]{TeX Gyre Heros}
+
+\setmathfont{TeX Gyre Pagella Math}
+\setmonofont{TeX Gyre Cursor}[Scale=1]
+
+% headings
+\usepackage{titlesec}
+
+\titleformat*{\section}{\large\bfseries\sffamily\MakeUppercase}
+\titleformat*{\subsection}{\normalsize\bfseries\sffamily}
+\titleformat*{\subsubsection}{\normalsize\bfseries\sffamily}
+\titleformat*{\paragraph}{\normalsize\bfseries\sffamily}
+\titleformat*{\subparagraph}{\normalsize\bfseries\sffamily}
+
+% \titlespacing\section{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+% \titlespacing\subsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+% \titlespacing\subsubsection{6pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\paragraph{12pt}{0pt plus 4pt minus 2pt}{4pt plus 2pt minus 2pt}
+
+% page setup
+\usepackage{titling} % to use \maketitle more than once
+\usepackage{fancyhdr}
+\usepackage{authblk}
+\usepackage{booktabs} % For prettier tables
+% \usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{lineno}
+% \modulolinenumbers[5]
+\usepackage{csquotes}
+\linenumbers
+\usepackage{setspace} % switch to single or double space as needed
+
+% Text alignment (comment out for fully justified)
+% \usepackage[document]{ragged2e}
+
+% prevent widows and orphans
+\usepackage[defaultlines=2,all]{nowidow}
+\usepackage{needspace}
+
+% create outline and links in pdf
+\usepackage{hyperref}
+\usepackage[numbered]{bookmark}
+\makeatletter
+\renewcommand\@seccntformat[1]{}
+\makeatother
+
+% debug warnings
+\overfullrule=1cm
+
+
+%%%%%%%%%%%%%%%%% TABLES & FIGURES %%%%%%%%%%%%%%%%
+% captions
+\usepackage[labelfont=footnotesize,textfont=footnotesize,singlelinecheck=off,justification=raggedright]{subcaption}
+\DeclareCaptionLabelSeparator{pipe}{\textrm{ | }}
+\usepackage[figurename=Fig.,
+						font={sf,footnotesize},
+						labelfont=bf,
+						labelsep=colon]{caption}
+
+% figures:
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{floatrow}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+% \usetikzlibrary{external}
+% \tikzset{external/force remake}
+% \tikzexternalize % activate!
+
+% tables:
+\usepackage{tabulary}
+\usepackage{multirow}
+\usepackage{ltablex}
+\usepackage{longtable} % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+% \usepackage[table,xcdraw]{xcolor}
+\usepackage{threeparttable}
+\floatsetup[table]{capposition=top} % from floatrow package: table captions on top
+
+%%%%%%%%%%%%%%%%% ANNOTATIONS %%%%%%%%%%%%%%%%
+\usepackage{soul} % highlighting & strikeout
+\setlength{\marginparwidth}{2cm} % make room for comments
+\usepackage[colorinlistoftodos, textsize=tiny]{todonotes}
+
+% For comments by specific authors, use \abp, \sab, \sv, \as
+\newcommand{\sab}[1]{
+	\todo[color=Dandelion]{[SAB] #1}
+}
+
+\newcommand{\abp}[1]{
+	\todo[color=green]{[ABP] #1}
+}
+
+\newcommand{\sv}[1]{
+	\todo[color=cyan]{[SV] #1}
+}
+
+\newcommand{\as}[1]{
+	\todo[color=lightgray]{[AS] #1}
+}
+
+\newcommand{\reply}[1]{\\\textbf{\ggg #1}}
+
+%%%%%%%%%%%%%%%%% BIBLIOGRAPHY %%%%%%%%%%%%%%%%
+\usepackage[
+		style=nature,
+		sorting=none,
+		backend=biber,
+		]{biblatex}
+\addbibresource{apodemus-vacc-refs.bib}
+\renewcommand*{\bibfont}{\sffamily\footnotesize}
+
+%%%%%%%%%%%%%%%%% PAGE SETUP %%%%%%%%%%%%%%%%
+\topmargin0.3cm
+\oddsidemargin0.0cm
+\textwidth15cm
+\textheight22cm
+\footskip1.3cm
+
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[RO]{\emph{Babayan et al.}}
+% \fancyfoot[RO, LE]{\thepage{}}
+\fancyfoot[c]{\thepage{}}
+
+\setlength{\headheight}{14pt}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+%%%%%%%%%%%%%%%%% TITLE PAGE %%%%%%%%%%%%%%%%
+
+\title{Environmental drivers of low vaccine responsiveness in a lab-to-wild mouse model}
+
+\author[1,\dag,*]{Simon A. Babayan} % 0000-0002-4949-1117
+\author[2,\dag]{Saudamini Venkatesan}
+\author[1,2]{Jessica Hall}
+\author[1]{Ewan Smith}
+\author[2]{Amy Sweeny}
+\author[2,*]{Amy B. Pedersen}
+
+\affil[1]{School of Biodiversity, One Health \& Veterinary Medicine, University of Glasgow, Glasgow, UK}
+\affil[2]{Institute of Ecology and Evolution, School of Biological Sciences, University of Edinburgh, Edinburgh, UK}
+\affil[ \dag]{These authors contributed equally to this work}
+\affil[*]{Corresponding authors: simon.babayan@glasgow.ac.uk, amy.pedersen@ed.ac.uk }
+
+% \renewcommand\Authfont{\normalsize}
+\renewcommand\Affilfont{\normalsize}
+
+
+% Include the date command, but leave its argument blank.
+\date{\today}
+
+% Set title for the abstract (default is "Abstract")
+\addto\captionsbritish{\renewcommand\abstractname{\vspace{-\baselineskip}}}
+
+%%%%%%%%%%%%%%%%% END OF PREAMBLE %%%%%%%%%%%%%%%%
+
+\begin{document}
+
+% Import list of figures
+\input{apodemus-vacc-figures.tex}
+
+% Double-space the manuscript.
+\baselineskip24pt
+
+% Don't number lines on title page
+\nolinenumbers
+
+% Make the title.
+\maketitle
+
+\listoftodos
+
+\newpage
+
+\begin{abstract}
+
+	% Number lines for the abstract
+	\linenumbers
+
+	\section{Abstract}
+	\textbf{Vaccination is the most effective way to prevent infectious disease and protect public health. However, most new vaccines fail late into the clinical trail pipeline, and even established vaccines often preform worse in populations that differ substantially from those in which they were initially tested, such as rural \emph{versus} urban individuals. This can lead to breakthrough infections and the inability to achieve or maintain herd immunity. However, the causes of vaccine hyporesponsiveness remain difficult to identify, quantify, and therefore pre-empt. We hypothesise that the leading causes of vaccine hyporesponsiveness are environmental, and are exacerbated when individuals are required to allocate limited resources to growth, reproduction and immunity. Using paired cohorts of laboratory-reared and wild wood mice (\emph{Apodemus sylvaticus}) vaccinated with a single and double-dose diphtheria toxoid vaccine (with adjuvant alum), we show that circulating vaccine-specific antibodies dropped on average by 50\% in a wild population relative to individuals of the same species that had been reared in laboratory conditions. We also found that, independently of habitat, substantial variation in vaccine responsiveness was explained by diet, with weaker negative impacts of being male and reproductively active. Surprisingly, helminth infection did not directly suppress vaccine-specific antibody production once adjusted for habitat, diet, and sex. While much variation remains to be explained, our results indicate that the environment plays a dramatic role in vaccine failure and that laboratory settings may systematically overestimate vaccine performance by failing to capture natural environmental variability. We anticipate that our study inaugurates a robust modelling approach and biological system for disentangling and quantifying the complex factors that cause vaccine responsiveness in diverse target populations. It may also call for a need to systematically raise efficacy thresholds for initiating clinical phases of vaccine development, and suggests that simple dietary interventions could improve individual responsiveness to immunisation.}
+
+\end{abstract}
+
+\pagebreak
+
+\linenumbers % Continue line numbering in this section
+
+\section{Introduction}
+
+Unanticipated variability in individuals' responses to vaccination can lead to a lack of protection from the targetted pathogen, continued disease transmission, and an increased risk of vaccine escape~\supercite{Greaney2021e,Harvey2021,Wang2021b,Kennedy2018}. This heterogeneity is largely driven by the individual's pre-existing immune state, itself the outcome of complex interactions between intrinsic and extrinsic factors. Indeed, vaccine efficacy can be affected by genetics~\supercite{Posteraro2014}, sex~\supercite{Flanagan2017}, reproductive status~\supercite{Shah2019}, past and current infections~\supercite{Elias2008,Wait2020,Natukunda2022}, and nutrition~\supercite{Huda2019,Saleem2015,Yap2014}. These heterogeneities can combine to affect both adaptive and innate immunity as demonstrated by the association between innate inflammatory markers in patients' peripheral blood before vaccination and subsequent antibody responses to 13 different vaccines~\supercite{Fourati2022}, thereby potentially driving disease and transmission~\supercite{Vazquez-Prokopec2016} and manifesting in the substantial drop in vaccine immunogenicity and efficacy in rural relative to urban populations~\supercite{vanDorst2023}. However, it is unclear how these factors interact and how to mitigate their effects to maximise vaccination efficacy. The limitations to our understanding of variability in vaccine efficacy stem in part from the inadequacy of current pre-clinical models used in vaccine development, which typically utilise defined inbred, non-reproductive, single sex, age-controlled animals that are bred in captivity under strictly controlled pathogen-free conditions. As a result, we hypothesise that this might explain why only a small minority of vaccines successfully transition from pre-clinical stages of development through phase III trials and reach mass market~\supercite{Pronker2013} -- in short, a generalisability and a transportability problem. Moreover, even successful vaccines can suffer from substantial variability between individuals and groups, notably for people of different ancestry~\supercite{Schaid2017} or different habitats~\supercite{vanDorst2023}. For example, individuals of Tanzanian ancestry were reported to have higher inflammatory and type 1 immune markers~\supercite{Boahen2022} and responses to measles vaccination~\supercite{Voigt2016} than those of European ancestry, while in rural populations the expression of BCG- and tetanus-specific cytokine recall and antibody responses was found to be markedly lower than in urban populations, while humoral responses to tetanus vaccination were higher~\supercite{Zimmermann2019,Kabagenyi2020}. Taken together, these reports indicate that vaccine efficacy depends on both the vaccine and the recipients' traits, and thus a need to develop flexible and adaptable models that can be used to predict vaccine efficacy in different populations.
+
+To increase the generalisability of experimental models of immunology and vaccinology, recent efforts have been made to integrate natural variability into immunological research~\supercite{Babayan2011,Beura2016,Graham2021,Rosshart2017,Rosshart2019}. These include exposing mice to richer, ``dirtier'' environments, littermates, and microbiota, which results in mice developing more mature, and thus more representative, immune systems and responses to infection. However, there is still uncertainty about how this heterogeneity affects the innate and adaptive arms of the immune system~\supercite{Mangino2017}, and what the consequences might be for vaccine responsiveness. More specifically, it is unclear how environmental factors and past stressors influence organisms' responses to immunisation. This complexity blurs the causal relationships between environmental and immunological processes, making the design and interpretation of \emph{in vivo} vaccination experiments difficult and their impact on their intended target populations intractable. % It would therefore be useful to simulate \emph{in silico} responses to defined vaccines for specific target populations using a set of easily observable traits on a  the same population. This could help predict which populations or subsets are likely to respond poorly to a specific vaccine, and benefit from targeted interventions such as diet changes, antiparasitic treatments, or different vaccine adjuvants.}\sab{This might be overshooting a little what we currently have in this paper... Might be worth replacing with a statement on the need for explicit causal modeling, or consider adding a section to the results where we simulate, say the effect of control diet only on population-wide Ab levels}
+
+Here we propose a structural causal model (SCM)\supercite{Pearl2009b} to  predict the effects of habitat, diet, sex, and parasite infection on vaccine responsiveness and to identify the paths through which their effects are mediated. This causal framework, which utilises graphical models to inform adjustment strategies~\supercite{Glymour2019, Bareinboim2022}, can eliminate or reduce multiple sources of confounding, such as common causes (misattribution of causal effects), sampling biases (non-representative test population), and transportability biases (lack of generalisability). We performed a vaccination study using a coupled laboratory-wild wood mouse (\emph{Apodemus sylvaticus}) system, which allows longitudinal sampling as well as experimental manipulation in both controlled laboratory conditions and in their natural woodland habitat. This allowed us to use the same assays and interventions across habitats, thereby approximating a model of the lab-to-trial vaccine testing or to the urban-rural divide. We then compared the generation of vaccine-specific antibody responses to an alum-adjuvanted diphtheria toxoid vaccine (DTV) between laboratory and natural settings and between two diets (supplemented and control) after vaccination. We have previously demonstrated that this high quality, whole diet supplementation drives a sustained reduction in helminth (\emph{Heligmosomoides polygyrus}) burdens and transmission, while also improving the efficacy of anthelmintic treatment~\supercite{Sweeny2021}. We therefore predicted that vaccine responses in wild mice would be lower than in lab wood mice and higher in diet-supplemented than normal-diet animals.
+
+To identify and quantify the drivers of vaccine responsiveness in laboratory and wild settings, we used Bayesian models to identify causal relationships defined by the SCM and thereby quantify the physiological and environmental direct and indirect causal effects of variation in the ability of recipients to generate vaccine-specific antibody responses (vaccine responsiveness). This allowed us to identify the main causes of loss of vaccine efficacy when translating a vaccine from the laboratory to the wild, and to accurately model how uncertainty and biological variability propagate through the causal network (see casual flow diagram, Fig.~\ref{supfig:SCM_flow}).
+
+\section{Results}
+
+\subsection{Vaccination induced stronger but variable antibody responses
+	in the laboratory than in the wild}
+
+We conducted a paired cross-factorial study on wild and laboratory \emph{A. sylvaticus} mice to evaluate the impact of the laboratory environment, diet supplementation, and vaccination protocol on vaccine responsiveness. The mice were given either a high or low-quality diet and then immunised with a diphtheria-alum vaccine (DTV) once or twice (see details in \nameref{sec:methods}; Figure~\ref{fig:design}).
+
+\FigDesign
+
+Wild mice generated 46.9\% ± 0.1 \% lower DTV-specific IgG1 antibody responses than their lab-based conspecifics, irrespective of vaccine regimen or diet (Figure~\ref{fig:igg1}A, \ref{fig:igg1}B `Hab'). While immunisation was most effective with two doses in both habitats, lab mice reached peak antibody levels with only a single dose (Figure~\ref{fig:igg1}A, `DA' vs `DD'; Lab boosted vs. Lab non-boosted OD = 0.2 ± 0.1 whereas Wild boosted vs. Wild non-boosted OD = 1.02 ± 0.23). However, in the wild, only when given two doses did the mice show responsiveness similar to the level observed in the laboratory mice (Figure~\ref{fig:igg1}A, `DD'; difference between Wild non-boosted vs. Lab non-boosted OD = 0.75 ± 0.11 while difference between Wild boosted vs. Lab boosted OD = 0.61 ± 0.18; LRT of Habitat \times vaccine regimen: \(\Delta dof = 4, \chi^2 = 30.6, p < 0.001 \)). Only mice that were administered the DT antigen generated DTV-specific IgG1, indicating that there was no pre-existing immunity to this antigen in our study populations (Figure~\ref{fig:igg1}A, group `A').
+
+\FigIgG
+
+To further quantify how habitat (lab \emph{vs.} wild), diet (supplemented \emph{vs.} control), and the immunisation protocol were associated with variation in vaccine responsiveness, we constructed a multilevel Bayesian model of those factors with intercepts for each immunisation protocol (Figure \ref{fig:igg1}B, Table~\ref{tbl:precis}). This indicated that the effects of each vaccine formulation on DTV-specific IgG1 OD were substantially more variable than those of habitat and diet. However, while this model describes associations between habitat, sex, diet, and vaccine responsiveness, it fails to describe the biological processes that generated the outcomes of interest. Further, it does not account for potential confounding and mediating effects of sex, reproductive status, body mass, body fat, or parasite burdens, which we hypothesise to contribute to variation in vaccine responsiveness.
+
+\subsection{Construction of a structural causal model of vaccine responsiveness}
+
+Next, to understand more specifically the relative contributions of diet and habitat to vaccine responsiveness, and how that effect might be mediated by parasite infection, reproductive status, and body condition, we built a causally-explicit model of the hypothesised causal relationships between (Figure~\ref{fig:DAGtikz}).
+
+\FigDAGtikz
+
+To estimate vaccine responsiveness $E$ as a function of vaccination $V$, habitat $H$ and diet supplementation $D$, and more importantly, to identify which variables might act as confounders in need of adjustment or mediators that might modulate vaccine responsiveness, we constructed a directed acyclic graph (DAG, Figure~\ref*{fig:DAGtikz}A) to represent the hypothesised structure of the biological processes that generate the data observed in this system. We used this DAG to specify the structural causal model $\mathfrak{C}$ (Figure~\ref*{fig:DAGtikz}B) that links our variables of interest to vaccine efficacy $E$ and describes the flow of causal effects based on the following criteria. Vaccination $V$ being allocated at random, has no parent node. Its effects were hypothesised to be affected by habitat $H$ since date of capture in the wild was inherently more variable than date of procedure in the lab for logistical reasons. A mouse being born in the lab or in the wild habitat $H$ was considered random, and therefore took no causal input but was hypothesised to potentially affect all other variables except $V$ and sex $S$. Diet $D$ was allocated at random in the laboratory colony, but because wild mice could also forage freely, we considered that being born in the wild could have a causal effect on diet $H \rightarrow D$, specifically on the effect of the supplementation relative to the control laboratory or wild diet. Diet was hypothesised to affect reproductive status $R$, body mass $M$, body fat $F$ and parasite burdens $P$ as well as $E$, with fat scores $F$ hypothesised to be a cause of variation in body mass $M$. Sex $S$ being genetically determined and therefore subject to Mendelian randomisation~\supercite{Lawlor2008}, and all treatments being randomised with respect to sex, $S$ was considered causally prior to reproductive status $R$, body mass $M$, body fat $F$ and parasite burdens $P$. Reproductive status $R$ being driven by sex, it was considered causally prior to body mass $M$ and parasite burdens $P$.  Vaccine efficacy $E$ was hypothesised to be potentially affected by all other variables. Each node also had its own error term to capture all unobserved sources of variation, assumed to be i.i.d
+To estimate vaccine responsiveness $E$ as a function of vaccination $V$, habitat $H$ and diet supplementation $D$, and more importantly, to identify which variables might act as confounders in need of adjustment or mediators that might modulate vaccine responsiveness, we constructed a directed acyclic graph (DAG, Figure~\ref*{fig:DAGtikz}A) to represent the hypothesised structure of the biological processes that generate the data observed in this system. We used this DAG to specify the structural causal model $\mathfrak{C}$ (Figure~\ref*{fig:DAGtikz}B) that links our variables of interest to vaccine efficacy $E$ and describes the flow of causal effects based on the following criteria. Vaccination $V$ being allocated at random, has no parent node. Its effects were hypothesised to be affected by habitat $H$ since date of capture in the wild was inherently more variable than date of procedure in the lab for logistical reasons. A mouse being born in the lab or in the wild habitat $H$ was considered random, and therefore took no causal input but was hypothesised to potentially affect all other variables except $V$ and sex $S$. Diet $D$ was allocated at random in the laboratory colony, but because wild mice could also forage freely, we considered that being born in the wild could have a causal effect on diet $H \rightarrow D$, specifically on the effect of the supplementation relative to the control laboratory or wild diet. Diet was hypothesised to affect reproductive status $R$, body mass $M$, body fat $F$ and parasite burdens $P$ as well as $E$, with fat scores $F$ hypothesised to be a cause of variation in body mass $M$. Sex $S$ being genetically determined and therefore subject to Mendelian randomisation~\supercite{Lawlor2008}, and all treatments being randomised with respect to sex, $S$ was considered causally prior to reproductive status $R$, body mass $M$, body fat $F$ and parasite burdens $P$. Reproductive status $R$ being driven by sex, it was considered causally prior to body mass $M$ and parasite burdens $P$.  Vaccine efficacy $E$ was hypothesised to be potentially affected by all other variables. Each node also had its own error term to capture all unobserved sources of variation,  all assumed to be independent and identically distributed.
+
+We then tested the validity of the causal hypotheses described above using the DAG to construct each model. For example, the DAG in Fig.~\ref{fig:DAGtikz} implies that parasite infection should be conditionally independent of vaccination if we adjust for diet, reproductive status, sex, and habitat ($P \upmodels V \mid D, R, S, H$); we therefore fit a binomial generalised linear model $glm(P \sim \alpha + \beta_V V + \beta_D D + \beta_R R + \beta_S S + \beta_H H)$. This process was repeated for all implied independencies derived from the causal graph (see \nameref{sec:structure} methods), and the DAG updated until all causal paths were supported by the observed data and consistent with plausible causal expectations. This resulted in the DAG shown in Figure~\ref*{fig:DAGtikz}.
+
+\subsection{Average, direct, and indirect causal effects of immunisation on vaccine responsiveness}
+
+\FigDAGtikzParam
+
+We fully parametrised $\mathfrak{C}$ (Model~\ref{eq:SCM}) using a set of Bayesian linear models containing variables required to ensure de-confounded estimation of the total and natural direct causal effects operating between the nodes of $\mathfrak{C}$ (Fig.~\ref{fig:DAGtikzParam}).
+Vaccination resulted in an average causal effect of 1.51 ± 0.11 ($log10 + 1$)-transformed OD units ($logOD$) from unvaccinated animals in this experiment, 1.49 ± 0.11 of which were estimated as direct (or mediated by unobserved variables, e.g. immune pathways) with a negligible fraction (<0.1 on average) mediated by reproductive status $R$, body mass $M$, and body fat $F$ (Fig.~\ref{fig:DAGtikzParam}B). However, vaccine responsiveness $E$ was strongly influenced by both the wild habitat and dietary supplementation. The wild habitat had a direct negative impact of 0.64 ± 0.17 $logOD$ on vaccine responsiveness, while dietary supplementation resulted in an average reduction of 0.28 ± 0.12 $logOD$.
+
+Furthermore, while wild wood mice were lighter (-1.3 ± 0.2 g on average) and accumulated less fat (by 2.3 points on 6-point scale), dietary supplementation increased body mass (+2.53 ± 0.3 g) though did not affect body fat scores. Interestingly, the effect of dietary supplementation on vaccine responsiveness $E$ was mostly direct (or mediated by unobserved variables) and not mediated by its effects on body mass, fat stores, reproductive status $R$, or parasite burden $P$. The total causal effect of sex on $E$ indicated greater vaccine responsiveness in females (0.26 ± 0.15 $logOD$). However, only a little over half of the effect of sex  (0.15 ± 0.10 $logOD$) was direct, with factors including body mass and fat storage mediating the rest (Fig.~\ref{fig:DAGtikzParam}).
+
+\subsection{Average causal effect of diet supplementation on vaccine responsiveness}
+
+\sab{Use ATE and TMLE?}
+
+\subsection{Effect of parasite infection among the infected}
+
+When considering the whole population including uninfected mice, \emph{H. polygyrus} burden had no clear effect on DT vaccine responsiveness (-0.13 ± 0.11 $logOD$). However, because parasite infections are overdispersed, we also estimated the causal effects of infection burden on DT vaccine responsiveness only among the infected wild wood mice. The direct effect of parasite burden on vaccine responsiveness among the infected was weakly negative (-0.58 ± 0.35 $logOD$), when adjusting for diet, sex, reproductive status, and vaccination.
+
+\section{Discussion}
+
+The physiological variables measured mediated very little of the effect of immunisation on vaccine responsiveness, if any. However, environmental covariates of supplemented diet and wild habitat had substantial negative effects on vaccine responsiveness.
+
+The `wild habitat' captures many variables that would still need to be identified - these might include weather, predation, competition, and other stressors that are absent from laboratory conditions.
+
+Effect of nutrition was unexpected. See~\supercite{Yap2014}
+
+Weak / variable effect of worms~\supercite{Bruckner2015,Wait2020,Natukunda2022}.
+
+
+\textbf{Limitations \& Perspectives}. We made the simplifying assumptions that:
+
+\begin{itemize}
+	\item parametric assumptions and linearity of the causal effects. Future work will need to generalise the functional form of the causal effects to allow for non-linear effects of the variables on vaccine responsiveness.
+	\item no unmeasured confounders. Future work will need to relax these assumptions to allow for more complex causal structures and to account for unmeasured confounders and mediation.
+	\item random vaccine and diet treatments: we should allow for vaccine and diet uptake (propensity scores) to vary among the treated, as especially in the wild population, these are not strictly enforced.
+\end{itemize}
+
+\section{Materials, Methods, and Models} \label{sec:methods}
+
+All animal work was conducted in accordance to UK Home Office in compliance with the Animals (Scientific Procedures) Act, 1986. Both laboratory and field experiments were approved by the University of Edinburgh Ethical Review Committee and carried out under the UK Home Office Project Licence 70/8543. The dosage of diphtheria vaccine was trialled in laboratory reared wood-mice before the experiments for safety and efficacy. Animal sacrifice was performed using appropriate Schedule 1 Methods. Fieldwork was carried out with permission of the Forestry Commission Scotland under the permit SUR09.
+
+See \nameref{supdata:Methods}
+\abp{What do we plan to include in the supplemenatry methods?}
+
+\subsection{Laboratory wood mouse experiment}
+
+The laboratory experiment was conducted on a wild-derived but now captive, outbred wood mice colony that has been bred and maintained at the University of Edinburgh~\supercite{Sweeny2021} (See SI for more details). The experiment was carried out in two replicate blocks, with 36 animals in each block (18 males, 18 females). At 12 days before the start of the experiment (d-12), all mice were shifted to new diet regimes and given time to acclimatise; half of the animals in each block (9 males and 9 females) were given TransBreed\textsuperscript{TM}, a high-quality whole-diet mouse chow.\sab{@ABP, @SV: Check whether mice diet groups are mislabelled against original data.} We have previously shown that wood mice supplemented with TransBreed\textsuperscript{TM} were more resistant to the gastrointestinal nematode \emph{Heligmosomoides polygyrus}, cleared worms more effectively after anthelmintic treatment and produced stronger general (total IgA) and parasite-specific (IgG) immune responses in both wild and laboratory conditions~\supercite{Sweeny2021}. The other half of the mice in this experiment were fed RM1 (Rat and Mouse Maintenance), a lower quality diet, but commonly used maintenance mouse chow which supports maintenance. Both TransBreed\textsuperscript{TM} and RM1 are standard laboratory diets, with TransBreed\textsuperscript{TM} containing higher amounts of starch, protein, fat and micro-nutrients compared to RM1 (see SI for detailed nutritional compositions). Within each diet regime, both male and female animals were randomly assigned to three experimental groups (Fig.~\ref{fig:design}). Animals belonging to Groups 1 \& 2 (n = 24) were subcutaneously injected with 100μl of diphtheria vaccine (2 Lf per 100μl of adjuvant (9\% Potassium Aluminium Sulphate) on d0. The vaccine was prepared in our laboratory one day before administration, using vaccine-grade diphtheria inactivated toxoid protein (Alpha Diagnostic International) adsorbed to the adjuvant (9\% Alum). Animals assigned to Group 3 (n = 12) were injected with a control, referred to as `adjuvant'; 100μl of adjuvant (9\% Potassium Aluminium Sulphate) suspended in 1X PBS on d0. Small volume blood samples were taken via tail snip 14 and 17 days after the first injections (d14 and d17) to measure the primary antibody response. Twenty-one days (d21) after the first injections, animals in Group 1 (n = 12) were injected again with 100μl of the diphtheria vaccine (referred to as the ‘booster’), whereas those assigned to Group 2 (n= 12) were injected with the control dose as described above (referred to as `adjuvant'). Animals assigned to Group 3 (n = 12) that had previously been injected with the control dose, now received an injection of 100μl diphtheria vaccine. Another blood sample (20- 50μl) was taken a day later (d22) via cheek venipuncture. All animals were sacrificed 14 days after the second injection (d35) and a blood sample for measuring the secondary antibody response was taken. The same procedures and timeline were carried out for the second experimental block of animals (n = 36). Mice were co-housed throughout the experiment, in same sex groups of three, with equal representation of the three experimental groups in each cage.
+
+
+\subsection{Wild wood mice experiment}
+
+We conducted a 10-week field experiment in a natural population of wood mice with a design similar to that of the laboratory experiment. The experiment took place in a woodland in Falkirk, Scotland, UK (Callendar Wood, 55.990470, -3.766636), where we established four trapping grids (60m X 40m per grid) with 10m spacing between each of the 35 trapping stations. At each station,  we set a pair of Sherman live traps (H.B. Sherman 2X2.5X6.5-inch folding trap, Tallahassee, FL, USA). We randomly selected two of the four grids to be ‘supplemented’; 12 days before we began live-trapping, we started supplementing these grids with extra resources. Specifically, we scattered 6 kg TransBreed\textsuperscript{TM} (high quality, whole- diet mouse food) pellets evenly around the grid, and this supplementation continued throughout the experiment, twice per week. The two ‘control’ grids did not receive any supplementation. Wood mice on all four grids had access to their normal diet and food items, so this extra resources on the ‘supplemented ’grids served as an additional high nutritional food resource.
+
+From July-September 2018, wood mice were trapped 2–3 nights per week using live traps baited with grains, carrots, and bedding. Additionally, traps on the supplemented grids were also baited with 1-2 TransBreed\textsuperscript{TM} pellets. For identification, all newly captured mice weighing >13g were subcutaneously tagged with a unique 9-digit microchip passive induced transponder (PIT tag; FriendChip AVID2028, Norco, CA, USA). On first capture, mice were assigned to one of the three vaccine treatment groups described above in the laboratory experiment; mice assigned to these groups received the same primary and booster doses of the diphtheria vaccine or control injections as described below (see Figure~\ref{fig:design}). Throughout the experiment, weekly small volume blood samples were taken via tail snip from each tagged animal to measure their antibody response to the diphtheria immunisation. Animals recaptured 14 or more days after their second injection were sacrificed and a terminal bleed was collected to measure their antibody response  and adult \emph{Heligmosomoides polygyrus} worm burdens. \emph{H. polygyrus} is a natural gastrointestinal nematode found at high prevalence (20-100 \%) in wild populations of \emph{A. sylvaticus}~\supercite{Sweeny2021,Gregory1990,Keymer1987,Knowles2013}, as well as being a well-studied model system of human gastrointestinal nematodes where it has been found to be highly immunomodulatory~\supercite{Maizels2012a,Reynolds2012a}.
+
+Additionally, at all captures, we took the following demographic metrics for each individual: sex, body condition, reproductive condition, weight (g), and length (mm). Sex and reproductive condition of each mouse was assigned by examining the genitals, with males having larger urogenital gap compared to females. Males were classified as reproductively active if their testes had visibly descended to scrotal sacs, and females were classified as reproductively active if they had a perforated vagina or were visibly pregnant or lactating. Body condition was measured by assigning dorsal and pelvic fat scores on a qualitative scale from 1-5, where 1 represented a very low condition mouse, while a 5 represented a mouse with ample fat reserves. This was accrued out by palpating the back and pubic bones~\supercite{Ullman-Cullere1999}.
+
+\subsection{Vaccine responsiveness}
+
+Vaccine responsiveness was measured as the concentration of anti-diphtheria IgG1 antibodies; this is the gold standard method used in vaccinology to measure the antibody-specific response to immunisation and is used specifically for the diphtheria toxoid vaccine used here~\supercite{Faruq2010}. To measure diphtheria vaccine responsiveness, we collected blood samples from both the laboratory and the wild mice and these were centrifuged (@24,000 rpm for 10 min) within 4–6 hours of collection. The sera were separated from the pellets and stored at -80 °C until further analysis. We used ELISAs adapted for diphtheria-specific antibodies from Clerc et al. (2019a), to quantify Anti-diphtheria IgG1 antibodies in the sera samples. 96-well plates (NuncTM MicroWellTM) were coated overnight at 4 °C with diphtheria toxin (2μg/mL) diluted in carbonate buffer (50 μl per well). After washing the plates with TBS (10 X) and Tween80 thrice, 100 μl of TBS(1X)-4percent BSA was added per well and incubated at 37 °C for 2 hours to block non-specific binding sites. Plates were then tapped dry and 50μl of serum samples serially diluted (starting dilution 1:100) in TBS (1X)-4percent BSA buffer were added per well and left at 4 °C for binding overnight. The next day, 50μl HRP-conjugated anti-mouse IgG1 detection antibody (Southern BioTech) was added per well after washing the plates 4 times with TBS (10X) and Tween80 and tapping them dry. After incubation at 37 °C for 1 hour, the plates were washed again, first 4 times with TBS (10X) and Tween80 and then twice with dH20. 50μl of TMB substrate solution was added per well and the enzymatic reaction was left to develop in the dark for 7 min. The reaction was stopped after 7 min using 50μl sulphuric acid (0.18 M) per well. Absorbance at 450 nm was recorded using an ELISA plate reader (Multiscan, Ascent Labsystems) immediately after. For each sample, blank-centred optical densities (OD) of three consecutive wells (of dilutions 1:3200, 1:6400, 1:12800) were averaged to obtain diphtheria-specific IgG antibody concentration.
+
+\subsection{Data processing and
+	analyses}
+
+DT-specific antibody ELISA optical densities ($E$) were $1 + log_{10}$-transformed and, body weight ($M$), fat scores ($F$) and days post-vaccination ($T ≥ 1$), were Z score-transformed to help the selection of sensible priors and to improve computational stability.  All models were adjusted for time $T$ between vaccination and blood collection to account for natural kinetics of the antibody response. Fat scores ranged from 2 to 5 and were derived from the sum of two five-point scales for pelvic and dorsal fat, where 1 is `bony' to palpation and 5 is `fat', and were treated as continuous for the analysis. All other variables were treated as binary.
+
+All data processing was performed in Julia v1.9~\supercite{Bezanson2017} using packages CSV.jl v0.10~\supercite{CSV2022} and DataFrames.jl v1.3~\supercite{DataFrames2022}.
+
+\subsection{Generalised linear mixed models of the effects of experimental
+	interventions on habitat, diet, and vaccine formulation}
+
+Generalised linear mixed models (GLMM) were used to estimate the effects of habitat, diet and vaccine formulation on vaccine-specific antibody concentrations measured as optical densities read-outs. Mouse ID was modelled as a random effect to account for multiple testing. The interaction between vaccine regimen and habitat was included in the full model to test whether mice in the wild would respond differently to vaccine timing and boosting than laboratory mice. Likelihood ratio tests (LRT) were used to test the contribution of the interaction terms to the model. We used Julia v1.9~\supercite{Bezanson2017} package MixedModels.jl v4.13~\supercite{douglas_bates_2022} was used for GLMMs and LRTs.
+
+\subsection{Bayesian statistics: choice of priors and sampling of posterior
+	estimates}
+
+We used Bayesian multilevel models to minimise the effects of imbalance on our analyses and to quantify the uncertainty of those estimates given the available data. Priors for intercepts and slopes were chosen to conform to the observed data, with equal means and 2.5 $\times$ the observed variance (see \nameref{supdata:MultilevelModels}). Typically, intercepts were given Gaussian priors of mean $\mu = mean(y)$ and $ 2.5 \times \sigma$ those of the observed response variable $y$ while population-level coefficients were given multivariate normal (Gaussian) priors of mean $\mu = 0$ and variance $\sigma = 2$. Population-level residuals were assumed to follow an exponential distribution with scale $\theta = 1 / std(y)$. Hyperparameters for group level intercepts and coefficients were given Gaussian priors and their variances were given positive-truncated Cauchy priors with location $x_0 = 0$ and scale $\gamma = 2$. Posterior estimates were sampled using the Hamiltonian Monte Carlo algorithm No U-Turn Sampler \supercite{Hoffman2014}, typically across 4 threads simultaneously with $> 3,000$ draws. Turing.jl~\supercite{ge2018t} was used for Bayesian modelling; Makie.jl v0.17~\supercite{Danisch2021} was used for plotting.
+
+\subsection{Structural Causal Models}
+
+The structural causal model (SCM) framework~\supercite{Pearl2009b,Peters2017a} proposes explicit qualitative solutions to biases inherent in datasets and can guide the statistical estimation of the mechanisms by which data are generated in complex systems~\supercite{Bareinboim2016,Pearl2012b}. Further, Bayesian statistical methods for estimating the causal effects indicated by the SCM allows flexibility of imbalanced small data and missing values~\supercite{McElreath2020}, and provides explicit estimation of uncertainty given assumptions made by the model~\supercite{Gelman2013}. Specifically, here we have made three important assumptions: vaccine, diet, and habitat treatments are random; there are no (statistically relevant) unmeasured confounders; and all relationships between variables are linear.
+
+\subsubsection{Model construction}
+
+Each of the variables $X$ described above was included in the structural causal model $\mathfrak{C}$ with the following assignments of the form $X_j \coloneq f(X_{k ≠ j}) + \mathcal{U}_j$ where the unmeasured noise variable $\mathcal{U}_j \sim Normal(0,4)$, was assumed to be independent and identically distributed, and $f()$ was assumed to be linear (\nameref{supdata:SCMconstruction}):
+
+A directed acyclic graph (DAG) expressing $\mathfrak{C}$ (Model~\ref{eq:SCM}) was used to build unconfounded models for the estimation of causal effects between each variable (Figure~\ref{fig:DAGtikz}).
+
+Model construction was performed in Julia v1.9~\supercite{Bezanson2017} using package Dagitty.jl and Turing.jl~\supercite{ge2018t}, and the DAG corresponding to $\mathfrak{C}$ was drawn in Tikz~\supercite{Tan12}.
+
+\subsubsection{Model validation}\label{sec:structure}
+
+To validate $\mathfrak{C}$ (Model~\ref{eq:SCM}), we tested the independencies it implies following chain, fork, and collider rules~\supercite{Pearl2009b,Cinelli2021}. Specifically, we used the observed values for each of the nodes of the causal graph (Figure~\ref{fig:DAGtikz}) to test the truth of the following 13 implied independences: ($D \upmodels S$), ($D \upmodels T \mid H$), ($D \upmodels V$), ($F \upmodels V \mid T, H$), ($H \upmodels S$), ($H \upmodels V$), ($M \upmodels V \mid T, H$), ($P \upmodels T \mid D, R, S, H$), ($P \upmodels V \mid T, H$), ($P \upmodels V \mid D, R, S, H$), ($R \upmodels V \mid T, H$), ($S \upmodels T$), and ($S \upmodels V$). For each of these tests, we constructed a generalised linear mixed model with the appropriate link function, with mouse ID and immunisation protocol as random effects, and considered the statement true if $P_X \greater 0.1$, where $X \subseteq \mathfrak{C}$ (\nameref{supdata:SCMconstruction}). We used MixedModels.jl v4.13~\supercite{douglas_bates_2022} to test the conditional independences implied by $\mathfrak{C}$.
+
+\subsubsection{Model parameterisation}\label{sec:parameterisation}
+
+Next, we encoded $\mathfrak{C}$ as a Bayesian network in Turing.jl~\supercite{ge2018t} to represent each variable as a probability distribution to be updated by the observed values. This allowed us to capture conditional expected values for each variable and their uncertainty. Posterior estimates were validated with MixedModels.jl~\supercite{douglas_bates_2022}.
+
+\paragraph{Missing data.} Twenty-two mice had no fat scores, resulting in 67 missing values in the full repeated sampling dataset. To avoid having to remove those mice from the analysis, we used Bayesian imputation to estimate plausible probability distributions of each of the missing values in light of its parents (PA) in $\mathfrak{C}$ (Model~\ref{eq:SCM}), where $ F \coloneq f(PA_F) = f(T, H, D, P, S)$ (Figure~\ref{fig:DAGtikz}).
+
+% \begin{equation*} \openup -1ex % affecting the line spacing in the environment
+% \begin{split} E_i &\sim Normal(\mu, \sigma) \\ \mu_i &= \alpha + \beta_F \dot
+% F_i + \beta_j X_j \\ \sigma &\sim Exponential(1) \\ \alpha &\sim Normal(0, 2)
+% \\ \beta_j &\sim Normal(0, 4) \\ \dot F_i &\sim Normal(\nu, \sigma_F) \\ \nu
+% &\sim Normal(0.5, 1) \\ \sigma_F &\sim Exponential(1) \\ \end{split}
+% \end{equation*}
+
+$\dot F$ denotes the variable $F$ that contains imputed values; $E_i$ denotes the expected distribution of $E$ given $\dot F$.
+
+\paragraph{Model updating and sampling.}
+
+All Bayesian modelling was performed in Julia v1.9~\supercite{Bezanson2017} using package Turing.jl v0.25~\supercite{ge2018t}.
+
+\section{Acknowledgements}
+
+\todo{Add details of the ISSF vaccination grant, Saudamini's Darwin Trust funding, ABPs Chancellors Fellowship, Amy Sweeny's Darwin Trust funding, SAB RS and BMGF.  - what else?}
+
+\section{Competing Interests}
+
+The authors declare that there are no competing interests.
+
+\section{Author contributions}
+
+Conceived and designed the experiments: ABP, SAB \\ Performed the experiments: SV, AS, ABP, SAB \\ Analysed the data: SV, SAB \\ Contributed reagents/materials/analysis tools: ABP, SAB \\ All the authors reviewed the manuscript.
+
+\section{References}
+% stop line numbering
+\nolinenumbers
+
+\printbibliography[heading=none]
+
+\pagebreak
+
+\section*{Tables}
+
+\TblPrecis \pagebreak
+
+\newcommand{\sectionbreak}{\clearpage} \newrefsection \nolinenumbers
+
+\maketitle
+
+\section{Supplementary information} \setcounter{page}{1}
+\renewcommand{\thepage}{S\arabic{page}} \setcounter{table}{0}
+\renewcommand{\thetable}{S\arabic{table}} \setcounter{figure}{0}
+\renewcommand{\thefigure}{S\arabic{figure}}
+
+\subsection{Supp methods}\label{supdata:Methods}
+
+Insert additional details about
+the lab mouse colony
+details of the diet make up of transbreed and RM1
+\subsection{Supplementary Data: Multilevel
+	Models}\label{supdata:MultilevelModels}
+
+\subsection{Supplementary Data: SCM construction}\label{supdata:SCMconstruction}
+
+\subsection{Supplementary Data: SCM
+	specification}\label{supdata:SCMspecification}
+
+\subsection{Supplementary Data: Wood mouse data}\label{supdata:WM}
+
+\subsection{Supplementary Figures}
+
+\SupFigSCMFlow
+
+\SupFigMCMCChainIgG
+
+\newcommand{\subsectionbreak}{\clearpage}
+
+
+\end{document}
