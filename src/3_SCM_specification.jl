@@ -85,6 +85,7 @@ D -> P;
 D -> R;
 F -> E;
 F -> M;
+H -> D;
 H -> E;
 H -> F;
 H -> M;
@@ -706,12 +707,13 @@ save("../manuscript/Figures/plots/R_nP_chn.pdf", p)
 
 ## Total effect of D on nP
 
-adjustmentSets(dag, "D", "P", effect="total") # {}
+adjustmentSets(dag, "D", "P", effect="total") # {H}
 
-@model function D_nP(nP, D, IDidx; n_id=length(unique(IDidx)))
+@model function D_nP(nP, D, H, IDidx; n_id=length(unique(IDidx)))
   # population-level priors
   α ~ Normal(0, 2.5)
   βD ~ Normal(0, 0.5)
+  βH ~ Normal(0, 0.5)
   σ ~ Exponential(std(nP))
 
   # priors for variance of random intercepts
@@ -719,21 +721,22 @@ adjustmentSets(dag, "D", "P", effect="total") # {}
   α_ID ~ filldist(Normal(0, τ), n_id)
 
   # likelihood
-  nP̂ = @. α + α_ID[IDidx] + βD * D
+  nP̂ = @. α + α_ID[IDidx] + βD * D + βH * H
   nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
-D_nP_model = D_nP(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.IDidx)
+D_nP_model = D_nP(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.IDidx)
 D_nP_chn = sample(D_nP_model, NUTS(), MCMCThreads(), 3_000, 4);
 D_nP_chn_df = DataFrame(D_nP_chn)[!, r"α\b|β"];
 precis(D_nP_chn_df)
 """
-┌───────┬────────────────────────────────────────────────────────┐
-│ param │   mean     std     5.5%     50%   94.5%      histogram │
-├───────┼────────────────────────────────────────────────────────┤
-│     α │ 0.2076  0.0841   0.0741  0.2073  0.3425  ▁▁▁▃▆██▆▄▂▁▁▁ │
-│    βD │ 0.0026   0.045  -0.0688   0.002  0.0741       ▁▁▃██▄▁▁ │
-└───────┴────────────────────────────────────────────────────────┘
+┌───────┬─────────────────────────────────────────────────────┐
+│ param │   mean    std   5.0 %    50 %  95.0 %     histogram │
+├───────┼─────────────────────────────────────────────────────┤
+│     α │ -0.537  0.141  -0.777  -0.535  -0.311  ▁▁▁▁▃▆█▇▄▂▁▁ │
+│    βD │ -0.009  0.043  -0.079  -0.009   0.063      ▁▁▃█▇▂▁▁ │
+│    βH │  0.558  0.091   0.409   0.557   0.707      ▁▁▅█▆▂▁▁ │
+└───────┴─────────────────────────────────────────────────────┘
 
 """
 
@@ -1154,12 +1157,13 @@ V             1.50833     0.111397    13.54    <1e-41
 """
 
 # Total effect of Diet on E
-adjustmentSets(dag, "D", "E") # {}
+adjustmentSets(dag, "D", "E", effect="total") # {H}
 
-@model function D_E(IDidx, Vidx, E, D; n_id=length(unique(IDidx)), n_vax=length(unique(Vidx)))
+@model function D_E(IDidx, Vidx, E, D, H; n_id=length(unique(IDidx)), n_vax=length(unique(Vidx)))
   # population-level priors
   α ~ Normal(mean(E), 2.5 * std(E))
-  βD_ ~ Normal(0, 0.5)
+  βD ~ Normal(0, 0.5)
+  βH ~ Normal(0, 0.5)
   σ ~ Exponential(std(E))
   ν ~ LogNormal(2, 1)
 
@@ -1170,11 +1174,11 @@ adjustmentSets(dag, "D", "E") # {}
   α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
 
   # likelihood
-  Ê = @. α + α_ID[IDidx] + α_vax[Vidx] + βD_ * D
+  Ê = @. α + α_ID[IDidx] + α_vax[Vidx] + βD * D + βH * H
   return E ~ MvNormal(Ê, σ^2 * I)
 end
 
-D_E_model = D_E(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.D);
+D_E_model = D_E(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.D, dag_df.H);
 
 D_E_chn = sample(D_E_model, NUTS(), MCMCThreads(), 3000, 3)
 
@@ -1182,11 +1186,12 @@ D_E_chn_df = DataFrame(D_E_chn)[!, r"β"];
 precis(D_E_chn_df)
 
 """
-┌───────┬───────────────────────────────────────────────────────┐
-│ param │    mean     std     5.5%      50%    94.5%  histogram │
-├───────┼───────────────────────────────────────────────────────┤
-│   βD_ │ -0.2573  0.1011  -0.4188  -0.2569  -0.0971  ▁▁▂▆█▅▂▁▁ │
-└───────┴───────────────────────────────────────────────────────┘
+┌───────┬──────────────────────────────────────────────────┐
+│ param │   mean    std   5.0 %    50 %  95.0 %  histogram │
+├───────┼──────────────────────────────────────────────────┤
+│    βD │ -0.248  0.087   -0.39  -0.247  -0.106  ▁▁▁▅█▅▁▁▁ │
+│    βH │ -0.654  0.098  -0.815  -0.655  -0.492  ▁▁▂▅█▅▂▁▁ │
+└───────┴──────────────────────────────────────────────────┘
 
 """
 
@@ -1354,9 +1359,9 @@ save("../manuscript/Figures/plots/F_E_chn.pdf", p)
 p
 
 ## Direct effect of M on E
-adjustmentSets(dag, "M", "E", effect="direct") # { D, F, H, P, R, S, T }
+adjustmentSets(dag, "M", "E", effect="direct") # { D, F, H, P, R, S}
 
-@model function M_E(E, M, D, Ḟ, P, R, S, T, H)
+@model function M_E(E, M, D, Ḟ, P, R, S, H)
 
   α ~ Normal(mean(E), 2.5 * std(E))
   σ ~ Exponential(std(E))
@@ -1371,7 +1376,6 @@ adjustmentSets(dag, "M", "E", effect="direct") # { D, F, H, P, R, S, T }
   βP ~ Normal(0, 1)
   βR ~ Normal(0, 1) # good to include for precision even if blocked by collider F->M<-R
   βS ~ Normal(0, 1)
-  βT ~ Normal(0, 1)
 
   N_missing = sum(ismissing.(Ḟ))
   F_impute ~ filldist(Normal(), N_missing)
@@ -1386,12 +1390,12 @@ adjustmentSets(dag, "M", "E", effect="direct") # { D, F, H, P, R, S, T }
       Ḟ[i] ~ Normal(ν, σ_F)
       f_imputed = Ḟ[i]
     end
-    µ = @. α + βM * M[i] + βD * D[i] + βF * f_imputed + βH * H[i] + βP * P[i] + βR * R[i] + βS * S[i] + βT * T[i]
+    µ = @. α + βM * M[i] + βD * D[i] + βF * f_imputed + βH * H[i] + βP * P[i] + βR * R[i] + βS * S[i]
     E[i] ~ Normal(µ, σ^2 * I)
   end
 end
 
-M_E_model = M_E(dag_df.E, dag_df.M, dag_df.D, dag_df.Ḟ, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S, dag_df.T, dag_df.H)
+M_E_model = M_E(dag_df.E, dag_df.M, dag_df.D, dag_df.Ḟ, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S, dag_df.H)
 
 M_E_ch = sample(M_E_model, NUTS(), MCMCThreads(), 3000, 4)
 
@@ -1410,7 +1414,6 @@ precis(M_E_df)
 │    βP │ -0.0297  0.0527  -0.1146  -0.0296   0.0536      ▁▁▂▆█▅▂▁▁ │
 │    βR │ -0.1242  0.1992   -0.443  -0.1255   0.1922      ▁▁▂▆█▅▁▁▁ │
 │    βS │  0.0623  0.1124  -0.1174   0.0625    0.241     ▁▁▂▆█▇▃▁▁▁ │
-│    βT │  0.0459  0.0049   0.0383   0.0459   0.0538      ▁▁▃▇█▄▁▁▁ │
 └───────┴───────────────────────────────────────────────────────────┘
 """
 
@@ -1422,33 +1425,33 @@ p
 
 ## Direct effet of H on P
 
-adjustmentSets(dag, "H", "P", effect="direct")# { D, R, S, T }
+adjustmentSets(dag, "H", "P", effect="direct")# { D, R, S, V }
 
-glmm_H_P = fit(MixedModel, @formula(lognP ~ 1 + H + D + R + S + T + (1 | ID)), dag_df)
+glmm_H_P = fit(MixedModel, @formula(lognP ~ 1 + H + D + R + S + V + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- lognP ~ 1 + H + D + R + S + T + (1 | ID)
+ lognP ~ 1 + H + D + R + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-    76.3168  -152.6337  -136.6337  -136.1194  -107.3022
+    75.7468  -151.4936  -135.4936  -134.9793  -106.1621
 
 Variance components:
             Column    Variance  Std.Dev.
-ID       (Intercept)  0.1635051 0.4043576
-Residual              0.0077141 0.0878299
+ID       (Intercept)  0.1634105 0.4042407
+Residual              0.0077654 0.0881214
  Number of obs: 289; levels of grouping factors: 110
 
   Fixed-effects parameters:
-──────────────────────────────────────────────────────
-                    Coef.  Std. Error      z  Pr(>|z|)
-──────────────────────────────────────────────────────
-(Intercept)  -0.480939     0.184299    -2.61    0.0091
-H             0.54097      0.0851168    6.36    <1e-09
-D            -0.00496528   0.0431236   -0.12    0.9083
-R             0.0402971    0.0388508    1.04    0.2996
-S            -0.072663     0.0787063   -0.92    0.3559
-T             0.000762771  0.00065167   1.17    0.2418
-──────────────────────────────────────────────────────
+─────────────────────────────────────────────────────
+                   Coef.  Std. Error      z  Pr(>|z|)
+─────────────────────────────────────────────────────
+(Intercept)  -0.492284     0.19141    -2.57    0.0101
+H             0.539661     0.0851757   6.34    <1e-09
+D            -0.00415668   0.0433778  -0.10    0.9237
+R             0.0445632    0.039308    1.13    0.2569
+S            -0.0713095    0.0786907  -0.91    0.3648
+V             0.0113116    0.023732    0.48    0.6336
+─────────────────────────────────────────────────────
 
 """
 
@@ -1486,62 +1489,63 @@ p
 
 ## Direct effet of D on P
 
-adjustmentSets(dag, "D", "P", effect="direct")# { H, R, S, T }
+adjustmentSets(dag, "D", "P", effect="direct")# { H, R, S, V }
 
-glmm_D_P = fit(MixedModel, @formula(lognP ~ 1 + H + D + R + S + T + (1 | ID)), dag_df)
+glmm_D_P = fit(MixedModel, @formula(lognP ~ 1 + H + D + R + S + V + (1 | ID)), dag_df)
 
 qqnorm(glmm_H_P; qqline=:fitrobust)
 hist(residuals(glmm_H_P))
 """
 Linear mixed model fit by maximum likelihood
- lognP ~ 1 + H + D + R + S + T + (1 | ID)
+ lognP ~ 1 + H + D + R + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -164.7185   329.4371   345.4371   345.9514   374.7685
+    75.7468  -151.4936  -135.4936  -134.9793  -106.1621
 
 Variance components:
-            Column   Variance Std.Dev.
-ID       (Intercept)  0.866887 0.931068
-Residual              0.040899 0.202236
+            Column    Variance  Std.Dev.
+ID       (Intercept)  0.1634105 0.4042407
+Residual              0.0077654 0.0881214
  Number of obs: 289; levels of grouping factors: 110
 
   Fixed-effects parameters:
 ─────────────────────────────────────────────────────
                    Coef.  Std. Error      z  Pr(>|z|)
 ─────────────────────────────────────────────────────
-(Intercept)  -1.1074      0.424364    -2.61    0.0091
-H             1.24563     0.195989     6.36    <1e-09
-D            -0.011433    0.0992959   -0.12    0.9083
-R             0.0927875   0.0894574    1.04    0.2996
-S            -0.167313    0.181228    -0.92    0.3559
-T             0.00175634  0.00150053   1.17    0.2418
+(Intercept)  -0.492284     0.19141    -2.57    0.0101
+H             0.539661     0.0851757   6.34    <1e-09
+D            -0.00415668   0.0433778  -0.10    0.9237
+R             0.0445632    0.039308    1.13    0.2569
+S            -0.0713095    0.0786907  -0.91    0.3648
+V             0.0113116    0.023732    0.48    0.6336
 ─────────────────────────────────────────────────────
+
 """
 
 boot = parametricbootstrap(MersenneTwister(1234), 3000, glmm_D_P);
 coefplot(boot)
 ridgeplot(boot)
 
-@model function H_nP(nP, H, D, R, S, T, IDidx; n_id=length(unique(IDidx)))
+@model function H_nP(nP, H, D, R, S, IDidx, Vidx; n_id=length(unique(IDidx)), n_vax=length(unique(Vidx)))
   # population-level priors
   α ~ Normal(mean(nP), 2.5 * std(nP))
   βH ~ Normal(0, 0.5)
   βD ~ Normal(0, 0.5)
   βR ~ Normal(0, 0.5)
   βS ~ Normal(0, 0.5)
-  βT ~ Normal(0, 0.5)
 
   σ ~ Exponential(std(nP))
 
   # priors for variance of random intercepts
   τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
   α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
 
   # likelihood
-  nP̂ = @. α + α_ID[IDidx] + βH * H + βD * D + βR * R + βS * S + βT * T
+  nP̂ = @. α + α_ID[IDidx] + α_vax[Vidx] + βH * H + βD * D + βR * R + βS * S
   return nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
-H_nP_model = H_nP(log10.(1 .+ dag_df.nP), dag_df.H, dag_df.D, dag_df.R, dag_df.S, dag_df.T, dag_df.IDidx);
+H_nP_model = H_nP(log10.(1 .+ dag_df.nP), dag_df.H, dag_df.D, dag_df.R, dag_df.S, dag_df.IDidx, dag_df.Vidx);
 
 H_nP_ch = sample(H_nP_model, NUTS(), MCMCThreads(), 3000, 4);
 
@@ -1550,16 +1554,17 @@ H_nP_df = DataFrame(H_nP_ch)[!, r"α\b|β"];
 precis(H_nP_df)
 
 """
-┌───────┬────────────────────────────────────────────────────────────┐
-│ param │    mean     std     5.5%      50%    94.5%       histogram │
-├───────┼────────────────────────────────────────────────────────────┤
-│     α │  -0.454  0.1884  -0.7511  -0.4571  -0.1445        ▁▁▄█▆▂▁▁ │
-│    βD │ -0.0058  0.0433  -0.0741  -0.0064   0.0631        ▁▁▃█▇▂▁▁ │
-│    βH │  0.5197  0.0874   0.3806   0.5192   0.6602        ▁▁▂▇█▄▁▁ │
-│    βR │  0.0416  0.0403   -0.022   0.0418   0.1065        ▁▁▃█▇▂▁▁ │
-│    βS │ -0.0743  0.0791  -0.2044  -0.0728   0.0489  ▁▁▁▁▂▄▇█▇▄▂▁▁▁ │
-│    βT │  0.0008  0.0007  -0.0003   0.0008   0.0018     ▁▁▁▃▆█▇▃▁▁▁ │
-└───────┴────────────────────────────────────────────────────────────┘
+┌───────┬──────────────────────────────────────────────────────┐
+│ param │   mean    std   5.0 %    50 %  95.0 %      histogram │
+├───────┼──────────────────────────────────────────────────────┤
+│     α │ -0.423  0.263  -0.851  -0.427   0.015     ▁▁▂▅██▄▂▁▁ │
+│    βH │  0.517  0.086   0.379   0.516   0.658       ▁▂▇█▃▁▁▁ │
+│    βD │ -0.002  0.043  -0.075  -0.003   0.069       ▁▁▃██▃▁▁ │
+│    βR │   0.05  0.041  -0.016   0.049   0.117        ▁▁▃██▃▁ │
+│    βS │ -0.076  0.081  -0.211  -0.077   0.059  ▁▁▁▂▄██▇▄▂▁▁▁ │
+└───────┴──────────────────────────────────────────────────────┘
+
+
 """
 
 p = plot_chains_df(H_nP_ch; show_intercept=true)
@@ -1568,36 +1573,33 @@ p
 
 ## Direct effect of D on F
 
-adjustmentSets(dag, "D", "F", effect="direct") # { H, P, R, S, T }
+adjustmentSets(dag, "D", "F", effect="direct") # { H, P, R, S}
 
-glmm_D_F = fit(MixedModel, @formula(Ḟ ~ 1 + D + H + P + R + S + T + (1 | ID)), dag_df)
+glmm_D_F = fit(MixedModel, @formula(Ḟ ~ 1 + D + H + P + R + S + (1 | ID)), dag_df)
 
 """
-Minimizing 13    Time: 0:00:00 (10.93 ms/it)
 Linear mixed model fit by maximum likelihood
- Ḟ ~ 1 + D + H + P + R + S + T + (1 | ID)
+ Ḟ ~ 1 + D + H + P + R + S + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -202.9478   405.8957   423.8957   424.7447   454.5198
+  -203.2277   406.4553   422.4553   423.1314   449.6768
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.147341 0.383850
-Residual              0.253006 0.502997
+ID       (Intercept)  0.144320 0.379895
+Residual              0.255575 0.505544
  Number of obs: 222; levels of grouping factors: 105
 
   Fixed-effects parameters:
 ──────────────────────────────────────────────────────
                    Coef.  Std. Error       z  Pr(>|z|)
 ──────────────────────────────────────────────────────
-(Intercept)   2.72242     0.295979      9.20    <1e-19
-D             0.00816337  0.0999789     0.08    0.9349
-H            -1.6543      0.16051     -10.31    <1e-24
-P             0.0113786   0.167606      0.07    0.9459
-R             0.089091    0.15239       0.58    0.5588
-S            -0.329883    0.105401     -3.13    0.0017
-T            -0.00333938  0.00443263   -0.75    0.4512
+(Intercept)   2.70376      0.294176     9.19    <1e-19
+D             0.00729174   0.0997214    0.07    0.9417
+H            -1.6568       0.160156   -10.34    <1e-24
+P            -0.00274903   0.165899    -0.02    0.9868
+R             0.0767133    0.151855     0.51    0.6134
+S            -0.33479      0.104839    -3.19    0.0014
 ──────────────────────────────────────────────────────
-
 
 """
 
@@ -1609,35 +1611,36 @@ ridgeplot(boot)
 
 ## Direct effect of D on M
 
-adjustmentSets(dag, "D", "M", effect="direct") # { F, H, P, R, S, T }
+adjustmentSets(dag, "D", "M", effect="direct") # { F, H, P, R, S, V }
 
-glmm_D_M = fit(MixedModel, @formula(M ~ 1 + D + Ḟ + H + P + R + S + T + (1 | ID)), dag_df)
+glmm_D_M = fit(MixedModel, @formula(M ~ 1 + D + Ḟ + H + P + R + S + V + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- M ~ 1 + D + Ḟ + H + P + R + S + T + (1 | ID)
+ M ~ 1 + D + Ḟ + H + P + R + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -150.7892   301.5784   321.5784   322.6211   355.6052
+  -154.5818   309.1637   329.1637   330.2063   363.1904
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.504269 0.710119
-Residual              0.059222 0.243357
+ID       (Intercept)  0.507168 0.712157
+Residual              0.062677 0.250354
  Number of obs: 222; levels of grouping factors: 105
 
   Fixed-effects parameters:
-─────────────────────────────────────────────────────
-                   Coef.  Std. Error      z  Pr(>|z|)
-─────────────────────────────────────────────────────
-(Intercept)   0.640662    0.400984     1.60    0.1101
-D             0.437883    0.102503     4.27    <1e-04
-Ḟ             0.0645476   0.0429016    1.50    0.1324
-H            -0.527277    0.198484    -2.66    0.0079
-P             0.13476     0.195148     0.69    0.4898
-R             0.272096    0.104188     2.61    0.0090
-S            -0.895595    0.145849    -6.14    <1e-09
-T             0.00703544  0.00249179   2.82    0.0048
-─────────────────────────────────────────────────────
+────────────────────────────────────────────────────
+                  Coef.  Std. Error      z  Pr(>|z|)
+────────────────────────────────────────────────────
+(Intercept)   0.595669    0.462329    1.29    0.1976
+D             0.441376    0.104883    4.21    <1e-04
+Ḟ             0.0546147   0.0437905   1.25    0.2123
+H            -0.55507     0.201918   -2.75    0.0060
+P             0.174696    0.197429    0.88    0.3762
+R             0.310284    0.109216    2.84    0.0045
+S            -0.886441    0.146589   -6.05    <1e-08
+V             0.0583054   0.124591    0.47    0.6398
+────────────────────────────────────────────────────
+
 """
 
 boot = parametricbootstrap(MersenneTwister(1234), 3000, glmm_D_M);
@@ -1648,29 +1651,30 @@ ridgeplot(boot)
 
 ## Direct effect of D on R
 
-adjustmentSets(dag, "D", "R", effect="direct") # {}
+adjustmentSets(dag, "D", "R", effect="direct") # {H}
 
-glmm_D_R = fit(MixedModel, @formula(R ~ 1 + D + (1 | ID)), dag_df)
+glmm_D_R = fit(MixedModel, @formula(R ~ 1 + D + H + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- R ~ 1 + D + (1 | ID)
+ R ~ 1 + D + H + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-   -35.1084    70.2168    78.2168    78.3577    92.8826
+    16.2329   -32.4658   -22.4658   -22.2538    -4.1337
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.153391 0.391652
-Residual              0.026892 0.163988
+ID       (Intercept)  0.048602 0.220458
+Residual              0.027884 0.166985
  Number of obs: 289; levels of grouping factors: 110
 
   Fixed-effects parameters:
-────────────────────────────────────────────────────
-                  Coef.  Std. Error      z  Pr(>|z|)
-────────────────────────────────────────────────────
-(Intercept)   1.27536     0.100695   12.67    <1e-36
-D            -0.0241109   0.0607939  -0.40    0.6917
-────────────────────────────────────────────────────
+─────────────────────────────────────────────────────
+                   Coef.  Std. Error      z  Pr(>|z|)
+─────────────────────────────────────────────────────
+(Intercept)   0.35744      0.0947436   3.77    0.0002
+D            -0.00953244   0.0430006  -0.22    0.8246
+H             0.656937     0.0493367  13.32    <1e-39
+─────────────────────────────────────────────────────
 
 """
 
@@ -1680,35 +1684,36 @@ ridgeplot(boot)
 
 ## Direct effect of F on M
 
-adjustmentSets(dag, "F", "M", effect="direct") # { D, H, P, R, S, T }
+adjustmentSets(dag, "F", "M", effect="direct") # { D, H, P, R, S, V }
 
-glmm_F_M = fit(MixedModel, @formula(M ~ 1 + Ḟ + D + H + P + R + S + T + (1 | ID)), dag_df)
+glmm_F_M = fit(MixedModel, @formula(M ~ 1 + Ḟ + D + H + P + R + S + V + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- M ~ 1 + Ḟ + D + H + P + R + S + T + (1 | ID)
+ M ~ 1 + Ḟ + D + H + P + R + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -150.7892   301.5784   321.5784   322.6211   355.6052
+  -154.5818   309.1637   329.1637   330.2063   363.1904
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.504269 0.710119
-Residual              0.059222 0.243357
+ID       (Intercept)  0.507168 0.712157
+Residual              0.062677 0.250354
  Number of obs: 222; levels of grouping factors: 105
 
   Fixed-effects parameters:
-─────────────────────────────────────────────────────
-                   Coef.  Std. Error      z  Pr(>|z|)
-─────────────────────────────────────────────────────
-(Intercept)   0.640662    0.400984     1.60    0.1101
-Ḟ             0.0645476   0.0429016    1.50    0.1324
-D             0.437883    0.102503     4.27    <1e-04
-H            -0.527277    0.198484    -2.66    0.0079
-P             0.13476     0.195148     0.69    0.4898
-R             0.272096    0.104188     2.61    0.0090
-S            -0.895595    0.145849    -6.14    <1e-09
-T             0.00703544  0.00249179   2.82    0.0048
-─────────────────────────────────────────────────────
+────────────────────────────────────────────────────
+                  Coef.  Std. Error      z  Pr(>|z|)
+────────────────────────────────────────────────────
+(Intercept)   0.595669    0.462329    1.29    0.1976
+Ḟ             0.0546147   0.0437905   1.25    0.2123
+D             0.441376    0.104883    4.21    <1e-04
+H            -0.55507     0.201918   -2.75    0.0060
+P             0.174696    0.197429    0.88    0.3762
+R             0.310284    0.109216    2.84    0.0045
+S            -0.886441    0.146589   -6.05    <1e-08
+V             0.0583054   0.124591    0.47    0.6398
+────────────────────────────────────────────────────
+
 """
 
 boot = parametricbootstrap(MersenneTwister(1234), 3000, glmm_F_M);
@@ -1719,34 +1724,34 @@ ridgeplot(boot)
 
 ## Direct effect of P on F
 
-adjustmentSets(dag, "P", "F", effect="direct") # { D, H, R, S, T }
+adjustmentSets(dag, "P", "F", effect="direct") # { D, H, R, S, V }
 
-glmm_P_F = fit(MixedModel, @formula(Ḟ ~ 1 + P + D + H + R + S + T + (1 | ID)), dag_df)
+glmm_P_F = fit(MixedModel, @formula(Ḟ ~ 1 + P + D + H + R + S + V + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- Ḟ ~ 1 + P + D + H + R + S + T + (1 | ID)
+ Ḟ ~ 1 + P + D + H + R + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -202.9478   405.8957   423.8957   424.7447   454.5198
+  -202.5831   405.1662   423.1662   424.0153   453.7903
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.147341 0.383850
-Residual              0.253006 0.502997
+ID       (Intercept)  0.139557 0.373573
+Residual              0.256358 0.506319
  Number of obs: 222; levels of grouping factors: 105
 
   Fixed-effects parameters:
-──────────────────────────────────────────────────────
-                   Coef.  Std. Error       z  Pr(>|z|)
-──────────────────────────────────────────────────────
-(Intercept)   2.72242     0.295979      9.20    <1e-19
-P             0.0113786   0.167606      0.07    0.9459
-D             0.00816337  0.0999789     0.08    0.9349
-H            -1.6543      0.16051     -10.31    <1e-24
-R             0.089091    0.15239       0.58    0.5588
-S            -0.329883    0.105401     -3.13    0.0017
-T            -0.00333938  0.00443263   -0.75    0.4512
-──────────────────────────────────────────────────────
+─────────────────────────────────────────────────────
+                  Coef.  Std. Error       z  Pr(>|z|)
+─────────────────────────────────────────────────────
+(Intercept)   2.47549     0.352539     7.02    <1e-11
+P            -0.01649     0.165081    -0.10    0.9204
+D             0.0089668   0.0990151    0.09    0.9278
+H            -1.6637      0.15933    -10.44    <1e-24
+R             0.0790238   0.151328     0.52    0.6015
+S            -0.329262    0.104082    -3.16    0.0016
+V             0.135703    0.118894     1.14    0.2537
+─────────────────────────────────────────────────────
 
 """
 
@@ -1758,35 +1763,36 @@ ridgeplot(boot)
 
 ## Direct effect of P on M
 
-adjustmentSets(dag, "P", "M", effect="direct") # { D, F, H, R, S, T }
+adjustmentSets(dag, "P", "M", effect="direct") # { D, F, H, R, S, V }
 
-glmm_P_M = fit(MixedModel, @formula(M ~ 1 + P + D + Ḟ + H + R + S + T + (1 | ID)), dag_df)
+glmm_P_M = fit(MixedModel, @formula(M ~ 1 + P + D + Ḟ + H + R + S + V + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- M ~ 1 + P + D + Ḟ + H + R + S + T + (1 | ID)
+ M ~ 1 + P + D + Ḟ + H + R + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -150.7892   301.5784   321.5784   322.6211   355.6052
+  -154.5818   309.1637   329.1637   330.2063   363.1904
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.504269 0.710119
-Residual              0.059222 0.243357
+ID       (Intercept)  0.507168 0.712157
+Residual              0.062677 0.250354
  Number of obs: 222; levels of grouping factors: 105
 
   Fixed-effects parameters:
-─────────────────────────────────────────────────────
-                   Coef.  Std. Error      z  Pr(>|z|)
-─────────────────────────────────────────────────────
-(Intercept)   0.640662    0.400984     1.60    0.1101
-P             0.13476     0.195148     0.69    0.4898
-D             0.437883    0.102503     4.27    <1e-04
-Ḟ             0.0645476   0.0429016    1.50    0.1324
-H            -0.527277    0.198484    -2.66    0.0079
-R             0.272096    0.104188     2.61    0.0090
-S            -0.895595    0.145849    -6.14    <1e-09
-T             0.00703544  0.00249179   2.82    0.0048
-─────────────────────────────────────────────────────
+────────────────────────────────────────────────────
+                  Coef.  Std. Error      z  Pr(>|z|)
+────────────────────────────────────────────────────
+(Intercept)   0.595669    0.462329    1.29    0.1976
+P             0.174696    0.197429    0.88    0.3762
+D             0.441376    0.104883    4.21    <1e-04
+Ḟ             0.0546147   0.0437905   1.25    0.2123
+H            -0.55507     0.201918   -2.75    0.0060
+R             0.310284    0.109216    2.84    0.0045
+S            -0.886441    0.146589   -6.05    <1e-08
+V             0.0583054   0.124591    0.47    0.6398
+────────────────────────────────────────────────────
+
 
 """
 
@@ -1798,33 +1804,33 @@ ridgeplot(boot)
 
 ## Direct effect of R on F
 
-adjustmentSets(dag, "R", "F", effect="direct") # { D, H, P, S, T }
+adjustmentSets(dag, "R", "F", effect="direct") # { D, H, P, S, V }
 
-glmm_R_F = fit(MixedModel, @formula(Ḟ ~ 1 + R + D + H + P + S + T + (1 | ID)), dag_df)
+glmm_R_F = fit(MixedModel, @formula(Ḟ ~ 1 + R + D + H + P + S + V + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- Ḟ ~ 1 + R + D + H + P + S + T + (1 | ID)
+ Ḟ ~ 1 + R + D + H + P + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -202.9478   405.8957   423.8957   424.7447   454.5198
+  -202.5831   405.1662   423.1662   424.0153   453.7903
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.147341 0.383850
-Residual              0.253006 0.502997
+ID       (Intercept)  0.139557 0.373573
+Residual              0.256358 0.506319
  Number of obs: 222; levels of grouping factors: 105
 
   Fixed-effects parameters:
 ──────────────────────────────────────────────────────
                    Coef.  Std. Error       z  Pr(>|z|)
 ──────────────────────────────────────────────────────
-(Intercept)   2.72242     0.295979      9.20    <1e-19
-R             0.089091    0.15239       0.58    0.5588
-D             0.00816337  0.0999789     0.08    0.9349
-H            -1.6543      0.16051     -10.31    <1e-24
-P             0.0113786   0.167606      0.07    0.9459
-S            -0.329883    0.105401     -3.13    0.0017
-T            -0.00333938  0.00443263   -0.75    0.4512
+(Intercept)   2.47549      0.352539     7.02    <1e-11
+R             0.0790238    0.151328     0.52    0.6015
+D             0.00896681   0.0990151    0.09    0.9278
+H            -1.6637       0.15933    -10.44    <1e-24
+P            -0.01649      0.165081    -0.10    0.9204
+S            -0.329262     0.104082    -3.16    0.0016
+V             0.135703     0.118894     1.14    0.2537
 ──────────────────────────────────────────────────────
 
 """
@@ -1836,35 +1842,36 @@ coefplot(boot)
 
 ## Direct effect of R on M
 
-adjustmentSets(dag, "R", "M", effect="direct") # { D, F, H, P, S, T }
+adjustmentSets(dag, "R", "M", effect="direct") # { D, F, H, P, S, V }
 
-glmm_R_M = fit(MixedModel, @formula(M ~ 1 + R + D + Ḟ + H + P + S + T + (1 | ID)), dag_df)
+glmm_R_M = fit(MixedModel, @formula(M ~ 1 + R + D + Ḟ + H + P + S + V + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- M ~ 1 + R + D + Ḟ + H + P + S + T + (1 | ID)
+ M ~ 1 + R + D + Ḟ + H + P + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -150.7892   301.5784   321.5784   322.6211   355.6052
+  -154.5818   309.1637   329.1637   330.2063   363.1904
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.504269 0.710119
-Residual              0.059222 0.243357
+ID       (Intercept)  0.507168 0.712157
+Residual              0.062677 0.250354
  Number of obs: 222; levels of grouping factors: 105
 
   Fixed-effects parameters:
-─────────────────────────────────────────────────────
-                   Coef.  Std. Error      z  Pr(>|z|)
-─────────────────────────────────────────────────────
-(Intercept)   0.640662    0.400984     1.60    0.1101
-R             0.272096    0.104188     2.61    0.0090
-D             0.437883    0.102503     4.27    <1e-04
-Ḟ             0.0645476   0.0429016    1.50    0.1324
-H            -0.527277    0.198484    -2.66    0.0079
-P             0.13476     0.195148     0.69    0.4898
-S            -0.895595    0.145849    -6.14    <1e-09
-T             0.00703544  0.00249179   2.82    0.0048
-─────────────────────────────────────────────────────
+────────────────────────────────────────────────────
+                  Coef.  Std. Error      z  Pr(>|z|)
+────────────────────────────────────────────────────
+(Intercept)   0.595669    0.462329    1.29    0.1976
+R             0.310284    0.109216    2.84    0.0045
+D             0.441376    0.104883    4.21    <1e-04
+Ḟ             0.0546147   0.0437905   1.25    0.2123
+H            -0.55507     0.201918   -2.75    0.0060
+P             0.174696    0.197429    0.88    0.3762
+S            -0.886441    0.146589   -6.05    <1e-08
+V             0.0583054   0.124591    0.47    0.6398
+────────────────────────────────────────────────────
+
 
 """
 
@@ -1915,35 +1922,35 @@ ridgeplot(boot)
 
 ## Direct effect of S on M
 
-adjustmentSets(dag, "S", "M", effect="direct") # { D, F, H, P, R, T }
+adjustmentSets(dag, "S", "M", effect="direct") # { D, F, H, P, R, V }
 
-glmm_S_M = fit(MixedModel, @formula(M ~ 1 + S + D + Ḟ + H + P + R + T + (1 | ID)), dag_df)
+glmm_S_M = fit(MixedModel, @formula(M ~ 1 + S + D + Ḟ + H + P + R + V + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- M ~ 1 + S + D + Ḟ + H + P + R + T + (1 | ID)
+ M ~ 1 + S + D + Ḟ + H + P + R + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -150.7892   301.5784   321.5784   322.6211   355.6052
+  -154.5818   309.1637   329.1637   330.2063   363.1904
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.504269 0.710119
-Residual              0.059222 0.243357
+ID       (Intercept)  0.507168 0.712157
+Residual              0.062677 0.250354
  Number of obs: 222; levels of grouping factors: 105
 
   Fixed-effects parameters:
-─────────────────────────────────────────────────────
-                   Coef.  Std. Error      z  Pr(>|z|)
-─────────────────────────────────────────────────────
-(Intercept)   0.640662    0.400984     1.60    0.1101
-S            -0.895595    0.145849    -6.14    <1e-09
-D             0.437883    0.102503     4.27    <1e-04
-Ḟ             0.0645476   0.0429016    1.50    0.1324
-H            -0.527277    0.198484    -2.66    0.0079
-P             0.13476     0.195148     0.69    0.4898
-R             0.272096    0.104188     2.61    0.0090
-T             0.00703544  0.00249179   2.82    0.0048
-─────────────────────────────────────────────────────
+────────────────────────────────────────────────────
+                  Coef.  Std. Error      z  Pr(>|z|)
+────────────────────────────────────────────────────
+(Intercept)   0.595669    0.462329    1.29    0.1976
+S            -0.886441    0.146589   -6.05    <1e-08
+D             0.441376    0.104883    4.21    <1e-04
+Ḟ             0.0546147   0.0437905   1.25    0.2123
+H            -0.55507     0.201918   -2.75    0.0060
+P             0.174696    0.197429    0.88    0.3762
+R             0.310284    0.109216    2.84    0.0045
+V             0.0583054   0.124591    0.47    0.6398
+────────────────────────────────────────────────────
 
 """
 
@@ -1987,114 +1994,6 @@ ridgeplot(boot)
 
 # TODO: code Bayesian version of this model
 
-## Direct effect of T on F
-
-adjustmentSets(dag, "T", "F", effect="direct") # { D, H, P, R, S }
-
-glmm_T_F = fit(MixedModel, @formula(Ḟ ~ 1 + T + D + H + P + R + S + (1 | ID)), dag_df)
-
-"""
-Linear mixed model fit by maximum likelihood
- Ḟ ~ 1 + T + D + H + P + R + S + (1 | ID)
-   logLik   -2 logLik     AIC       AICc        BIC
-  -202.9478   405.8957   423.8957   424.7447   454.5198
-
-Variance components:
-            Column   Variance Std.Dev.
-ID       (Intercept)  0.147341 0.383850
-Residual              0.253006 0.502997
- Number of obs: 222; levels of grouping factors: 105
-
-  Fixed-effects parameters:
-──────────────────────────────────────────────────────
-                   Coef.  Std. Error       z  Pr(>|z|)
-──────────────────────────────────────────────────────
-(Intercept)   2.72242     0.295979      9.20    <1e-19
-T            -0.00333938  0.00443263   -0.75    0.4512
-D             0.00816337  0.0999789     0.08    0.9349
-H            -1.6543      0.16051     -10.31    <1e-24
-P             0.0113786   0.167606      0.07    0.9459
-R             0.089091    0.15239       0.58    0.5588
-S            -0.329883    0.105401     -3.13    0.0017
-──────────────────────────────────────────────────────
-
-"""
-
-boot = parametricbootstrap(MersenneTwister(1234), 3000, glmm_T_F);
-coefplot(boot)
-ridgeplot(boot)
-
-## Direct effect of T on M
-
-adjustmentSets(dag, "T", "M", effect="direct") # { D, F, H, P, R, S }
-
-glmm_T_M = fit(MixedModel, @formula(M ~ 1 + T + D + Ḟ + H + P + R + S + (1 | ID)), dag_df)
-
-"""
-Linear mixed model fit by maximum likelihood
- M ~ 1 + T + D + Ḟ + H + P + R + S + (1 | ID)
-   logLik   -2 logLik     AIC       AICc        BIC
-  -150.7892   301.5784   321.5784   322.6211   355.6052
-
-Variance components:
-            Column   Variance Std.Dev.
-ID       (Intercept)  0.504269 0.710119
-Residual              0.059222 0.243357
- Number of obs: 222; levels of grouping factors: 105
-
-  Fixed-effects parameters:
-─────────────────────────────────────────────────────
-                   Coef.  Std. Error      z  Pr(>|z|)
-─────────────────────────────────────────────────────
-(Intercept)   0.640662    0.400984     1.60    0.1101
-T             0.00703544  0.00249179   2.82    0.0048
-D             0.437883    0.102503     4.27    <1e-04
-Ḟ             0.0645476   0.0429016    1.50    0.1324
-H            -0.527277    0.198484    -2.66    0.0079
-P             0.13476     0.195148     0.69    0.4898
-R             0.272096    0.104188     2.61    0.0090
-S            -0.895595    0.145849    -6.14    <1e-09
-─────────────────────────────────────────────────────
-
-"""
-
-boot = parametricbootstrap(MersenneTwister(1234), 3000, glmm_T_M);
-coefplot(boot)
-ridgeplot(boot)
-
-## Direct effect of T on R
-
-adjustmentSets(dag, "T", "R", effect="direct") # { H }
-
-glmm_T_R = fit(MixedModel, @formula(R ~ 1 + T + H + (1 | ID)), dag_df)
-
-"""
-Linear mixed model fit by maximum likelihood
- R ~ 1 + T + H + (1 | ID)
-   logLik   -2 logLik     AIC       AICc        BIC
-    16.7620   -33.5239   -23.5239   -23.3119    -5.1918
-
-Variance components:
-            Column   Variance Std.Dev.
-ID       (Intercept)  0.047543 0.218044
-Residual              0.028003 0.167341
- Number of obs: 289; levels of grouping factors: 110
-
-  Fixed-effects parameters:
-────────────────────────────────────────────────────
-                  Coef.  Std. Error      z  Pr(>|z|)
-────────────────────────────────────────────────────
-(Intercept)  0.31996     0.0736581    4.34    <1e-04
-T            0.00122903  0.00116347   1.06    0.2908
-H            0.65482     0.0489267   13.38    <1e-40
-────────────────────────────────────────────────────
-
-"""
-
-boot = parametricbootstrap(MersenneTwister(1234), 3000, glmm_T_R);
-coefplot(boot)
-ridgeplot(boot)
-
 ## Direct effect of H on D
 
 adjustmentSets(dag, "H", "D", effect="direct") # { }
@@ -2129,33 +2028,33 @@ ridgeplot(boot)
 
 ## Direct effect of H on F
 
-adjustmentSets(dag, "H", "F", effect="direct") # { D, P, R, S, T }
+adjustmentSets(dag, "H", "F", effect="direct") # { D, P, R, S, V }
 
-glmm_H_F = fit(MixedModel, @formula(Ḟ ~ 1 + H + D + P + R + S + T + (1 | ID)), dag_df)
+glmm_H_F = fit(MixedModel, @formula(Ḟ ~ 1 + H + D + P + R + S + V + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- Ḟ ~ 1 + H + D + P + R + S + T + (1 | ID)
+ Ḟ ~ 1 + H + D + P + R + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -202.9478   405.8957   423.8957   424.7447   454.5198
+  -202.5831   405.1662   423.1662   424.0153   453.7903
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.147341 0.383850
-Residual              0.253006 0.502997
+ID       (Intercept)  0.139557 0.373573
+Residual              0.256358 0.506319
  Number of obs: 222; levels of grouping factors: 105
 
   Fixed-effects parameters:
 ──────────────────────────────────────────────────────
                    Coef.  Std. Error       z  Pr(>|z|)
 ──────────────────────────────────────────────────────
-(Intercept)   2.72242     0.295979      9.20    <1e-19
-H            -1.6543      0.16051     -10.31    <1e-24
-D             0.00816337  0.0999789     0.08    0.9349
-P             0.0113786   0.167606      0.07    0.9459
-R             0.089091    0.15239       0.58    0.5588
-S            -0.329883    0.105401     -3.13    0.0017
-T            -0.00333938  0.00443263   -0.75    0.4512
+(Intercept)   2.47549      0.352539     7.02    <1e-11
+H            -1.6637       0.15933    -10.44    <1e-24
+D             0.00896681   0.0990151    0.09    0.9278
+P            -0.01649      0.165081    -0.10    0.9204
+R             0.0790238    0.151328     0.52    0.6015
+S            -0.329262     0.104082    -3.16    0.0016
+V             0.135703     0.118894     1.14    0.2537
 ──────────────────────────────────────────────────────
 
 """
@@ -2166,35 +2065,37 @@ ridgeplot(boot)
 
 ## Direct effect of H on M
 
-adjustmentSets(dag, "H", "M", effect="direct") # { D, F, P, R, S, T }
+adjustmentSets(dag, "H", "M", effect="direct") # { D, F, P, R, S, V }
 
-glmm_H_M = fit(MixedModel, @formula(M ~ 1 + H + D + Ḟ + P + R + S + T + (1 | ID)), dag_df)
+glmm_H_M = fit(MixedModel, @formula(M ~ 1 + H + D + Ḟ + P + R + S + V + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- M ~ 1 + H + D + Ḟ + P + R + S + T + (1 | ID)
+ M ~ 1 + H + D + Ḟ + P + R + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -150.7892   301.5784   321.5784   322.6211   355.6052
+  -154.5818   309.1637   329.1637   330.2063   363.1904
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.504269 0.710119
-Residual              0.059222 0.243357
+ID       (Intercept)  0.507168 0.712157
+Residual              0.062677 0.250354
  Number of obs: 222; levels of grouping factors: 105
 
   Fixed-effects parameters:
-─────────────────────────────────────────────────────
-                   Coef.  Std. Error      z  Pr(>|z|)
-─────────────────────────────────────────────────────
-(Intercept)   0.640662    0.400984     1.60    0.1101
-H            -0.527277    0.198484    -2.66    0.0079
-D             0.437883    0.102503     4.27    <1e-04
-Ḟ             0.0645476   0.0429016    1.50    0.1324
-P             0.13476     0.195148     0.69    0.4898
-R             0.272096    0.104188     2.61    0.0090
-S            -0.895595    0.145849    -6.14    <1e-09
-T             0.00703544  0.00249179   2.82    0.0048
-─────────────────────────────────────────────────────
+────────────────────────────────────────────────────
+                  Coef.  Std. Error      z  Pr(>|z|)
+────────────────────────────────────────────────────
+(Intercept)   0.595669    0.462329    1.29    0.1976
+H            -0.55507     0.201918   -2.75    0.0060
+D             0.441376    0.104883    4.21    <1e-04
+Ḟ             0.0546147   0.0437905   1.25    0.2123
+P             0.174696    0.197429    0.88    0.3762
+R             0.310284    0.109216    2.84    0.0045
+S            -0.886441    0.146589   -6.05    <1e-08
+V             0.0583054   0.124591    0.47    0.6398
+────────────────────────────────────────────────────
+
+
 
 """
 
@@ -2204,30 +2105,30 @@ ridgeplot(boot)
 
 ## Direct effect of H on R
 
-adjustmentSets(dag, "H", "R", effect="direct") # { T }
+adjustmentSets(dag, "H", "R", effect="direct") # { D }
 
-glmm_H_R = fit(MixedModel, @formula(R ~ 1 + H + T + (1 | ID)), dag_df)
+glmm_H_R = fit(MixedModel, @formula(R ~ 1 + H + D + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- R ~ 1 + H + T + (1 | ID)
+ R ~ 1 + H + D + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-    16.7620   -33.5239   -23.5239   -23.3119    -5.1918
+    16.2329   -32.4658   -22.4658   -22.2538    -4.1337
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.047543 0.218044
-Residual              0.028003 0.167341
+ID       (Intercept)  0.048602 0.220458
+Residual              0.027884 0.166985
  Number of obs: 289; levels of grouping factors: 110
 
   Fixed-effects parameters:
-────────────────────────────────────────────────────
-                  Coef.  Std. Error      z  Pr(>|z|)
-────────────────────────────────────────────────────
-(Intercept)  0.31996     0.0736581    4.34    <1e-04
-H            0.65482     0.0489267   13.38    <1e-40
-T            0.00122903  0.00116347   1.06    0.2908
-────────────────────────────────────────────────────
+─────────────────────────────────────────────────────
+                   Coef.  Std. Error      z  Pr(>|z|)
+─────────────────────────────────────────────────────
+(Intercept)   0.35744      0.0947436   3.77    0.0002
+H             0.656937     0.0493367  13.32    <1e-39
+D            -0.00953244   0.0430006  -0.22    0.8246
+─────────────────────────────────────────────────────
 
 """
 
