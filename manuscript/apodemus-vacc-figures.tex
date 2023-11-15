@@ -20,7 +20,9 @@
 		\centering
 		% This code uses the tikz package
 		\input{Figures/DAGtikz-param.tex}
-		\caption{\textbf{Fully resolved Causal Model of vaccine efficacy.} \textbf{A}, Directed acyclic graph representing point estimates of positive (blue) and negative (red) direct causal effects ± std driving vaccine responsiveness \(E\). \textbf{B}, MCMC sampling of posterior distributions of the coefficients estimating the direct effect of diet $D$ on vaccine responsiveness, $E \coloneq  \beta_{DE}D + \beta_{FE}F + \beta_{HE}H + \beta_{ME}M + \beta_{PE}P + \beta_{RE}R + \beta_{SE}S + \beta_{TE}T$ (see \nameref{sec:parameterisation} methods). Note that each edge in panel A shows the direct causal effect of its parent node on its child node, which is conditional on the specific adjustment set for that model; thus, only the coefficient for the edge between $D$ and $E$ is a causal estimate in panel B, while the others are only associative.}
+		\caption{\textbf{Fully resolved Causal Model of vaccine efficacy.} \textbf{A}, Directed acyclic graph representing point estimates of positive (blue) and negative (red) direct causal effects ± std driving vaccine responsiveness \(E\). \textbf{B}, MCMC sampling of posterior distributions of the coefficients estimating the direct effect of the wild habitat $H$ on vaccine responsiveness $E$, with the adjustment set including, Diet $D$, Fat scores $F$, body mass $M$, parasite burden $P$, active reproductive status $R$, and female sex $S$; vaccine formulation $V$ and individual treated as random effects:
+		$E \coloneq β_{Hab}H + β_{Diet}D + β_{Fat}F + β_{Mass}M + β_{Para}P + β_{Rep}R + β_{Sex}S$
+		(see \nameref{sec:parameterisation} methods). Note that each edge in panel A shows the direct causal effect of its parent node on its child node, which is conditional on the specific adjustment set for that model; thus, only the coefficient for the edge between $D$ and $E$ is a causal estimate in panel B, while the others are only associative.}
 		\label{fig:DAGtikzParam}
 	\end{figure}
 }

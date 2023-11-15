@@ -356,8 +356,8 @@ INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolS10.t
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolS8.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolS6.tfm
 INPUT ./Figures/DAGtikz-param.tex
-INPUT ./Figures/plots/MultiLevel_NDE_P_E_chn_relabel.pdf
-INPUT ./Figures/plots/MultiLevel_NDE_P_E_chn_relabel.pdf
+INPUT ./Figures/plots/MultiLevel_DE_H_E_chn_traces.pdf
+INPUT ./Figures/plots/MultiLevel_DE_H_E_chn_traces.pdf
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolS12.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolS8.tfm
 INPUT ./Figures/Apodemus-vacc-figures/SCM_flow.pdf
