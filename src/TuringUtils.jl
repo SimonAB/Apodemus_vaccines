@@ -221,19 +221,17 @@ function precis(df::DataFrame; io=stdout, digits=3, depth=Inf, alpha=0.1)
     d.mean = mean.(cols)
     d.std = std.(cols)
     lower_q = alpha / 2
-    lower_q_pc = lower_q * 100
-    higher_q = 1 - alpha / 2
-    higher_q_pc = higher_q * 100
-    quants = quantile.(cols, ([lower_q, 0.5, higher_q],))
+    upper_q = 1 - lower_q
+    quants = quantile.(cols, ([lower_q, 0.5, upper_q],))
     quants = hcat(quants...)
-    d[:, "$lower_q_pc %"] = quants[1, :]
+    d[:, "$(lower_q * 100) %"] = quants[1, :]
     d[:, "50 %"] = quants[2, :]
-    d[:, "$higher_q_pc %"] = quants[3, :]
+    d[:, "$(upper_q * 100) %"] = quants[3, :]
     d.histogram = unicode_histogram.(cols, min(size(df, 1), 12))
 
-    for col in ["mean", "std", "$lower_q_pc %", "50 %", "$higher_q_pc %"]
+    for col in ["mean", "std", "$(lower_q * 100) %", "50 %", "$(upper_q * 100) %"]
         d[:, col] .= round.(d[:, col], digits=digits)
     end
 
-    pretty_table(io, d, nosubheader=true, vlines=[0, 1, 7])
+    pretty_table(io, d, vlines=[0, 1, 7])
 end
