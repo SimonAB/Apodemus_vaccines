@@ -46,21 +46,12 @@
 
 % ELISA
 
-% \newcommand{\FigIgG}{
-%     \begin{wrapfigure}{R}{0.46\textwidth}
-%                 \includegraphics[width=\hsize]{./Figures/Apodemus-vacc-figures/IgG1.png}
-%                 \caption{\textbf{Vaccine-induced DTV-specific IgG1.}}
-%                 \todo[inline]{Fix figure \& add legend}
-%                 \label{fig:igg1}
-%     \end{wrapfigure}
-% }
-
 \newcommand{\FigIgG}{
 	\begin{figure}[hp]
 
 		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/IgG1.pdf}
 
-		\caption{\textbf{Vaccine-induced DTV-specific IgG1.} \textbf{A}, diphtheria toxoid vaccine (DTV)-specific IgG1 optical density in mice from laboratory- and wild-habitats offered high and low quality dietary supplements. Mice were immunised either once, with adjuvant as control (A) or DTV (D) only, or twice (i.e. with booster), using adjuvant alone followed by DTV at subsequent recapture ≥7 days after the previous immunisation (AD), DTV and subsequently adjuvant alone (DA), or two separate doses of DTV (DD). Only mice immunised at least 7 days prior to antibody measurement are shown, and each point represents one of 1–4 recaptures for each individual. \textbf{B}, distribution of posterior distributions of the coefficients for diet, habitat, and vaccine formulation (A, D, AD, DA, DD) of a multilevel Bayesian model adjusted for repeated individual measures. Each density curve represents the distribution of 3,000 samples from one of four MCMC chains (see Fig~\ref{supfig:igg1}).}
+		\caption{\textbf{Vaccine-induced DTV-specific IgG1.} \textbf{A}, diphtheria toxoid vaccine (DTV)-specific IgG1 optical density in mice from laboratory- and wild-habitats offered high and low quality dietary supplements. Mice were immunised either once, with adjuvant as control (A) or DTV (D) only, or twice (i.e. with booster), using adjuvant alone followed by DTV at subsequent recapture ≥7 days after the previous immunisation (AD), DTV and subsequently adjuvant alone (DA), or two separate doses of DTV (DD). Only mice immunised at least 7 days prior to antibody measurement are shown, and each point represents one of 1–4 recaptures for each individual. \textbf{B}, distribution of posterior distributions of the coefficients for diet, habitat, and vaccine formulation (A, D, AD, DA, DD), and effect of the same vaccines conditional on being in the wild habitat (H) of a multilevel Bayesian model adjusted for repeated individual measures. Each density curve represents the distribution of 3,000 samples from one of four MCMC chains; dotted line represents the the value for which the reference (global intercept for Diet and Habitat; Adjuvant alone for the vaccines) is null (see Fig~\ref{supfig:igg1}).}
 
 		\label{fig:igg1}
 
@@ -154,20 +145,27 @@
 \newcommand{\TblPrecis}{
 	\begin{table}[htbp]
 		\centering
-		\caption{Posterior predictions of model parameters for random intercept Gaussian model \(E \sim Normal(\alpha[ID] + H + D + V, \sigma)\).}
+		\caption{Posterior predictions of model parameters for random intercept Gaussian model \(E \sim Normal(\alpha[ID] + H + D + V + V:H, \sigma)\).}
 		\sffamily
 		\begin{tabular}{|>{\bfseries}l|ccccc|}
 			\hline
 			Parameter & \textbf{Mean} & \textbf{Std} & \textbf{5\%} & \textbf{50\%} & \textbf{95\%} \\
 			\hline
-			Intercept & -0.476        & 0.851        & -1.878       & -0.470        & 0.902         \\
-			Diet      & -0.273        & 0.079        & -0.402       & -0.274        & -0.142        \\
-			Habitat   & -0.704        & 0.087        & -0.850       & -0.703        & -0.560        \\
-			A         & 0.105         & 0.838        & -1.257       & 0.100         & 1.480         \\
-			D         & 1.391         & 0.836        & 0.027        & 1.385         & 2.770         \\
-			AD        & 1.046         & 0.838        & -0.321       & 1.046         & 2.424         \\
-			DA        & 1.655         & 0.839        & 0.288        & 1.652         & 3.037         \\
-			DD        & 2.017         & 0.840        & 0.650        & 2.014         & 3.404         \\
+			Intercept & 1.004         & 0.845        & -0.369       & 1.017         & 2.397         \\
+			Diet      & 0.0           & 0.861        & -3.286       & -1.889        & -0.459        \\
+			Habitat   & 2.072         & 0.846        & -1.175       & 0.193         & 1.577         \\
+			A         & 1.275         & 0.865        & -2.012       & -0.614        & 0.814         \\
+			D         & 3.661         & 0.859        & 0.389        & 1.768         & 3.19          \\
+			AD        & 3.008         & 0.855        & -0.255       & 1.122         & 2.534         \\
+			DA        & -0.483        & 0.795        & -1.771       & -0.469        & 0.849         \\
+			DD        & -0.252        & 0.072        & -0.372       & -0.252        & -0.135        \\
+			A:H       & 0.0           & 0.815        & -0.913       & 0.433         & 1.761         \\
+			D:H       & -0.6          & 0.799        & -1.492       & -0.167        & 1.151         \\
+			AD:H      & -0.385        & 0.815        & -1.291       & 0.054         & 1.376         \\
+			DA:H      & -1.354        & 0.809        & -2.268       & -0.918        & 0.399         \\
+			DD:H      & -0.534        & 0.806        & -1.436       & -0.106        & 1.218         \\
+
+
 			\hline
 		\end{tabular}
 		\label{tbl:precis}

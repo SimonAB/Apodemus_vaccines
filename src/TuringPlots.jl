@@ -27,105 +27,107 @@ plot of the traces (optional) and densities of the coefficients and the intercep
 - `show_traces`: should the traces be drawn? (default=true)
 """
 function plot_chains_df(chns; mask=r"α\b|β", res=(8, 0.8 * length(names(DataFrame(chns)[!, mask]))), show_intercept=false, show_traces=true, xlab_dist="Parameter estimate")
+    # Convert chains to DataFrame and filter by mask
     chns_df = DataFrame(chns)[!, mask]
+    # Get number of chains and samples
     n_chains = length(chains(chns))
     n_samples = length(chns)
     panel = 1
 
-    if show_intercept
-        pms = Symbol.(names(chns_df))
-        res = (res[1], res[2] + 1)
-    else
-        pms = Symbol.(names(chns_df))[2:end]
+    # Set the first level of each categorical factor as reference for the others
+    ref_values = Dict()
+    prefixes = unique([split(param, "[")[1] for param in names(chns_df) if contains(param, "[")])
+    for prefix in prefixes
+        ref_param = prefix * "[1]"
+        if ref_param in names(chns_df)
+            mean_val = mean(chns_df[:, ref_param])
+            ref_values[prefix] = mean_val
+        end
+    end
+    for (j, param) in enumerate(names(chns_df))
+        prefix = split(param, "[")[1]
+        if haskey(ref_values, prefix)
+            chns_df[:, param] .-= ref_values[prefix]
+        end
     end
 
-    if show_traces
-        size_inches = res
-        size_pt = 72 .* size_inches
-        fig = Figure(; resolution=size_pt)
-        # show_traces
-        for (i, param) in enumerate(pms)
-            ax = Axis(fig[i, panel]; ylabel=string(param))
-            for chain in 1:n_chains
-                values = chns[:, param, chain]
-                CairoMakie.lines!(ax, 1:n_samples, values,
-                    color=(cgrad(:RdYlBu_10, n_chains, categorical=true)[chain], 0.7);
-                    linewidth=1,
-                    label=string(chain))
-            end
+    # Calculate the global mean of the intercept α
+    global_mean_alpha = mean(chns_df[:, :α])
 
-            hideydecorations!(ax; label=false)
-            if i < length(pms)
-                hidexdecorations!(ax; grid=false)
-            else
-                ax.xlabel = "Iteration"
-            end
+    # Determine parameters to plot
+    pms = show_intercept ? Symbol.(names(chns_df)) : Symbol.(names(chns_df))[2:end]
+    # Adjust resolution if intercept is shown
+    res = show_intercept ? (res[1], res[2] + 1) : res
+
+    # Set figure size
+    size_inches = show_traces ? res : (res[1] ÷ 2, res[2])
+    size_pt = 72 .* size_inches
+    fig = Figure(; resolution=size_pt)
+
+    # Plot traces for each parameter
+    for (i, param) in enumerate(pms)
+        ax = Axis(fig[i, panel]; ylabel=string(param))
+        for chain in 1:n_chains
+            values = chns[:, param, chain]
+            CairoMakie.lines!(ax, 1:n_samples, values,
+                color=(cgrad(:RdYlBu_10, n_chains, categorical=true)[chain], 0.7);
+                linewidth=1,
+                label=string(chain))
         end
 
-        # densities
-        for (i, param) in enumerate(pms)
-            ax = Axis(fig[i, panel+1]; ylabel=string(param))
-            for chain in 1:n_chains
-                values = chns[:, param, chain]
-                CairoMakie.density!(ax, values,
-                    color=(cgrad(:RdYlBu_10, n_chains, categorical=true)[chain], 0.7),
-                    strokewidth=0.3,
-                    strokecolor=:grey40;
-                    label=string(chain)
-                )
-            end
-
-            show_traces ? hideydecorations!(ax) : hideydecorations!(ax; label=false)
-
-            if i < length(pms)
-                hidexdecorations!(ax; grid=false)
-            else
-                ax.xlabel = xlab_dist
-            end
-            vlines!(ax, 0, color=:grey10, linestyle=:dot)
-
+        hideydecorations!(ax; label=false)
+        if i < length(pms)
+            hidexdecorations!(ax; grid=false)
+        else
+            hidexdecorations!(ax; grid=false, label=false)
+            ax.xlabel = "Iteration"
         end
-        axes = [only(contents(fig[i, panel+1])) for i in 1:length(pms)]
-        linkxaxes!(axes...)
-        rowgap!(fig.layout, 10)
-        colgap!(fig.layout, 10)
-
-    else
-        # plot only the densities
-        size_inches = (res[1] ÷ 2, res[2])
-        size_pt = 72 .* size_inches
-        fig = Figure(; resolution=size_pt)
-        for (i, param) in enumerate(pms)
-            ax = Axis(fig[i, 1]; ylabel=string(param))
-            for chain in 1:n_chains
-                values = chns[:, param, chain]
-                CairoMakie.density!(ax, values,
-                    # color=(RGB(215 / 255, 230 / 255, 244 / 255), 0.7),
-                    color=(cgrad(:RdYlBu_10, n_chains, categorical=true)[chain], 0.7),
-                    strokewidth=0.3,
-                    strokecolor=:grey40;
-                    label=string(chain)
-                )
-            end
-
-            show_traces ? hideydecorations!(ax) : hideydecorations!(ax; label=false)
-
-            if i < length(pms)
-                hidexdecorations!(ax; grid=false)
-            else
-                ax.xlabel = xlab_dist
-            end
-            vlines!(ax, 0, color=:grey10, linestyle=:dot)
-        end
-
-        axes = [only(contents(fig[i, 1])) for i in 1:length(pms)]
-        linkxaxes!(axes...)
     end
+
+    # Plot densities
+    min_value = minimum(minimum(eachcol(chns_df)))
+    max_value = maximum(maximum(eachcol(chns_df)))
+
+    for (i, param) in enumerate(pms)
+        ax = Axis(fig[i, panel+1]; ylabel=string(param))
+
+        for chain in 1:n_chains
+            values = chns[:, param, chain]
+            CairoMakie.density!(ax, values,
+                color=(cgrad(:RdYlBu_10, n_chains, categorical=true)[chain], 0.7),
+                strokewidth=0.3,
+                strokecolor=:grey40;
+                label=string(chain)
+            )
+        end
+
+        # Set x-axis limits to align density plots on value 0
+        prefix = split(string(param), "[")[1]
+        ref_value = get(ref_values, prefix, global_mean_alpha)
+        xlims!(ax, (min_value, max_value))
+
+        show_traces ? hideydecorations!(ax) : hideydecorations!(ax; label=false)
+
+        if i < length(pms)
+            hidexdecorations!(ax; grid=false)
+        else
+            hidexdecorations!(ax; grid=false, label=false)
+            ax.xlabel = xlab_dist
+        end
+        vlines!(ax, ref_value, color=:grey10, linestyle=:dot)
+        text!(ax, ref_value - 1, 0; text="–", color=:grey10, weight=:bold)
+        text!(ax, ref_value + 0.5, 0; text="+", color=:grey10, weight=:bold)
+
+    end
+    # Link x-axes of all density plots
+    axes = [only(contents(fig[i, panel+1])) for i in 1:length(pms)]
+    linkxaxes!(axes...)
+    # Set gaps between plots
     rowgap!(fig.layout, 10)
-    # rowsize!(fig.layout, 2, Relative(0.6))
+    colgap!(fig.layout, 10)
+
     return fig
 end
-
 
 """
 # Plot MCMCChains with Makie

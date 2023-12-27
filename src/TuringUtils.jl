@@ -229,6 +229,19 @@ function precis(df::DataFrame; io=stdout, digits=3, depth=Inf, alpha=0.1)
     d[:, "$(upper_q * 100) %"] = quants[3, :]
     d.histogram = unicode_histogram.(cols, min(size(df, 1), 12))
 
+    # Subtract the mean of the row containing "[1]" from all levels starting with the same characters preceding "[1]"
+    for (i, param) in enumerate(d.param)
+        if contains(param, "[1]")
+            prefix = split(param, "[1]")[1]
+            mean_val = d.mean[i]
+            for (j, other_param) in enumerate(d.param)
+                if startswith(other_param, prefix)
+                    d.mean[j] -= mean_val
+                end
+            end
+        end
+    end
+
     for col in ["mean", "std", "$(lower_q * 100) %", "50 %", "$(upper_q * 100) %"]
         d[:, col] .= round.(d[:, col], digits=digits)
     end

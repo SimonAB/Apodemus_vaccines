@@ -4,7 +4,11 @@ using CategoricalArrays
 using StatsBase
 
 # IMPORT raw df
-rawdata = CSV.File("../data/joint_dataset_4analysis.csv";
+
+datadir = "data"
+datafile = "joint_dataset_4analysis_checked.csv"
+filepath = isdir(datadir) ? joinpath("./", datadir, datafile) : joinpath("../", datadir, datafile)
+rawdata = CSV.File(filepath;
     missingstring="NA", pool=true) |>
           DataFrame
 
@@ -28,9 +32,9 @@ dataunique = df |>
 
 # join the rest of the columns
 df_unique = df |>
-     @join(dataunique, _.ID, _.ID, {_..., __...}) |>
-     @unique(_.ID) |> # ensure no repeated measures
-     DataFrame;
+            @join(dataunique, _.ID, _.ID, {_..., __...}) |>
+            @unique(_.ID) |> # ensure no repeated measures
+            DataFrame;
 "Total number of individual wood mice: $(length(unique(df.ID)))"
 
 # ENCODE & STANDARDISE

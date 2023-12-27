@@ -289,3 +289,5 @@ cython_debug/
 /src/deprecated
 
 /.luarc.json
+
+/.quarto/
