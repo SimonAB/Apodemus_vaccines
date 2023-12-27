@@ -1,6 +1,6 @@
 #=
 TuringUtils:
-- Julia version: 1.9
+- Julia version: 1.10
 - Author: Simon A Babayan
 - Date: 2022-03-25
 =#
