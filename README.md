@@ -2,11 +2,11 @@
 
 ## Objective
 
-***Why do individuals vary in their response to immunisation?***
+***Environmental drivers of low vaccine responsiveness in a lab-to-wild mouse model***
 
 ## Setup
 
-To set the julia environment up follow the steps below (taken from <https://julialang.github.io/Pkg.jl/v1/environments/>):
+To set the julia environment up follow the steps below:
 
 1. Clone the current repository (`https://github.com/SimonAB/Apodemus_vaccines.git`)
 2. In [VSCode](https://code.visualstudio.com), the folder of the cloned repo
