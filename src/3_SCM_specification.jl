@@ -28,7 +28,7 @@ using LinearAlgebra: I
 using MCMCChains
 using Turing
 using ReverseDiff
-Turing.setadbackend(:reversediff)
+Turing.setbackend(:reversediff)
 Turing.setrdcache(true)
 
 using RCall
@@ -325,31 +325,32 @@ save("../manuscript/Figures/plots/naive_P_E_chn_df.pdf", p)
 adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, V }
 
 # Mixed Model - excluding H since length(unique(dag_df_infected.H))=1
-glmm_P_E_all = fit(MixedModel, @formula(E ~ 1 + lognP + D + R + S + V + (1 | ID)), dag_df)
+glmm_P_E_all = fit(MixedModel, @formula(E ~ 1 + lognP + D + H + R + S + V + (1 | ID)), dag_df)
 
 """
 Linear mixed model fit by maximum likelihood
- E ~ 1 + lognP + D + R + S + V + (1 | ID)
+ E ~ 1 + lognP + D + H + R + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
-  -300.1878   600.3755   616.3755   616.8898   645.7070
+  -291.8487   583.6974   601.6974   602.3426   634.6953
 
 Variance components:
             Column   Variance Std.Dev.
-ID       (Intercept)  0.061167 0.247321
-Residual              0.413615 0.643129
+ID       (Intercept)  0.047808 0.218650
+Residual              0.398274 0.631089
  Number of obs: 289; levels of grouping factors: 110
 
   Fixed-effects parameters:
-───────────────────────────────────────────────────
-                 Coef.  Std. Error      z  Pr(>|z|)
-───────────────────────────────────────────────────
-(Intercept)  -2.31676    0.327291   -7.08    <1e-11
-lognP        -0.13274    0.113216   -1.17    0.2410
-D            -0.284799   0.0898423  -3.17    0.0015
-R            -0.508572   0.13659    -3.72    0.0002
-S             0.320681   0.0921007   3.48    0.0005
-V             1.61709    0.116514   13.88    <1e-43
-───────────────────────────────────────────────────
+─────────────────────────────────────────────────────
+                   Coef.  Std. Error      z  Pr(>|z|)
+─────────────────────────────────────────────────────
+(Intercept)  -1.97382      0.325576   -6.06    <1e-08
+lognP        -0.00896315   0.112239   -0.08    0.9364
+D            -0.290815     0.0858287  -3.39    0.0007
+H            -0.608419     0.146348   -4.16    <1e-04
+R            -0.0965752    0.165227   -0.58    0.5589
+S             0.287458     0.0881604   3.26    0.0011
+V             1.61397      0.112689   14.32    <1e-45
+─────────────────────────────────────────────────────
 
 """
 
@@ -360,10 +361,12 @@ coefplot(boot)
 ridgeplot(boot)
 
 # Infected only
-glmm_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + D + R + S + V + (1 | ID)), dag_df_infected)
+glmm_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + D + H + R + S + V + (1 | ID)), dag_df_infected)
 """
+┌ Warning: Fixed-effects matrix is rank deficient
+└ @ MixedModels ~/.julia/packages/MixedModels/wR4rk/src/Xymat.jl:41
 Linear mixed model fit by maximum likelihood
- E ~ 1 + lognP + D + R + S + V + (1 | ID)
+ E ~ 1 + lognP + D + H + R + S + V + (1 | ID)
    logLik   -2 logLik     AIC       AICc        BIC
    -54.1721   108.3441   124.3441   127.7727   139.7987
 
@@ -374,17 +377,17 @@ Residual              0.471247 0.686474
  Number of obs: 51; levels of grouping factors: 19
 
   Fixed-effects parameters:
-───────────────────────────────────────────────────
-                 Coef.  Std. Error      z  Pr(>|z|)
-───────────────────────────────────────────────────
-(Intercept)  -1.61109     0.960908  -1.68    0.0936
-lognP        -0.52165     0.315781  -1.65    0.0985
-D            -0.151094    0.24211   -0.62    0.5326
-R            -0.116407    0.324117  -0.36    0.7195
-S             0.157128    0.240046   0.65    0.5127
-V             1.16835     0.338118   3.46    0.0005
-───────────────────────────────────────────────────
-
+────────────────────────────────────────────────────
+                 Coef.  Std. Error       z  Pr(>|z|)
+────────────────────────────────────────────────────
+(Intercept)  -1.61109     0.960908   -1.68    0.0936
+lognP        -0.52165     0.315781   -1.65    0.0985
+D            -0.151094    0.24211    -0.62    0.5326
+H            -0.0       NaN         NaN       NaN
+R            -0.116407    0.324117   -0.36    0.7195
+S             0.157128    0.240046    0.65    0.5127
+V             1.16835     0.338118    3.46    0.0005
+────────────────────────────────────────────────────
 
 """
 
@@ -393,6 +396,9 @@ boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_P_E);
 coefplot(boot)
 ridgeplot(boot)
 ridge2d(boot)
+
+
+
 
 
 # Direct effect of P on E among the infected
@@ -436,14 +442,15 @@ ridgeplot(boot)
 
 
 # Population-level model for the log of the expected number
-@model function P_E(IDidx, E, P, D, R, S, T; n_id=length(unique(IDidx)))
+@model function P_E(IDidx, E, P, D, H, R, S, V; n_id=length(unique(IDidx)))
   # population-level priors
   α ~ Normal(mean(E), 2.5 * std(E))
   βPE ~ Normal(0, 0.5)
   βDE ~ Normal(0, 0.5)
+  βHE ~ Normal(0, 0.5)
   βRE ~ Normal(0, 0.5)
   βSE ~ Normal(0, 0.5)
-  βTE ~ Normal(0, 0.5)
+  βVE ~ Normal(0, 0.5)
   σ ~ Exponential(std(E))
   ν ~ LogNormal(2, 1)
 
@@ -452,11 +459,12 @@ ridgeplot(boot)
   α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
 
   # likelihood
-  Ê = α .+ α_ID[IDidx] .+ βPE * P .+ βDE * D .+ βRE * R .+ βSE * S .+ βTE * T
+  Ê = α .+ α_ID[IDidx] .+ βPE * P .+ βDE * D .+ βHE * H .+ βRE * R .+ βSE * S .+ βVE * V
   return E ~ MvNormal(Ê, σ^2 * I)
 end
 
-P_E_model = P_E(dag_df_infected.IDidx, dag_df_infected.E, log10.(1 .+ dag_df_infected.nP), dag_df_infected.D, dag_df_infected.R, dag_df_infected.S, dag_df_infected.T); # note log10(1+X)-transformed parasite counts.
+P_E_model = P_E(dag_df_infected.IDidx, dag_df_infected.E, log10.(1 .+ dag_df_infected.nP), dag_df_infected.D, dag_df_infected.H, dag_df_infected.R, dag_df_infected.S, dag_df_infected.V); # note log10(1+X)-transformed parasite counts.
+
 
 P_E_priors = sample(P_E_model, Prior(), MCMCThreads(), 3000, 4);
 summarize(P_E_priors)

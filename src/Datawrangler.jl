@@ -50,15 +50,15 @@ function encode_df(df)
     df.iswild = df.Env .∈ Ref(["Wild"])
 
     # Ensure proper datatypes (no missing)
-    df.Weight = convert(Vector{Float64}, df.Weight)
-    df.vax_history = CategoricalArray(convert(Vector{String}, df.vax_history))
+    df.Weight = Base.convert(Vector{Float64}, df.Weight)
+    df.vax_history = CategoricalArray(Base.convert(Vector{String}, df.vax_history))
     df.ID = CategoricalArray(df.ID)
 
     # populate nodes
     df.E = standardize(ZScoreTransform, df.logOD, dims=1)
     df.M = standardize(ZScoreTransform, df.Weight, dims=1)
     df.F = df.Fat_Scores_Sum
-    df.T = convert(Vector{Float64}, df.days_since_1st_D_or_A)
+    df.T = Base.convert(Vector{Float64}, df.days_since_1st_D_or_A)
     # df.T = standardize(ZScoreTransform, df.T, dims=1)
     df.nP = df.nHp .+ df.Cestode #.+ df.Pinworms;
 

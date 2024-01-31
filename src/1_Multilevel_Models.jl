@@ -33,16 +33,16 @@ include("TuringPlots.jl")
 include("DataWrangler.jl")
 df = encode_df(df) # df includes repeated measures
 df =
-  df |>
-  @filter(_.days_since_1st_D_or_A ≥ 1) |> # remove most recent post vaccination samples
-  DataFrame
+    df |>
+    @filter(_.days_since_1st_D_or_A ≥ 1) |> # remove most recent post vaccination samples
+    DataFrame
 
 
 df_unique = encode_df(df_unique) # df_unique no repeated measures
 df_unique =
-  df_unique |>
-  @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
-  DataFrame
+    df_unique |>
+    @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
+    DataFrame
 
 levels!(df.vax_history, ["A", "D", "AD", "DA", "DD"]);
 levels(df[!, :vax_history])
@@ -339,25 +339,25 @@ ridgeplot(boot)
 ## Bayesian model
 @model function varying_intercept(IDidx, Vidx, H, D, E)
 
-  n_id = length(unique(IDidx))
-  n_vax = length(unique(Vidx))
-  Ē = mean(E)
+    n_id = length(unique(IDidx))
+    n_vax = length(unique(Vidx))
+    Ē = mean(E)
 
-  #priors for fixed effects
-  α ~ Normal(Ē, 2.5 * std(E))           # population-level intercept
-  βv ~ filldist(Normal(Ē, 2), n_vax)    # population-level slopes relative to adjuvant control
-  βh ~ Normal(0, 2)                     # population-level slopes
-  βd ~ Normal(0, 2)                     # population-level slopes
-  βvh ~ filldist(Normal(Ē, 2), n_vax)   # interaction term between Vidx and H
-  σ ~ Exponential(std(E))               # residual SD
+    #priors for fixed effects
+    α ~ Normal(Ē, 2.5 * std(E))           # population-level intercept
+    βv ~ filldist(Normal(Ē, 2), n_vax)    # population-level slopes relative to adjuvant control
+    βh ~ Normal(0, 2)                     # population-level slopes
+    βd ~ Normal(0, 2)                     # population-level slopes
+    βvh ~ filldist(Normal(Ē, 2), n_vax)   # interaction term between Vidx and H
+    σ ~ Exponential(std(E))               # residual SD
 
-  #priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)  # group-level SDs intercepts
-  α_ID ~ filldist(Normal(0, τ), n_id)   # group-level intercepts
+    #priors for variance of random intercepts
+    τ ~ truncated(Cauchy(0, 2); lower=0)  # group-level SDs intercepts
+    α_ID ~ filldist(Normal(0, τ), n_id)   # group-level intercepts
 
-  #likelihood
-  Ê = @. α + α_ID[IDidx] + βv[Vidx] + βh * H + βd * D + βvh[Vidx] * H
-  E ~ MvNormal(Ê, σ^2 * I)
+    #likelihood
+    Ê = @. α + α_ID[IDidx] + βv[Vidx] + βh * H + βd * D + βvh[Vidx] * H
+    E ~ MvNormal(Ê, σ^2 * I)
 
 end
 
@@ -405,10 +405,10 @@ fig = Figure(resolution=size_pt, fontsize=12)
 # Fig A
 ax1 = fig[1:3, 1] # = GridLayout() # this is actually a subfigure that will house the axes drawn by AoG
 bp = data(df) * visual(BoxPlot; show_outliers=false) * mapping(:vax_history => "Immunisation protocol",
-       :OD => "DTV-specific IgG1 (OD)",
-       col=:Env,
-       color=:Diet,
-       dodge=:Diet)
+         :OD => "DTV-specific IgG1 (OD)",
+         col=:Env,
+         color=:Diet,
+         dodge=:Diet)
 bps = draw!(ax1, bp)
 legend!(ax1[1, 3], bps, valign=:top, patchsize=(10, 10))
 #
@@ -425,17 +425,17 @@ n_samples = length(vi_chn)
 ref_values = Dict()
 prefixes = unique([split(param, "[")[1] for param in names(chns_df) if contains(param, "[")])
 for prefix in prefixes
-  ref_param = prefix * "[1]"
-  if ref_param in names(chns_df)
-    mean_val = mean(chns_df[:, ref_param])
-    ref_values[prefix] = mean_val
-  end
+    ref_param = prefix * "[1]"
+    if ref_param in names(chns_df)
+        mean_val = mean(chns_df[:, ref_param])
+        ref_values[prefix] = mean_val
+    end
 end
 for (j, param) in enumerate(names(chns_df))
-  prefix = split(param, "[")[1]
-  if haskey(ref_values, prefix)
-    chns_df[:, param] .-= ref_values[prefix]
-  end
+    prefix = split(param, "[")[1]
+    if haskey(ref_values, prefix)
+        chns_df[:, param] .-= ref_values[prefix]
+    end
 end
 
 # Calculate the global mean of the intercept α
@@ -443,55 +443,55 @@ global_mean_alpha = mean(chns_df[:, :α])
 
 # densities
 for (i, param) in enumerate(params)
-  gl = fig[3+i, 1]
-  ax = Axis(gl; ylabel=[
-    "Hab",
-    "Diet",
-    "A",
-    "D",
-    "AD",
-    "DA",
-    "DD",
-    "A:H",
-    "D:H",
-    "AD:H",
-    "DA:H",
-    "DD:H"][i])
-  for chain in 1:n_chains
-    values = vi_chn[:, param, chain]
-    CairoMakie.density!(ax, values,
-      color=(:slategray2, 0.7),
-      strokewidth=0.1,
-      strokecolor=:grey40)
-  end
+    gl = fig[3+i, 1]
+    ax = Axis(gl; ylabel=[
+        "Hab",
+        "Diet",
+        "A",
+        "D",
+        "AD",
+        "DA",
+        "DD",
+        "A:H",
+        "D:H",
+        "AD:H",
+        "DA:H",
+        "DD:H"][i])
+    for chain in 1:n_chains
+        values = vi_chn[:, param, chain]
+        CairoMakie.density!(ax, values,
+            color=(:slategray2, 0.7),
+            strokewidth=0.1,
+            strokecolor=:grey40)
+    end
 
-  # Set x-axis limits to align density plots on value 0
-  min_value = minimum(minimum(eachcol(chns_df)))
-  max_value = maximum(maximum(eachcol(chns_df)))
-  prefix = split(string(param), "[")[1]
-  ref_value = get(ref_values, prefix, global_mean_alpha)
-  xlims!(ax, (min_value, max_value))
+    # Set x-axis limits to align density plots on value 0
+    min_value = minimum(minimum(eachcol(chns_df)))
+    max_value = maximum(maximum(eachcol(chns_df)))
+    prefix = split(string(param), "[")[1]
+    ref_value = get(ref_values, prefix, global_mean_alpha)
+    xlims!(ax, (min_value, max_value))
 
-  hideydecorations!(ax; label=false, grid=false)
-  if i < length(params)
-    hidexdecorations!(ax; grid=false)
-  else
-    hidexdecorations!(ax; grid=false, label=false)
-    ax.xlabel = "Posterior distribution of effect on DTV-specific IgG1"
-  end
-  vlines!(ax, ref_value, color=:grey40, linestyle=:dot)
-  text!(ax, ref_value - 0.3, 0; text="–", color=:grey10, weight=:bold)
-  text!(ax, ref_value + 0.1, 0; text="+", color=:grey10, weight=:bold)
-  xlims!(-6, 6)
+    hideydecorations!(ax; label=false, grid=false)
+    if i < length(params)
+        hidexdecorations!(ax; grid=false)
+    else
+        hidexdecorations!(ax; grid=false, label=false)
+        ax.xlabel = "Posterior distribution of effect on DTV-specific IgG1"
+    end
+    vlines!(ax, ref_value, color=:grey40, linestyle=:dot)
+    text!(ax, ref_value - 0.3, 0; text="–", color=:grey10, weight=:bold)
+    text!(ax, ref_value + 0.1, 0; text="+", color=:grey10, weight=:bold)
+    xlims!(-6, 6)
 end
 
 # Panels
 for (label, layout) in zip(["A", "B"], [ax1, fig[4, 1]])
-  Label(layout[1, 1, TopLeft()], label,
-    fontsize=12,
-    font="TeX Gyre Heros Bold",
-    padding=(0, 5, 5, 0),
-    halign=:right)
+    Label(layout[1, 1, TopLeft()], label,
+        fontsize=12,
+        font="TeX Gyre Heros Bold",
+        padding=(0, 5, 5, 0),
+        halign=:right)
 end
 
 rowgap!(ax1.layout, 10)
