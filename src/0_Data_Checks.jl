@@ -50,3 +50,5 @@ end
 data_check(df, "H_poly")
 
 data_check(df, "Pinworms")
+
+data_check(df, "Cestode")

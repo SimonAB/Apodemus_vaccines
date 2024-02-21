@@ -1,6 +1,6 @@
 PWD /Users/s_a_b/Documents/Work/Projects/Apodemus vaccines/Apodemus-DTP_Vaccines/Apodemus_vaccines/manuscript
 INPUT /usr/local/texlive/2023/texmf-var/web2c/luahbtex/lualatex.fmt
-INPUT ./apodemus-vacc-main.tex
+INPUT /Users/s_a_b/Documents/Work/Projects/Apodemus vaccines/Apodemus-DTP_Vaccines/Apodemus_vaccines/manuscript/apodemus-vacc-main.tex
 OUTPUT apodemus-vacc-main.log
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/tex-ini-files/lualatexquotejobname.lua
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/base/ltluatex.lua
@@ -363,8 +363,3 @@ INPUT ./Figures/Apodemus-vacc-figures/SCM_flow.pdf
 INPUT ./Figures/Apodemus-vacc-figures/SCM_flow.pdf
 INPUT ./Figures/plots/IgG1_varint.pdf
 INPUT ./Figures/plots/IgG1_varint.pdf
-INPUT ./apodemus-vacc-main.aux
-INPUT ./apodemus-vacc-main.run.xml
-OUTPUT apodemus-vacc-main.run.xml
-INPUT /usr/local/texlive/2023/texmf-dist/fonts/type1/public/mnsymbol/MnSymbol10.pfb
-INPUT /usr/local/texlive/2023/texmf-dist/fonts/type1/public/mnsymbol/MnSymbol9.pfb
