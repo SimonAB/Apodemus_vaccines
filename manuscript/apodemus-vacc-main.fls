@@ -1,6 +1,6 @@
 PWD /Users/s_a_b/Documents/Work/Projects/Apodemus vaccines/Apodemus-DTP_Vaccines/Apodemus_vaccines/manuscript
 INPUT /usr/local/texlive/2023/texmf-var/web2c/luahbtex/lualatex.fmt
-INPUT /Users/s_a_b/Documents/Work/Projects/Apodemus vaccines/Apodemus-DTP_Vaccines/Apodemus_vaccines/manuscript/apodemus-vacc-main.tex
+INPUT ./apodemus-vacc-main.tex
 OUTPUT apodemus-vacc-main.log
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/tex-ini-files/lualatexquotejobname.lua
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/base/ltluatex.lua
@@ -333,21 +333,31 @@ INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolD6.tf
 INPUT ./apodemus-vacc-main.tdo
 OUTPUT apodemus-vacc-main.tdo
 INPUT /usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/cm/cmmi10.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/cm/cmmi7.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/cm/cmmi5.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolA10.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolA7.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolA5.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolB10.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolB7.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolB5.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolC10.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolC7.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolC5.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolD10.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolD7.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolD5.tfm
 INPUT ./Figures/Apodemus-vacc-figures/StudyDesign_paper.pdf
 INPUT ./Figures/Apodemus-vacc-figures/StudyDesign_paper.pdf
 INPUT ./Figures/plots/IgG1.pdf
 INPUT ./Figures/plots/IgG1.pdf
 INPUT ./Figures/DAGtikz.tex
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/cm/cmmi9.tfm
-INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/cm/cmmi5.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolA9.tfm
-INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolA5.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolB9.tfm
-INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolB5.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolC9.tfm
-INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolC5.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolD9.tfm
-INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolD5.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolS9.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolS6.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/mnsymbol/MnSymbolS5.tfm
@@ -363,3 +373,8 @@ INPUT ./Figures/Apodemus-vacc-figures/SCM_flow.pdf
 INPUT ./Figures/Apodemus-vacc-figures/SCM_flow.pdf
 INPUT ./Figures/plots/IgG1_varint.pdf
 INPUT ./Figures/plots/IgG1_varint.pdf
+INPUT ./apodemus-vacc-main.aux
+INPUT ./apodemus-vacc-main.run.xml
+OUTPUT apodemus-vacc-main.run.xml
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/type1/public/mnsymbol/MnSymbol10.pfb
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/type1/public/mnsymbol/MnSymbol9.pfb
