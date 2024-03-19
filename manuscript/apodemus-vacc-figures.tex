@@ -19,7 +19,7 @@
 
 		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/IgG1.pdf}
 
-		\caption{\textbf{Vaccine-induced DTV-specific IgG1.} \textbf{A}, diphtheria toxoid vaccine (DTV)-specific IgG1 optical density in mice from laboratory- and wild-habitats offered high and low quality dietary supplements. Mice were immunised either once, with adjuvant as control (A) or DTV (D) only, or twice (i.e. with booster), using adjuvant alone followed by DTV at subsequent recapture ≥7 days after the previous immunisation (AD), DTV and subsequently adjuvant alone (DA), or two separate doses of DTV (DD). Only mice immunised at least 7 days prior to antibody measurement are shown, and each point represents one of 1–4 recaptures for each individual. \textbf{B}, distribution of posterior distributions of the coefficients for diet, habitat, and vaccine formulation (A, D, AD, DA, DD), and effect of the same vaccines conditional on being in the wild habitat (H) of a multilevel Bayesian model adjusted for repeated individual measures. Each density curve represents the distribution of 3,000 samples from one of four MCMC chains; dotted line represents the the value for which the reference (global intercept for Diet and Habitat; Adjuvant alone for the vaccines) is null (see parameter estimates in Table~\ref{tbl:precis}).}
+		\caption{\textbf{Vaccine-induced DTV-specific IgG1.} \textbf{A}, diphtheria toxoid vaccine (DTV)-specific IgG1 optical density in mice from laboratory- and wild-habitats provided high and low quality dietary supplements. Mice were immunised either once, with adjuvant as control (A) or DTV (D), or twice, using adjuvant alone followed by DTV (AD), DTV and subsequently adjuvant alone (DA), or two separate doses of DTV (DD). Only mice immunised at least 7 days prior to serum ELISA sampling are shown. \textbf{B}, posterior conditional distributions of the coefficients for diet, habitat, and vaccine formulation (A, D, AD, DA, DD), and effect of the same vaccines. Each density curve represents the distribution of 3,000 samples from one of four MCMC chains; dotted line represents the the value for which the reference (global intercept for Diet and Habitat; Adjuvant alone for the vaccines) is null (see parameter estimates in Table~\ref{tbl:precis}).}
 
 		\label{fig:igg1}
 
@@ -33,7 +33,7 @@
 		\centering
 		% This code uses the tikz package
 		\input{./Figures/DAGtikz.tex}
-		\caption{\textbf{Causal Model of vaccine efficacy.} \textbf{A}, Directed acyclic graph $\mathbb{G}_{VE}$ representing hypothesised causal effects driving variation in efficacy \(E\) of vaccine \(V\) in laboratory or wild mice \(H\), under supplemented or control diet \(D\) (green vertices depict experimental treatments). Covariates,mediators, and potential confounders (blue vertices) were time since vaccination \(T\), parasite infection (presence or burden) \(P\), reproductive status \(R\), body mass \(M\), fat scores \(F\), and sex \(S\). Directed edges depict causal effects hypothesised to operate between vertices. \textbf{B}, Structural causal model \(\mathbb{C}_{VE}\) derived from $\mathbb{G}_{VE}$ with coefficients $\beta_{ij}$ representing the effect of cause $i$ on effect $j$. $\mathcal{U}_j$ represents the unmeasured variation of the response variable, not represented in $\mathbb{G}_{VE}$ (panel A) for clarity.}
+		\caption{\textbf{Causal Model of vaccine responsiveness.} \textbf{A}, Directed acyclic graph $\mathbb{G}_{VE}$ representing hypothesised causal effects driving variation in efficacy \(E\) of vaccine \(V\) in laboratory or wild mice \(H\), under supplemented or control diet \(D\) (green nodes depict experimental treatments). Covariates, mediators, and potential confounders (blue nodes) were time since vaccination \(T\), parasite infection (presence or burden) \(P\), reproductive status \(R\), body mass \(M\), fat scores \(F\), and sex \(S\). Directed edges depict causal effects hypothesised to operate between nodes. \textbf{B}, Structural causal model \(\mathbb{C}_{VE}\) derived from $\mathbb{G}_{VE}$ with coefficients $\beta_{ij}$ representing the effect of cause $i$ on effect $j$. $\mathcal{U}_j$ represents the unmeasured variation of the response variable, not represented in $\mathbb{G}_{VE}$ (panel A) for clarity.}
 
 		\label{fig:DAGtikz}
 	\end{figure}
@@ -45,8 +45,8 @@
 		% This code uses the tikz package
 		\input{Figures/DAGtikz-param.tex}
 		\caption{\textbf{Fully resolved Causal Model of vaccine efficacy.} \textbf{A}, Directed acyclic graph representing point estimates of positive (blue) and negative (red) direct causal effects ± std driving vaccine responsiveness \(E\). \textbf{B}, MCMC sampling of posterior distributions of the coefficients estimating the direct effect of the wild habitat $H$ on vaccine responsiveness $E$, with the adjustment set including, Diet $D$, Fat scores $F$, body mass $M$, parasite burden $P$, active reproductive status $R$, and female sex $S$; vaccine formulation $V$ and individual treated as random effects:
-		$E \coloneq β_{Hab}H + β_{Diet}D + β_{Fat}F + β_{Mass}M + β_{Para}P + β_{Rep}R + β_{Sex}S$
-		(see \nameref{sec:parameterisation} methods). Note that each edge in panel A shows the direct causal effect of its parent node on its child node, which is conditional on the specific adjustment set for that model; thus, only the coefficient for the edge between $D$ and $E$ is a causal estimate in panel B, while the others are only associative.}
+		$E \coloneq β_{Hab}H + β_{Diet}D + β_{Fat}F + β_{Mass}M + β_{Para}P + β_{Rep}R + β_{Sex}S + \mathcal{N}(0,Exp(\sigma_E))$
+		(see \nameref{sec:parameterisation} methods). Note that each edge in panel A shows the direct causal effect of its parent node on its child node, which is conditional on the specific adjustment set for that model; thus, only the coefficient $β_{Diet}$ for the edge between $D$ and $E$ is a causal estimate in panel B, while the others are only associative.}
 		\label{fig:DAGtikzParam}
 	\end{figure}
 }
@@ -54,7 +54,7 @@
 \newcommand{\FigDAG}{
 	\begin{figure}
 		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/Apodemus-vacc-figures/DAG.pdf}
-		\caption{\textbf{Graphical Causal Model of vaccine efficacy.} Directed acyclic graph representing validated causal relationships expressed by the SCM \(\mathbb{C}_{VE}\) (Model~\ref{eq:SCM}). Covariates and potential confounders (blue vertices) were time since vaccination \(T\), parasite infection (presence or burden) \(P\), reproductive status \(R\), body mass \(M\), fat scores \(F\), and sex \(S\). }
+		\caption{\textbf{Graphical Causal Model of vaccine efficacy.} Directed acyclic graph representing validated causal relationships expressed by the SCM \(\mathbb{C}_{VE}\) (Model~\ref{eq:SCM}). Covariates and potential confounders (blue nodes) were time since vaccination \(T\), parasite infection (presence or burden) \(P\), reproductive status \(R\), body mass \(M\), fat scores \(F\), and sex \(S\). }
 		\label{fig:DAG}
 	\end{figure}
 }
