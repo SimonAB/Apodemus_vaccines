@@ -56,13 +56,13 @@ function plot_chains_df(chns; mask=r"α\b|β", res=(8, 0.8 * length(names(DataFr
 
     # Determine parameters to plot
     pms = show_intercept ? Symbol.(names(chns_df)) : Symbol.(names(chns_df))[2:end]
-    # Adjust resolution if intercept is shown
+    # Adjust size if intercept is shown
     res = show_intercept ? (res[1], res[2] + 1) : res
 
     # Set figure size
     size_inches = show_traces ? res : (res[1] ÷ 2, res[2])
     size_pt = 72 .* size_inches
-    fig = Figure(; resolution=size_pt)
+    fig = Figure(; size=size_pt)
 
     # Plot traces for each parameter
     for (i, param) in enumerate(pms)
@@ -152,14 +152,14 @@ function plot_chains(chns; mask=r"α\b|β", res=(10, 1.2 * length(filter(contain
     chain_mapping = mapping(pms .=> "Parameter estimate") * mapping(; color=:chain => nonnumeric, row=dims(1) => renamer(pms))
 
     if show_traces
-        fig = Figure(; resolution=size_pt)
+        fig = Figure(; size=size_pt)
         plt1 = data(chns) * mapping(:iteration .=> "Iteration") * chain_mapping * visual(Lines)
         plt2 = data(chns) * chain_mapping * density()
         draw!(fig[1, 1], plt1)
         draw!(fig[1, 2], plt2; axis=(ylabel="Density",))
     else
         # plot only the densities
-        fig = Figure(; resolution=size_pt)
+        fig = Figure(; size=size_pt)
         plt = data(chns) * chain_mapping * density()
         draw!(fig[1, 2], plt; axis=(ylabel="Density",))
     end
