@@ -1,12 +1,12 @@
 # Fdb version 4
-["biber apodemus-vacc-main"] 1715616095.27951 "apodemus-vacc-main.bcf" "apodemus-vacc-main.bbl" "apodemus-vacc-main" 1715616140.38631 0
-  "apodemus-vacc-main.bcf" 1715616139.9249 113500 39cee403e99c14d1b863e77842cc1a94 "lualatex"
+["biber apodemus-vacc-main"] 1715634364.42983 "apodemus-vacc-main.bcf" "apodemus-vacc-main.bbl" "apodemus-vacc-main" 1715763435.59108 0
+  "apodemus-vacc-main.bcf" 1715763435.18351 113500 03033b468f476176940002c83b3601d7 "lualatex"
   "apodemus-vacc-refs.bib" 1710852506 162747 d41fd8134d451d419b060b3f052f07d9 ""
   (generated)
   "apodemus-vacc-main.bbl"
   "apodemus-vacc-main.blg"
   (rewritten before read)
-["lualatex"] 1715616134.76088 "apodemus-vacc-main.tex" "apodemus-vacc-main.pdf" "apodemus-vacc-main" 1715616140.38668 0
+["lualatex"] 1715763430.42083 "apodemus-vacc-main.tex" "apodemus-vacc-main.pdf" "apodemus-vacc-main" 1715763435.5914 0
   "/Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/lmroman10-bold.luc" 1712218401.4867 128410 d0a7d6c5b84cb323c732980fd1a15945 ""
   "/Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/lmroman10-regular.luc" 1712218401.24463 127327 76a1047b4dbbf48407ed6ace26562c1b ""
   "/Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyrecursor-bold.luc" 1712218403.05655 128963 049f259ea57e6bc251f1c770b2b841af ""
@@ -22,7 +22,7 @@
   "/Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyrepagella-italic.luc" 1712218402.06349 311419 39ca8862f027fc8e8cf477a7afc97c71 ""
   "/Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyrepagella-math.luc" 1712218402.5913 554481 c28af6487758b014fb1dd4d7b761dc37 ""
   "/Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyrepagella-regular.luc" 1712218401.88147 310182 43c31faa6829fbfbd64a29ede2fc1209 ""
-  "/Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/names/luaotfload-lookup-cache.luc" 1715521523.13631 14989 9480c81c001dba47613f4bcd00b06168 ""
+  "/Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/names/luaotfload-lookup-cache.luc" 1715678115.4198 16559 de18f1d207049329debd697e9b06411a ""
   "/Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/names/luaotfload-names.luc.gz" 1714644495.39589 451321 5a98250d30bc1aab5b0a13de04ada2d4 ""
   "/usr/local/texlive/2024/texmf-dist/fonts/opentype/public/tex-gyre-math/texgyrepagella-math.otf" 1429396594 601220 5ba9edcf6604dc0d9cbd28b39d3272bc ""
   "/usr/local/texlive/2024/texmf-dist/fonts/opentype/public/tex-gyre/texgyrecursor-regular.otf" 1257299502 84652 af0a4ae66d8890d339bae8e0ce9902d4 ""
@@ -345,11 +345,11 @@
   "Figures/plots/IgG1_varint.pdf" 1704789237 901263 b3f149b119da4f8b482b7c306ed8fcd0 ""
   "Figures/plots/MultiLevel_DE_H_E_chn_traces.pdf" 1700057305 524908 c4f888e1960d2f1002a9656d9512904e ""
   "apodemus-vacc-figures.tex" 1710857403 9879 162d9f2c18f3cd01b55f0057cdfc6a62 ""
-  "apodemus-vacc-main.aux" 1715616139.88873 46764 ba6eb2ac3220267cd8611c65330340b7 "lualatex"
-  "apodemus-vacc-main.bbl" 1715616123.8794 243521 74657fc882b879853d1164c960454abe "biber apodemus-vacc-main"
-  "apodemus-vacc-main.run.xml" 1715616139.9277 2578 2e3fdb3de7fdda374ba236b8db78381a "lualatex"
-  "apodemus-vacc-main.tdo" 1715616139.92786 582 af17c0c79beeaaedd189e5aa5ad46a89 "lualatex"
-  "apodemus-vacc-main.tex" 1715616112.75074 47733 443471e3ce72ba50ffd7effd08d502e9 ""
+  "apodemus-vacc-main.aux" 1715763435.16251 47060 7d0b6cb4ebaf25298effc1197d9108e1 "lualatex"
+  "apodemus-vacc-main.bbl" 1715634366.10963 243521 589882ba64528dca687cbd07b39bf951 "biber apodemus-vacc-main"
+  "apodemus-vacc-main.run.xml" 1715763435.18448 2578 2e3fdb3de7fdda374ba236b8db78381a "lualatex"
+  "apodemus-vacc-main.tdo" 1715763435.18457 699 af6686e376dc54108b88bd206587b57d "lualatex"
+  "apodemus-vacc-main.tex" 1715763420 47863 c5988252d8a585851992fea9abfccd1b ""
   (generated)
   "apodemus-vacc-main.aux"
   "apodemus-vacc-main.bcf"
