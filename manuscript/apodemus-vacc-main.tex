@@ -213,11 +213,11 @@
 
 \begin{abstract}
 
-	% Number lines for the abstract
-	\linenumbers
+    % Number lines for the abstract
+    \linenumbers
 
-	\section{abstract}
-	\textbf{Vaccination is the most effective medical intervention to prevent infectious disease and protect public health. However, most new vaccines fail late in the clinical trial pipeline, and even established vaccines often perform worse in populations that differ substantially from those in which they were initially tested. This can lead to breakthrough infections and prevent or delay herd immunity. For anthelmintic vaccines, the situation is worse still: none have progressed beyond clinical trials in humans to date. Despite decades of immunological research and vaccine development, the causes of vaccine hyporesponsiveness remain difficult to identify, quantify, and therefore, address. We and others have shown that diet could have profound impacts on anthelmintic immunity: while protein restriction disproportionally impairs type 2 immunity compared to pro-inflammatory and type 1 immunity, dietary supplementation with a nutrient-rich chow can help wild rodents reduce parasite burdens by $\sim$ 50\%. Here, we therefore hypothesised that the leading causes of type-2 vaccine hyporesponsiveness are environmental, and are exacerbated when individuals are under nutritional or physiological (e.g., reproductive) stress. We used paired cohorts of laboratory-reared and wild wood mice (\emph{Apodemus sylvaticus}) vaccinated with a single or two doses of diphtheria toxoid vaccine formulated with alum to drive type 2 responses. We show that circulating vaccine-specific IgG1 antibodies dropped on average by 50\% in a wild population compared to individuals of the same species that had been reared under controlled laboratory conditions. We also found that, regardless of habitat, substantial variation in vaccine responsiveness was explained by diet, alongside weaker negative effects of being male and reproductively active. Surprisingly, helminth infection did not directly suppress vaccine-specific antibody production once habitat, diet, and sex were accounted for. While much variation within the habitat remains to be explained, our results indicate that the environment, chiefly dietary resource, plays a dramatic role in vaccine responsiveness. Further, they suggest that laboratory settings may systematically overestimate vaccine performance by failing to capture natural environmental variability. We anticipate that our study will inaugurate a robust modelling approach and biological system to disentangle and quantify the complex factors that cause vaccine responsiveness in target populations. It may also call for a need to systematically raise efficacy thresholds for initiating clinical phases of vaccine development.}
+    \section{abstract}
+    \textbf{Vaccination is the most effective medical intervention to prevent infectious disease and protect public health. However, most new vaccines fail late in the clinical trial pipeline, and even established vaccines often perform worse in populations that differ substantially from those in which they were initially tested. This can lead to breakthrough infections and prevent or delay herd immunity. For anthelmintic vaccines, the situation is worse still: none have progressed beyond clinical trials in humans to date. Despite decades of immunological research and vaccine development, the causes of vaccine hyporesponsiveness remain difficult to identify, quantify, and therefore, address. We and others have shown that diet could have profound impacts on anthelmintic immunity: while protein restriction disproportionally impairs type 2 immunity compared to pro-inflammatory and type 1 immunity, dietary supplementation with a nutrient-rich chow can help wild rodents reduce parasite burdens by $\sim$ 50\%. Here, we therefore hypothesised that the leading causes of type-2 vaccine hyporesponsiveness are environmental, and are exacerbated when individuals are under nutritional or physiological (e.g., reproductive) stress. We used paired cohorts of laboratory-reared and wild wood mice (\emph{Apodemus sylvaticus}) vaccinated with a single or two doses of diphtheria toxoid vaccine formulated with alum to drive type 2 responses. We show that circulating vaccine-specific IgG1 antibodies dropped on average by 50\% in a wild population compared to individuals of the same species that had been reared under controlled laboratory conditions. We also found that, regardless of habitat, substantial variation in vaccine responsiveness was explained by diet, alongside weaker negative effects of being male and reproductively active. Surprisingly, helminth infection did not directly suppress vaccine-specific antibody production once habitat, diet, and sex were accounted for. While much variation within the habitat remains to be explained, our results indicate that the environment, chiefly dietary resource, plays a dramatic role in vaccine responsiveness. Further, they suggest that laboratory settings may systematically overestimate vaccine performance by failing to capture natural environmental variability. We anticipate that our study will inaugurate a robust modelling approach and biological system to disentangle and quantify the complex factors that cause vaccine responsiveness in target populations. It may also call for a need to systematically raise efficacy thresholds for initiating clinical phases of vaccine development.}
 \end{abstract}
 
 \pagebreak
@@ -255,52 +255,58 @@ However, this model does not explain how habitat and diet are driving this loss 
 
 To understand more specifically the relative contributions of diet and habitat to vaccine responsiveness, and how that effect might be mediated by parasite infection, reproductive status, and body condition, we built a causal model of vaccine efficacy in the wood mouse system, first by constructing a graphical model of our hypotheses, then using our data to validate and refine its structure (see casual flow diagram, Fig.~\ref{supfig:SCM_flow}).
 
-The resulting causal directed acyclic graph (DAG) $\mathbb{G}_{VE}$ and corresponding SCM $\mathbb{C}_{VE}$ then allowed us to estimate vaccine responsiveness $E$ as a function of vaccination $V$, habitat $H$ and diet supplementation $D$, and more importantly, to identify which variables could act as confounders or mediators that might modulate vaccine responsiveness. In summary, the DAG $\mathbb{G}_{VE}$ (Figure~\ref{fig:DAGtikz}A) represents the hypothesised structure of the biological processes that cause the variation in vaccine responsiveness observed in this system, and the corresponding SCM $\mathbb{C}_{VE}$ (Figure~\ref{fig:DAGtikz}B) that links (via the edges in $\mathbb{G}_{VE}$) our variables of interest (nodes in $\mathbb{G}_{VE}$) to vaccine efficacy $E$ under the different habitat and dietary treatments. 
+The resulting causal directed acyclic graph (DAG) $\mathbb{G}_{VE}$ and corresponding SCM $\mathbb{C}_{VE}$ then allowed us to estimate vaccine responsiveness $E$ as a function of vaccination $V$, habitat $H$ and diet supplementation $D$, and more importantly, to identify which variables could act as confounders or mediators that might modulate vaccine responsiveness. In summary, the DAG $\mathbb{G}_{VE}$ (Figure~\ref{fig:DAGtikz}A) represents the hypothesised structure of the biological processes that cause the variation in vaccine responsiveness observed in this system, and the corresponding SCM $\mathbb{C}_{VE}$ (Figure~\ref{fig:DAGtikz}B) that links (via the edges in $\mathbb{G}_{VE}$) our variables of interest (nodes in $\mathbb{G}_{VE}$) to vaccine efficacy $E$ under the different habitat and dietary treatments.
 
 \FigDAGtikz
 
 \begin{itemize}
-    \item Vaccination $V$ was allocated at random, and therefore has no parent node. It was hypothesised to potentially affect parasite infection $P$, reproductive status $R$, body mass $M$ and fat stores $F$ through non-specific effects in addition to its main intended effect on vaccine responsiveness $E$. 
-    \item Whether a mouse was born in the lab or in the wild habitat $H$ was considered random and therefore took no parent node, but was hypothesised to potentially affect all other variables except $V$ and sex $S$. 
-    \item Diet $D$ was allocated at random in the laboratory colony, but because wild mice could also forage freely, we considered that being born in the wild could have a causal effect on diet, specifically on the effect of supplementation relative to the control laboratory or the wild diet. We therefore considered a causal effect of $H$ on $D$. Diet was hypothesised to affect reproductive status $R$, body mass $M$, body fat $F$ and parasite burdens $P$ as well as $E$, with fat scores $F$ hypothesised to be a cause of variation in body mass $M$. 
-    \item Sex $S$ being genetically determined and therefore subject to Mendelian randomisation~\supercite{Lawlor2008}, and all treatments being randomised with respect to sex, $S$ had no parent node, and was considered causally prior to reproductive status $R$, body mass $M$, body fat $F$ and parasite burdens $P$. 
-    \item Reproductive status $R$ being driven by sex, it was hypothesised to affect body mass $M$ and parasite burden $P$. 
-    \item Vaccine responsiveness $E$ was hypothesised to be affected by all other variables. 
+    \item Vaccination $V$ was allocated at random, and therefore has no parent node. It was hypothesised to potentially affect parasite infection $P$, reproductive status $R$, body mass $M$ and fat stores $F$ through non-specific effects in addition to its main intended effect on vaccine responsiveness $E$.
+    \item Whether a mouse was born in the lab or in the wild habitat $H$ was considered random and therefore took no parent node, but was hypothesised to potentially affect all other variables except $V$ and sex $S$.
+    \item Diet $D$ was allocated at random in the laboratory colony, but because wild mice could also forage freely, we considered that being born in the wild could have a causal effect on diet, specifically on the effect of supplementation relative to the control laboratory or the wild diet. We therefore considered a causal effect of $H$ on $D$. Diet was hypothesised to affect reproductive status $R$, body mass $M$, body fat $F$ and parasite burdens $P$ as well as $E$, with fat scores $F$ hypothesised to be a cause of variation in body mass $M$.
+    \item Sex $S$ being genetically determined and therefore subject to Mendelian randomisation~\supercite{Lawlor2008}, and all treatments being randomised with respect to sex, $S$ had no parent node, and was considered causally prior to reproductive status $R$, body mass $M$, body fat $F$ and parasite burdens $P$.
+    \item Reproductive status $R$ being driven by sex, it was hypothesised to affect body mass $M$ and parasite burden $P$.
+    \item Vaccine responsiveness $E$ was hypothesised to be affected by all other variables.
     \item Each node also had its own error term to capture all unobserved sources of variation, assumed to be independent and identically distributed (Figure~\ref{fig:DAGtikz}B).
 \end{itemize}
 
 \subsection{Validation of the causal model}
 
-We then tested the validity of the causal hypotheses described above, using $\mathbb{G}_{VE}$ to construct each model. For example, $\mathbb{G}_{VE}$ (Figure~\ref{fig:DAGtikz}A) implies that parasite infection should be conditionally independent of vaccination if we adjust for diet, reproductive status, sex, and habitat ($P \upmodels V \mid D, R, S, H$); therefore, we fitted a binomial generalised linear mixed model $P \sim \alpha + \beta_V V + \beta_D D + \beta_R R + \beta_S S + \beta_H H + (1 | ID)$, and tested whether $\beta_D$ was indeed non-significant\todo{@SB Check how.. p value?}. This process was repeated for all implied independencies derived from the causal graph $\mathbb{G}_{VE}$ (see \nameref{sec:structure} methods), and $\mathbb{G}_{VE}$ was updated until all causal paths were both supported by the observed data and consistent with biological expectations.
+We then tested the validity of the causal hypotheses described above, using $\mathbb{G}_{VE}$ to construct each model. For example, $\mathbb{G}_{VE}$ (Figure~\ref{fig:DAGtikz}A) indicates that parasite infection should be independent of vaccination if we adjust for diet, reproductive status, sex, and habitat ($P \upmodels V \mid D, R, S, H$); therefore, we fitted a binomial generalised linear mixed model $P \sim \alpha + \beta_V V + \beta_D D + \beta_R R + \beta_S S + \beta_H H + (1 | ID)$, and confirmed that the posterior distribution of $\beta_D$ was not significantly different from zero. This process was repeated for all implied independencies derived from the causal graph $\mathbb{G}_{VE}$ (see \nameref{sec:structure} methods), and $\mathbb{G}_{VE}$ was updated until all causal paths were both supported by the observed data and consistent with biological expectations.
 
 \subsection{Causal analysis indicates preponderant effects of diet and habitat on vaccine responsiveness}
 
 \FigDAGtikzParam
 
-We fully parametrised $\mathbb{C}_{VE}$ (Model~\ref{eq:SCM}) using Bayesian linear models to estimate the total and natural direct causal effects operating between the nodes of $\mathbb{G}_{VE}$ (Fig.~\ref{fig:DAGtikzParam}).
-Vaccination resulted in an average causal effect of 1.50 ± 0.13 ($log10 + 1$)-transformed OD units ($logOD$) relative to unvaccinated animals and no indirect effects mediated by body fat $F$, body mass $M$, reproductive status $R$ or parasite burden $P$ (Fig.~\ref{fig:DAGtikzParam}B). However, vaccine responsiveness was strongly influenced by both wild habitat and dietary supplementation.
+Using the resulting, validated, DAG, we parametrised $\mathbb{C}_{VE}$ (Model~\ref{eq:SCM}) using Bayesian linear models to estimate the total and direct causal effects operating within $\mathbb{G}_{VE}$ (Fig.~\ref{fig:DAGtikzParam}).
+Vaccination had an average causal effect of 1.50 ± 0.13 ($log10 + 1$)-transformed OD units ($logOD$) relative to unvaccinated animals and no indirect effects mediated by body fat $F$, body mass $M$, reproductive status $R$ or parasite burden $P$ (Fig.~\ref{fig:DAGtikzParam}B). However, vaccine responsiveness was strongly influenced by both wild habitat and dietary supplementation.
 
 \subsection{Habitat had wide ranging effects on wood mice and their response to vaccination}
 
-The wild habitat had a total negative effect on vaccine-specific IgG1 of -0.46 ± 0.24 $logOD$, partitioned into a direct negative impact of -0.66 ± 0.15 $logOD$, lower body mass (-1.3 ± 0.2 g on average) and lower fat scores (reduction by 2.3 points on the 6-point scale). Wood mice in the wild but not in the lab could freely reproduce and were naturally exposed to \emph{H. polygyrus}, reflected in direct causal effects of 0.66 ± 0.05 and 0.52 ± 0.08, respectively. Consistent with expectations under random diet allocation, there was no effect of habitat $H$ on diet $D$.
+Living in the wild had a total negative effect on vaccine-specific IgG1 of -0.46 ± 0.24 $logOD$, partitioned between body mass $M$ with a direct negative impact of -0.66 ± 0.15 $logOD$ (corresponding to wild wood mice being on average 1.3 ± 0.2 g lighter than their laboratory counterparts), and body fat $F$ (reduction by 2.3 fat score points on the 6-point scale).
+
+Wood mice in the wild but not in the lab could freely reproduce and were naturally exposed to \emph{H. polygyrus}, reflected in direct causal effects of 0.66 ± 0.05 and 0.52 ± 0.08 of $H$ on $R$ and $P$, respectively. Consistent with expectations under random diet allocation, there was no effect of habitat $H$ on diet $D$.
 
 \subsection{Diet supplementation reduced vaccine responsiveness}
 
-The total causal effect of diet supplementation on vaccine responsiveness was estimated to be -0.25 ± 0.09 $logOD$, adjusted for habitat. However, the direct effect of diet supplementation on vaccine responsiveness was estimated to be -0.23 ± 0.09 $logOD$, when adjusting for body mass, fat stores, habitat, sex, reproductive status, parasite burden, and vaccine formulation. This indicates that the direct effect of diet supplementation on vaccine responsiveness was weakly negative, and that the effect of diet supplementation on vaccine responsiveness was mostly direct (or mediated by unobserved variables, e.g. immune pathways affecting DTV-specific IgG1 production) and not mediated by its effects on body mass, fat stores, reproductive status, or parasite burden.
-While wild wood mice were lighter (-1.3 ± 0.2 g on average) and accumulated less fat (by 2.3 points on the 6-point scale), dietary supplementation increased body mass (+2.53 ± 0.3 g) though did not affect body fat scores.
-
-% Interestingly, the effect of dietary supplementation on vaccine responsiveness $E$ was mostly direct (or mediated by unobserved variables) and not mediated by its effects on body mass, fat stores, reproductive status $R$, or parasite burden $P$.
+The total causal effect of diet supplementation on vaccine responsiveness was estimated to be -0.25 ± 0.09 $logOD$, adjusted for habitat. However, the direct effect of diet supplementation on vaccine responsiveness was estimated to be -0.23 ± 0.09 $logOD$, when adjusting for body mass, fat stores, habitat, sex, reproductive status, parasite burden, and vaccine formulation. This indicates that the effect of diet supplementation on vaccine responsiveness was mostly direct (or mediated by unobserved variables along the path $D \rightarrow E$, e.g. immune pathways affecting DTV-specific IgG1 production or the microbiome), but was not mediated by its effects on body mass, fat stores, reproductive status, or parasite burden.
+Dietary supplementation increased body mass on average by 2.53 ± 0.3 g, though did not affect body fat scores.\todo{Estimate the interaction between diet and habitat}
 
 \subsection{Sex had both direct and indirect effects on vaccine responsiveness}
 
-The total causal effect of sex on DTV-specific antibody production $E$ indicated greater vaccine responsiveness in females (0.26 ± 0.15 $logOD$). However, only a little more than half of the effect of sex  (0.15 ± 0.10 $logOD$) was direct, with factors including body mass and fat storage mediating the rest (Fig.~\ref{fig:DAGtikzParam}).
+The total causal effect of sex on DTV-specific antibody production $E$ indicated greater vaccine responsiveness in females (0.26 ± 0.15 $logOD$). However, only a little more than half of the effect of sex (0.15 ± 0.10 $logOD$) was direct, with body mass (0.08 ± 0.01 $logOD$) and body fat (0.03 ± 0.005 $logOD$) mediating the rest (Fig.~\ref{fig:DAGtikzParam}).
 
 
-\subsection{Mild negative effect of parasite burdens on vaccine responsiveness among the infected}
+\subsection{Negative effect of parasite burdens on vaccine responsiveness among the infected}
 
-When considering the entire population, including uninfected mice, \emph{H. polygyrus} burden had no clear effect on DT vaccine responsiveness (-0.13 ± 0.11 $logOD$). However, because parasite infections are overdispersed, we also estimated the causal effects of infection burden on DT vaccine responsiveness only among infected wild wood mice. The direct effect of parasite burden on vaccine responsiveness among the infected was weakly negative (-0.58 ± 0.35 $logOD$), when adjusting for diet, sex, reproductive status, and vaccination.
+When considering the entire population, including uninfected mice, \emph{H. polygyrus} burden had no clear effect on DT vaccine responsiveness (-0.13 ± 0.11 $logOD$). However, because parasite infections are overdispersed and zero-inflated, we also estimated the causal effects of infection burden on DT vaccine responsiveness only among infected wild wood mice. Parasite burden among the infected had a negative direct causal effect on vaccine responsiveness (-0.58 ± 0.35 $logOD$), when adjusting for diet, sex, reproductive status, and vaccination.
 
 \section{Discussion}
+
+We used a structural causal model in wood mice to estimate how the effects of a clean laboratory vs wild habitats and of dietary supplementation on vaccine responsiveness were partitioned among parasitological and physiological traits. We recorded substantial variation in vaccine efficacy among individuals, and marked hypo responsiveness in wild animal populations relative to their laboratory conspecific counterparts, despite being immunised with the same Diphtheria Toxoid vaccine formulations. This demonstrates the importance of environmental factors for responses to immunisation at both individual and population levels, consistent with reports across multiple habitats and species including humans (REFS). The negative effect of living in a natural habitat was only partially rescued by a booster shot of the vaccine. This reduction is consistent with widespread reports of vaccine failure during clinical trials (REFS). Part of the negative effect of the wild habitat was mediated by parasite infection, consistent with reports in humans and animals showing that parasitic helminths can negatively impact vaccination (REFS). These reports are not unanimous, however, with many reporting no or a positive association with parasitic infection (REFS). These discrepancies might be due to the particular vaccine formulations and immune read-outs chosen, or, as suggested by our present study, by how parasite infection is estimated. Indeed, we only detected a negative effect of parasite burden among the infected animals, and no effect when including uninflected individuals of the population. Animal studies have highlighted the immunoregulatory effects of gastrointestinal parasites, in particular of \emph{H. bakeri}. Our focus on \emph{H. polygyrus} was driven by it being the most prevalent among GI nematodes in our populations. It is unclear how other parasite species might affect vaccine responsiveness.
+
+While habitat significantly affected body mass, body fat, and reproductive status, those effects did not propagate to vaccine efficacy, indicating a preponderance of as yet unmeasured factors in explaining hyporesponsiveness to vaccines in the wild. These might include coinfections other than \emph{H. bakeri} or differences in microbiota independent of dietary supplementation (because we adjusted for that), among other physiological and environmental factors.
+
+The effect of diet was negative, that is, mediated by unmeasured factors that likely include the microbiome and the immune system. Indeed...\todo{Fill in discussion with refs on effects of diet on immunity via microbiome}. We had predicted that diet supplementation would increase vaccine responsiveness. Indeed, we have previously shown that the same diet, in the same populations of the same species reduced parasite burdens (REFS). \hl{This effect was replicated in this experiment} \todo{Calculate $D \rightarrow P$ among the infected!} However, the same mice generated a weaker réponse to the vaccines. We hypothesise that the immune system adopts different strategies depending on nutritional resources. This is consistent with our and other's studies reporting a pro-inflammatory effect of protein scarcity (REFS: Ing2000, etc)
 
 The physiological variables measured mediated very little of the effect of immunisation on vaccine responsiveness, if any. However, environmental covariates of supplemented diet and wild habitat had substantial negative effects on vaccine responsiveness.
 
@@ -314,21 +320,23 @@ Weak / variable effect of worms~\supercite{Bruckner2015,Wait2020,Natukunda2022}.
 
 We have focused on the response to immunisation; the next step will be to evaluation how variability in responsiveness affects protection against pathogens, i.e., vaccine efficacy.
 
+Females overall responded better to vaccination than males, partly as a direct effect of sex (i.e. through unmeasured mediation) and partly mediated by body mass and fat content.
+
 \textbf{Limitations \& Perspectives}.
 
 \begin{itemize}
-	\item Only one antibody isotype;
-	\item Only IgG1 measured. would be good to also measure IgG2a and IgM.
-	\item Complete diet supplementation, not possible to analyse nutrients, nor to measure how much of the feed was taken by each individual.
+    \item Only one antibody isotype;
+    \item Only IgG1 measured. would be good to also measure IgG2a and IgM.
+    \item Complete diet supplementation, not possible to analyse nutrients, nor to measure how much of the feed was taken by each individual.
 \end{itemize}
 
 
 We made the following simplifying assumptions:
 
 \begin{itemize}
-	\item Parametric assumptions and linearity of the causal effects. Future work will need to generalise the functional form of the causal effects to allow for non-linear effects of the variables on vaccine responsiveness.
-	\item no unmeasured confounders. Future work will need to relax these assumptions to allow for more complex causal structures and to account for unmeasured confounders and mediation.
-	\item Random vaccine and diet treatments: We should allow vaccine and diet uptake (propensity scores) to vary among the treated, as, especially in the wild population, these are not strictly enforced.
+    \item Parametric assumptions and linearity of the causal effects. Future work will need to generalise the functional form of the causal effects to allow for non-linear effects of the variables on vaccine responsiveness.
+    \item no unmeasured confounders. Future work will need to relax these assumptions to allow for more complex causal structures and to account for unmeasured confounders and mediation.
+    \item Random vaccine and diet treatments: We should allow vaccine and diet uptake (propensity scores) to vary among the treated, as, especially in the wild population, these are not strictly enforced.
 \end{itemize}
 
 \section{Materials, Methods, and Models} \label{sec:methods}
@@ -441,7 +449,7 @@ Insert additional details about
 the lab mouse colony
 details of the diet make up of TransBreed and RM1
 \subsection{Supplementary Data: Multilevel
-	Models}\label{supdata:MultilevelModels}
+    Models}\label{supdata:MultilevelModels}
 
 \subsection{Supplementary Data: SCM construction}\label{supdata:SCMconstruction}
 
