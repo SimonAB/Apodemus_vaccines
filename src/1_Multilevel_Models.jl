@@ -480,8 +480,8 @@ for (i, param) in enumerate(params)
         ax.xlabel = "Posterior distribution of effect on DTV-specific IgG1"
     end
     vlines!(ax, ref_value, color=:grey40, linestyle=:dot)
-    text!(ax, ref_value - 0.3, 0; text="–", color=:grey10, weight=:bold)
-    text!(ax, ref_value + 0.1, 0; text="+", color=:grey10, weight=:bold)
+    text!(ax, ref_value - 0.3, 0; text="–", color=:grey10, font=:bold)
+    text!(ax, ref_value + 0.1, 0; text="+", color=:grey10, font=:bold)
     xlims!(-6, 6)
 end
 

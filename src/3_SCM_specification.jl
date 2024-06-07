@@ -38,7 +38,7 @@ using RCall
 using CairoMakie
 CairoMakie.activate!(type="svg")
 using MixedModelsMakie
-using Formatting
+# using Formatting
 
 # include modules
 cd("./src/")
@@ -51,19 +51,19 @@ include("DataWrangler.jl")
 # all cases
 df = encode_df(df) # choose between df and df_unique (the latter has no repeated measures)
 df =
-    df |>
-    # @filter(_.vax_history != "DD") |> # keep only mice with a single vaccination or adjuvant
-    @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
-    DataFrame
+  df |>
+  # @filter(_.vax_history != "DD") |> # keep only mice with a single vaccination or adjuvant
+  @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
+  DataFrame
 df.IDidx = get_idx(:ID, df)[1]
 
 
 # restrict to unique cases (no repeated measures):
 df_unique = encode_df(df_unique)
 df_unique =
-    df_unique |>
-    @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
-    DataFrame
+  df_unique |>
+  @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
+  DataFrame
 
 # Build DAG dataFrame
 dag_df = df[!, [:E, :H, :V, :D, :R, :S, :M, :Ḟ, :T, :P, :nP, :ID, :IDidx, :vax_history, :Vidx]]
@@ -115,19 +115,19 @@ V -> R;
 adjustmentSets(dag, "V", "E", effect="total") # {} -> V is assumed to be a RCT
 
 @model function V_E(IDidx, E, V; n_id=length(unique(IDidx)))
-    # population-level priors
-    α ~ Normal(mean(E), 2.5 * std(E))
-    βVE ~ Normal(0, 0.5)
-    σ ~ Exponential(std(E))
-    ν ~ LogNormal(2, 1)
+  # population-level priors
+  α ~ Normal(mean(E), 2.5 * std(E))
+  βVE ~ Normal(0, 0.5)
+  σ ~ Exponential(std(E))
+  ν ~ LogNormal(2, 1)
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
 
-    # likelihood
-    Ê = @. α + α_ID[IDidx] + βVE * V
-    return E ~ MvNormal(Ê, σ^2 * I)
+  # likelihood
+  Ê = @. α + α_ID[IDidx] + βVE * V
+  return E ~ MvNormal(Ê, σ^2 * I)
 end
 
 V_E_model = V_E(dag_df.IDidx, dag_df.E, dag_df.V); # note log10(1+X)-transformed parasite counts.
@@ -153,43 +153,43 @@ plot_chains_df(V_E_chn)
 adjustmentSets(dag, "V", "E", effect="direct") # { D, F, H, M, P, R, S }
 
 @model function V_E_NDE(IDidx, E, V, D, Ḟ, H, M, P, R, S; n_id=length(unique(IDidx)))
-    # population-level priors
-    α ~ Normal(mean(E), 2.5 * std(E))  # overall intercept
-    βVE ~ Normal(0, 0.5)  # slope of V on E
-    βDE ~ Normal(0, 0.5)  # slope of D on E
-    βFE ~ Normal(0, 0.5)  # slope of F on E
-    βHE ~ Normal(0, 0.5)  # slope of H on E
-    βME ~ Normal(0, 0.5)  # slope of M on E
-    βPE ~ Normal(0, 0.5)  # slope of P on E
-    βRE ~ Normal(0, 0.5)  # slope of R on E
-    βSE ~ Normal(0, 0.5)  # slope of S on E
-    σ ~ Exponential(std(E))  # residual SD
-    ν ~ LogNormal(2, 1)  # residual degrees of freedom
+  # population-level priors
+  α ~ Normal(mean(E), 2.5 * std(E))  # overall intercept
+  βVE ~ Normal(0, 0.5)  # slope of V on E
+  βDE ~ Normal(0, 0.5)  # slope of D on E
+  βFE ~ Normal(0, 0.5)  # slope of F on E
+  βHE ~ Normal(0, 0.5)  # slope of H on E
+  βME ~ Normal(0, 0.5)  # slope of M on E
+  βPE ~ Normal(0, 0.5)  # slope of P on E
+  βRE ~ Normal(0, 0.5)  # slope of R on E
+  βSE ~ Normal(0, 0.5)  # slope of S on E
+  σ ~ Exponential(std(E))  # residual SD
+  ν ~ LogNormal(2, 1)  # residual degrees of freedom
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)     # group-level intercepts
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)     # group-level intercepts
 
-    # missing F values
-    N_missing = sum(ismissing.(Ḟ))
-    F_impute ~ filldist(Normal(0, 1), N_missing)
-    ν ~ Normal(0, 0.5) # imputed mean
-    σ_F ~ Exponential() # imputed SD
+  # missing F values
+  N_missing = sum(ismissing.(Ḟ))
+  F_impute ~ filldist(Normal(0, 1), N_missing)
+  ν ~ Normal(0, 0.5) # imputed mean
+  σ_F ~ Exponential() # imputed SD
 
-    i_missing = 1
-    for i in eachindex(Ḟ)
-        if ismissing(Ḟ[i])
-            F_impute[i_missing] ~ Normal(ν, σ_F)
-            f_imputed = F_impute[i_missing]
-            i_missing += 1
-        else
-            Ḟ[i] ~ Normal(ν, σ_F)
-            f_imputed = Ḟ[i]
-        end
-        # likelihood
-        Ê = @. α + α_ID[IDidx][i] + βVE * V[i] + βDE * D[i] + βFE * f_imputed + βHE * H[i] + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i]
-        E[i] ~ Normal(Ê, σ)
+  i_missing = 1
+  for i in eachindex(Ḟ)
+    if ismissing(Ḟ[i])
+      F_impute[i_missing] ~ Normal(ν, σ_F)
+      f_imputed = F_impute[i_missing]
+      i_missing += 1
+    else
+      Ḟ[i] ~ Normal(ν, σ_F)
+      f_imputed = Ḟ[i]
     end
+    # likelihood
+    Ê = @. α + α_ID[IDidx][i] + βVE * V[i] + βDE * D[i] + βFE * f_imputed + βHE * H[i] + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i]
+    E[i] ~ Normal(Ê, σ)
+  end
 end
 
 V_E_DE_model = V_E_NDE(dag_df.IDidx, dag_df.E, dag_df.V, dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S); # note log10(1+X)-transformed parasite counts.
@@ -301,19 +301,19 @@ save("../manuscript/Figures/plots/P_E_ridgeplot.pdf", cp)
 
 # Bayesian model
 @model function naive_P_E(IDidx, E, nP; n_id=length(unique(IDidx)))
-    # population-level priors
-    α ~ Normal(mean(E), 2.5 * std(E))
-    βPE ~ Normal(0, 0.5)
-    σ ~ Exponential(std(E))
-    # ν ~ LogNormal(2, 1)
+  # population-level priors
+  α ~ Normal(mean(E), 2.5 * std(E))
+  βPE ~ Normal(0, 0.5)
+  σ ~ Exponential(std(E))
+  # ν ~ LogNormal(2, 1)
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
 
-    # likelihood
-    Ê = @. α + α_ID[IDidx] + βPE * nP
-    return E ~ MvNormal(Ê, σ^2 * I)
+  # likelihood
+  Ê = @. α + α_ID[IDidx] + βPE * nP
+  return E ~ MvNormal(Ê, σ^2 * I)
 end
 
 naive_P_E_model = naive_P_E(dag_df_infected.IDidx, dag_df_infected.E, dag_df_infected.lognP); # note log10(1+X)-transformed parasite counts.
@@ -459,24 +459,24 @@ ridgeplot(boot)
 
 # Population-level model for the log of the expected number
 @model function P_E(IDidx, E, P, D, H, R, S, V; n_id=length(unique(IDidx)))
-    # population-level priors
-    α ~ Normal(mean(E), 2.5 * std(E))
-    βPE ~ Normal(0, 0.5)
-    βDE ~ Normal(0, 0.5)
-    βHE ~ Normal(0, 0.5)
-    βRE ~ Normal(0, 0.5)
-    βSE ~ Normal(0, 0.5)
-    βVE ~ Normal(0, 0.5)
-    σ ~ Exponential(std(E))
-    ν ~ LogNormal(2, 1)
+  # population-level priors
+  α ~ Normal(mean(E), 2.5 * std(E))
+  βPE ~ Normal(0, 0.5)
+  βDE ~ Normal(0, 0.5)
+  βHE ~ Normal(0, 0.5)
+  βRE ~ Normal(0, 0.5)
+  βSE ~ Normal(0, 0.5)
+  βVE ~ Normal(0, 0.5)
+  σ ~ Exponential(std(E))
+  ν ~ LogNormal(2, 1)
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
 
-    # likelihood
-    Ê = α .+ α_ID[IDidx] .+ βPE * P .+ βDE * D .+ βHE * H .+ βRE * R .+ βSE * S .+ βVE * V
-    return E ~ MvNormal(Ê, σ^2 * I)
+  # likelihood
+  Ê = α .+ α_ID[IDidx] .+ βPE * P .+ βDE * D .+ βHE * H .+ βRE * R .+ βSE * S .+ βVE * V
+  return E ~ MvNormal(Ê, σ^2 * I)
 end
 
 P_E_model = P_E(dag_df_infected.IDidx, dag_df_infected.E, log10.(1 .+ dag_df_infected.nP), dag_df_infected.D, dag_df_infected.H, dag_df_infected.R, dag_df_infected.S, dag_df_infected.V); # note log10(1+X)-transformed parasite counts.
@@ -576,45 +576,45 @@ ridgeplot(boot)
 # Bayesian model
 
 @model function DE_P_E(IDidx, E, P, D, Ḟ, H, M, R, S, V; n_id=length(unique(IDidx)))
-    # population-level priors
-    α ~ Normal(mean(E), 2.5 * std(E))
+  # population-level priors
+  α ~ Normal(mean(E), 2.5 * std(E))
 
-    βPE ~ Normal(0, 0.5)
-    βDE ~ Normal(0, 0.5)
-    βFE ~ Normal(0, 0.5)
-    βHE ~ Normal(0, 0.5)
-    βME ~ Normal(0, 0.5)
-    βRE ~ Normal(0, 0.5)
-    βSE ~ Normal(0, 0.5)
-    βVE ~ Normal(0, 0.5)
+  βPE ~ Normal(0, 0.5)
+  βDE ~ Normal(0, 0.5)
+  βFE ~ Normal(0, 0.5)
+  βHE ~ Normal(0, 0.5)
+  βME ~ Normal(0, 0.5)
+  βRE ~ Normal(0, 0.5)
+  βSE ~ Normal(0, 0.5)
+  βVE ~ Normal(0, 0.5)
 
-    σ ~ Exponential(std(E))
+  σ ~ Exponential(std(E))
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
 
-    # missing F values
-    N_missing = sum(ismissing.(Ḟ))
-    F_impute ~ filldist(Normal(0, 1), N_missing)
-    F_impute = convert(Array, F_impute)
-    ν ~ Normal(0, 0.5) # imputed mean
-    σ_F ~ Exponential() # imputed SD
+  # missing F values
+  N_missing = sum(ismissing.(Ḟ))
+  F_impute ~ filldist(Normal(0, 1), N_missing)
+  F_impute = convert(Array, F_impute)
+  ν ~ Normal(0, 0.5) # imputed mean
+  σ_F ~ Exponential() # imputed SD
 
-    i_missing = 1
-    for i in eachindex(Ḟ)
-        if ismissing(Ḟ[i])
-            F_impute[i_missing] ~ Normal(ν, σ_F)
-            f_imputed = F_impute[i_missing]
-            i_missing += 1
-        else
-            Ḟ[i] ~ Normal(ν, σ_F)
-            f_imputed = Ḟ[i]
-        end
-        # likelihood
-        Ê = @. α + α_ID[IDidx][i] + βPE * P[i] + βDE * D[i] + βFE * f_imputed + βHE * H[i] + βME * M[i] + βRE * R[i] + βSE * S[i] + βVE * V[i]
-        E[i] ~ Normal(Ê, σ)
+  i_missing = 1
+  for i in eachindex(Ḟ)
+    if ismissing(Ḟ[i])
+      F_impute[i_missing] ~ Normal(ν, σ_F)
+      f_imputed = F_impute[i_missing]
+      i_missing += 1
+    else
+      Ḟ[i] ~ Normal(ν, σ_F)
+      f_imputed = Ḟ[i]
     end
+    # likelihood
+    Ê = @. α + α_ID[IDidx][i] + βPE * P[i] + βDE * D[i] + βFE * f_imputed + βHE * H[i] + βME * M[i] + βRE * R[i] + βSE * S[i] + βVE * V[i]
+    E[i] ~ Normal(Ê, σ)
+  end
 end
 
 DE_P_E_model = DE_P_E(dag_df.IDidx, dag_df.E, dag_df.P, dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, dag_df.R, dag_df.S, dag_df.V);
@@ -686,22 +686,22 @@ V             0.0113116    0.023732    0.48    0.6336
 
 # Bayesian model
 @model function R_nP(nP, R, D, H, S, V, IDidx; n_id=length(unique(IDidx)))
-    # population-level priors
-    α ~ Normal(0, 2.5)
-    βR ~ Normal(0, 0.5)
-    βD ~ Normal(0, 0.5)
-    βH ~ Normal(0, 0.5)
-    βS ~ Normal(0, 0.5)
-    βV ~ Normal(0, 0.5)
-    σ ~ Exponential(std(nP))
+  # population-level priors
+  α ~ Normal(0, 2.5)
+  βR ~ Normal(0, 0.5)
+  βD ~ Normal(0, 0.5)
+  βH ~ Normal(0, 0.5)
+  βS ~ Normal(0, 0.5)
+  βV ~ Normal(0, 0.5)
+  σ ~ Exponential(std(nP))
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)
 
-    # likelihood
-    nP̂ = @. α + α_ID[IDidx] + βR * R + βD * D + βH * H + βS * S + βV * V
-    nP ~ MvNormal(nP̂, σ^2 * I)
+  # likelihood
+  nP̂ = @. α + α_ID[IDidx] + βR * R + βD * D + βH * H + βS * S + βV * V
+  nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
 
@@ -735,19 +735,19 @@ save("../manuscript/Figures/plots/R_nP_chn.pdf", p)
 adjustmentSets(dag, "D", "P", effect="total") # {H}
 
 @model function D_nP(nP, D, H, IDidx; n_id=length(unique(IDidx)))
-    # population-level priors
-    α ~ Normal(0, 2.5)
-    βD ~ Normal(0, 0.5)
-    βH ~ Normal(0, 0.5)
-    σ ~ Exponential(std(nP))
+  # population-level priors
+  α ~ Normal(0, 2.5)
+  βD ~ Normal(0, 0.5)
+  βH ~ Normal(0, 0.5)
+  σ ~ Exponential(std(nP))
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)
 
-    # likelihood
-    nP̂ = @. α + α_ID[IDidx] + βD * D + βH * H
-    nP ~ MvNormal(nP̂, σ^2 * I)
+  # likelihood
+  nP̂ = @. α + α_ID[IDidx] + βD * D + βH * H
+  nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
 D_nP_model = D_nP(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.IDidx)
@@ -776,23 +776,23 @@ p = draw(layers * plt, axis=(xlabel="Diet supplemented", ylabel="H. polygyrus (c
 adjustmentSets(dag, "D", "P", effect="direct") # { H, R, S, V}
 
 @model function D_nP(nP, D, H, R, S, V, IDidx; n_id=length(unique(IDidx)))
-    # population-level priors
-    α ~ Normal(0, 2.5)
-    βD ~ Normal(0, 0.5)
-    βH ~ Normal(0, 0.5)
-    βR ~ Normal(0, 0.5)
-    βS ~ Normal(0, 0.5)
-    βV ~ Normal(0, 0.5)
+  # population-level priors
+  α ~ Normal(0, 2.5)
+  βD ~ Normal(0, 0.5)
+  βH ~ Normal(0, 0.5)
+  βR ~ Normal(0, 0.5)
+  βS ~ Normal(0, 0.5)
+  βV ~ Normal(0, 0.5)
 
-    σ ~ Exponential(std(nP))
+  σ ~ Exponential(std(nP))
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)
 
-    # likelihood
-    nP̂ = @. α + α_ID[IDidx] + βD * D + βH * H + βR * R + βS * S + βV * V
-    nP ~ MvNormal(nP̂, σ^2 * I)
+  # likelihood
+  nP̂ = @. α + α_ID[IDidx] + βD * D + βH * H + βR * R + βS * S + βV * V
+  nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
 D_nP_model = D_nP(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.R, dag_df.S, dag_df.V, dag_df.IDidx)
@@ -854,18 +854,18 @@ ridgeplot(boot)
 # Bayesian model
 
 @model function S_E(IDidx, E, S; n_id=length(unique(IDidx)))
-    # population-level priors
-    α ~ Normal(mean(E), 2.5 * std(E))  # overall intercept
-    βS_ ~ Normal(0, 0.5)  # slope of S on E
-    σ ~ Exponential(std(E))  # residual SD
+  # population-level priors
+  α ~ Normal(mean(E), 2.5 * std(E))  # overall intercept
+  βS_ ~ Normal(0, 0.5)  # slope of S on E
+  σ ~ Exponential(std(E))  # residual SD
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)     # group-level intercepts
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)     # group-level intercepts
 
-    # likelihood
-    Ê = @. α + α_ID[IDidx] + βS_ * S
-    return E ~ MvNormal(Ê, σ^2 * I)
+  # likelihood
+  Ê = @. α + α_ID[IDidx] + βS_ * S
+  return E ~ MvNormal(Ê, σ^2 * I)
 end
 
 S_E_model = S_E(dag_df.IDidx, dag_df.E, dag_df.S); # note log10(1+X)-transformed parasite counts.
@@ -927,43 +927,43 @@ ridgeplot(boot)
 # Bayesian model
 @model function S_E(E, S, D, Ḟ, H, M, P, R, V, IDidx; n_id=length(unique(IDidx)))
 
-    α ~ Normal(mean(E), 2.5 * std(E))
-    σ ~ Exponential(std(E))
+  α ~ Normal(mean(E), 2.5 * std(E))
+  σ ~ Exponential(std(E))
 
-    βS ~ Normal(0, 1)
-    βD ~ Normal(0, 1)
-    βF ~ Normal(0, 1)
-    βH ~ Normal(0, 1)
-    βM ~ Normal(0, 1)
-    βP ~ Normal(0, 1)
-    βR ~ Normal(0, 1)
-    βV ~ Normal(0, 1)
+  βS ~ Normal(0, 1)
+  βD ~ Normal(0, 1)
+  βF ~ Normal(0, 1)
+  βH ~ Normal(0, 1)
+  βM ~ Normal(0, 1)
+  βP ~ Normal(0, 1)
+  βR ~ Normal(0, 1)
+  βV ~ Normal(0, 1)
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
 
-    # missing F values
-    N_missing = sum(ismissing.(Ḟ))
-    F_impute ~ filldist(Normal(), N_missing)
-    ν ~ Normal(0.5, 1)
-    σ_F ~ Exponential()
+  # missing F values
+  N_missing = sum(ismissing.(Ḟ))
+  F_impute ~ filldist(Normal(), N_missing)
+  ν ~ Normal(0.5, 1)
+  σ_F ~ Exponential()
 
-    i_missing = 1
-    for i in eachindex(Ḟ)
-        if ismissing(Ḟ[i])
-            F_impute[i_missing] ~ Normal(ν, σ_F)
-            f_imputed = F_impute[i_missing]
-            i_missing += 1
-        else
-            Ḟ[i] ~ Normal(ν, σ_F)
-            f_imputed = Ḟ[i]
-        end
-
-        # likelihood
-        µ = @. α + α_ID[IDidx][i] + βS * S[i] + βD * D[i] + βF * f_imputed + βH * H[i] + βM * M[i] + βP * P[i] + βR * R[i] + βV * V[i]
-        E[i] ~ Normal(µ, σ)
+  i_missing = 1
+  for i in eachindex(Ḟ)
+    if ismissing(Ḟ[i])
+      F_impute[i_missing] ~ Normal(ν, σ_F)
+      f_imputed = F_impute[i_missing]
+      i_missing += 1
+    else
+      Ḟ[i] ~ Normal(ν, σ_F)
+      f_imputed = Ḟ[i]
     end
+
+    # likelihood
+    µ = @. α + α_ID[IDidx][i] + βS * S[i] + βD * D[i] + βF * f_imputed + βH * H[i] + βM * M[i] + βP * P[i] + βR * R[i] + βV * V[i]
+    E[i] ~ Normal(µ, σ)
+  end
 end
 
 S_E_model = S_E(dag_df.E, dag_df.S, dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.T, dag_df.IDidx)
@@ -981,23 +981,23 @@ precis(S_E_df)
 adjustmentSets(dag, "S", "P", effect="direct") # {D, H, R, V}
 
 @model function S_nP(nP, S, D, H, R, V, IDidx; n_id=length(unique(IDidx)))
-    # population-level priors
-    α ~ Normal(0, 2.5)
-    βS ~ Normal(0, 0.5)
-    βD ~ Normal(0, 0.5)
-    βH ~ Normal(0, 0.5)
-    βR ~ Normal(0, 0.5)
-    βV ~ Normal(0, 0.5)
+  # population-level priors
+  α ~ Normal(0, 2.5)
+  βS ~ Normal(0, 0.5)
+  βD ~ Normal(0, 0.5)
+  βH ~ Normal(0, 0.5)
+  βR ~ Normal(0, 0.5)
+  βV ~ Normal(0, 0.5)
 
-    σ ~ Exponential(std(nP))
+  σ ~ Exponential(std(nP))
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)
 
-    # likelihood
-    nP̂ = @. α + α_ID[IDidx] + βS * S + βD * D + βH * H + βR * R + βV * V
-    nP ~ MvNormal(nP̂, σ^2 * I)
+  # likelihood
+  nP̂ = @. α + α_ID[IDidx] + βS * S + βD * D + βH * H + βR * R + βV * V
+  nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
 S_nP_model = S_nP(log10.(1 .+ dag_df.nP), dag_df.S, dag_df.D, dag_df.H, dag_df.R, dag_df.V, dag_df.IDidx)
@@ -1029,22 +1029,22 @@ save("../manuscript/Figures/plots/S_nP_chn.pdf", p)
 adjustmentSets(dag, "H", "E") # { }
 
 @model function H_E(IDidx, Vidx, E, H; n_id=length(unique(IDidx)), n_vax=length(unique(Vidx)))
-    # population-level priors
-    α ~ Normal(mean(E), 2.5 * std(E))
-    βH_ ~ Normal(0, 0.5)
-    σ ~ Exponential(std(E))
-    ν ~ LogNormal(2, 1)
+  # population-level priors
+  α ~ Normal(mean(E), 2.5 * std(E))
+  βH_ ~ Normal(0, 0.5)
+  σ ~ Exponential(std(E))
+  ν ~ LogNormal(2, 1)
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)   # group-level SDs intercepts
-    τᵦ ~ truncated(Cauchy(0, 2); lower=0)   # group-level SDs intercepts
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)   # group-level SDs intercepts
+  τᵦ ~ truncated(Cauchy(0, 2); lower=0)   # group-level SDs intercepts
 
-    α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
-    α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
 
-    # likelihood
-    Ê = @. α + α_ID[IDidx] + α_vax[Vidx] + βH_ * H * τᵦ
-    return E ~ MvNormal(Ê, σ^2 * I)
+  # likelihood
+  Ê = @. α + α_ID[IDidx] + α_vax[Vidx] + βH_ * H * τᵦ
+  return E ~ MvNormal(Ê, σ^2 * I)
 end
 
 H_E_model = H_E(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.H);
@@ -1072,45 +1072,45 @@ p
 adjustmentSets(dag, "H", "E", effect="direct") # { D, F, M, P, R, S, V } - V is treated as random effect
 
 @model function DE_H_E(IDidx, Vidx, E, H, D, Ḟ, M, P, R, S; n_id=length(unique(IDidx)), n_vax=length(unique(Vidx)))
-    # population-level priors
-    α ~ Normal(mean(E), 2.5 * std(E))
+  # population-level priors
+  α ~ Normal(mean(E), 2.5 * std(E))
 
-    βHab ~ Normal(0, 0.5)
-    βDiet ~ Normal(0, 0.5)
-    βFat ~ Normal(0, 0.5)
-    βMass ~ Normal(0, 0.5)
-    βPara ~ Normal(0, 0.5)
-    βRep ~ Normal(0, 0.5)
-    βSex ~ Normal(0, 0.5)
+  βHab ~ Normal(0, 0.5)
+  βDiet ~ Normal(0, 0.5)
+  βFat ~ Normal(0, 0.5)
+  βMass ~ Normal(0, 0.5)
+  βPara ~ Normal(0, 0.5)
+  βRep ~ Normal(0, 0.5)
+  βSex ~ Normal(0, 0.5)
 
-    σ ~ Exponential(std(E))
+  σ ~ Exponential(std(E))
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
-    α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
 
-    # missing F values
-    N_missing = sum(ismissing.(Ḟ))
-    F_impute ~ filldist(TDist(3), N_missing)
-    F_impute = convert(Array, F_impute)
-    ν ~ Normal(0.5, 1) # imputed mean
-    σ_F ~ Exponential() # imputed SD
+  # missing F values
+  N_missing = sum(ismissing.(Ḟ))
+  F_impute ~ filldist(TDist(3), N_missing)
+  F_impute = convert(Array, F_impute)
+  ν ~ Normal(0.5, 1) # imputed mean
+  σ_F ~ Exponential() # imputed SD
 
-    i_missing = 1
-    for i in eachindex(Ḟ)
-        if ismissing(Ḟ[i])
-            F_impute[i_missing] ~ Normal(ν, σ_F)
-            f_imputed = F_impute[i_missing]
-            i_missing += 1
-        else
-            Ḟ[i] ~ Normal(ν, σ_F)
-            f_imputed = Ḟ[i]
-        end
-        # likelihood
-        Ê = @. α + α_ID[IDidx][i] + α_vax[Vidx][i] + βHab * H[i] + βDiet * D[i] + βFat * f_imputed + βMass * M[i] + βPara * P[i] + βRep * R[i] + βSex * S[i]
-        E[i] ~ Normal(Ê, σ)
+  i_missing = 1
+  for i in eachindex(Ḟ)
+    if ismissing(Ḟ[i])
+      F_impute[i_missing] ~ Normal(ν, σ_F)
+      f_imputed = F_impute[i_missing]
+      i_missing += 1
+    else
+      Ḟ[i] ~ Normal(ν, σ_F)
+      f_imputed = Ḟ[i]
     end
+    # likelihood
+    Ê = @. α + α_ID[IDidx][i] + α_vax[Vidx][i] + βHab * H[i] + βDiet * D[i] + βFat * f_imputed + βMass * M[i] + βPara * P[i] + βRep * R[i] + βSex * S[i]
+    E[i] ~ Normal(Ê, σ)
+  end
 end
 
 DE_H_E_model = DE_H_E(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.H, dag_df.D, dag_df.Ḟ, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S);
@@ -1189,22 +1189,22 @@ save("../manuscript/Figures/plots/MultiLevel_DE_H_E_ridgeplot.pdf", glmm_DE_H_E_
 adjustmentSets(dag, "D", "E", effect="total") # {H}
 
 @model function D_E(IDidx, Vidx, E, D, H; n_id=length(unique(IDidx)), n_vax=length(unique(Vidx)))
-    # population-level priors
-    α ~ Normal(mean(E), 2.5 * std(E))
-    βD ~ Normal(0, 0.5)
-    βH ~ Normal(0, 0.5)
-    σ ~ Exponential(std(E))
-    ν ~ LogNormal(2, 1)
+  # population-level priors
+  α ~ Normal(mean(E), 2.5 * std(E))
+  βD ~ Normal(0, 0.5)
+  βH ~ Normal(0, 0.5)
+  σ ~ Exponential(std(E))
+  ν ~ LogNormal(2, 1)
 
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
-    α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
 
-    # likelihood
-    Ê = @. α + α_ID[IDidx] + α_vax[Vidx] + βD * D + βH * H
-    return E ~ MvNormal(Ê, σ^2 * I)
+  # likelihood
+  Ê = @. α + α_ID[IDidx] + α_vax[Vidx] + βD * D + βH * H
+  return E ~ MvNormal(Ê, σ^2 * I)
 end
 
 D_E_model = D_E(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.D, dag_df.H);
@@ -1232,45 +1232,45 @@ p
 adjustmentSets(dag, "D", "E", effect="direct") # {F, H, M, P, R, S, V} - V is treated as random effect
 
 @model function DE_D_E(IDidx, Vidx, E, D, Ḟ, H, M, P, R, S; n_id=length(unique(IDidx)), n_vax=length(unique(Vidx)))
-    # population-level priors
-    α ~ Normal(mean(E), 2.5 * std(E))
+  # population-level priors
+  α ~ Normal(mean(E), 2.5 * std(E))
 
-    βDE ~ Normal(0, 0.5)
-    βFE ~ Normal(0, 0.5)
-    βHE ~ Normal(0, 0.5)
-    βME ~ Normal(0, 0.5)
-    βPE ~ Normal(0, 0.5)
-    βRE ~ Normal(0, 0.5)
-    βSE ~ Normal(0, 0.5)
+  βDE ~ Normal(0, 0.5)
+  βFE ~ Normal(0, 0.5)
+  βHE ~ Normal(0, 0.5)
+  βME ~ Normal(0, 0.5)
+  βPE ~ Normal(0, 0.5)
+  βRE ~ Normal(0, 0.5)
+  βSE ~ Normal(0, 0.5)
 
-    σ ~ Exponential(std(E))
+  σ ~ Exponential(std(E))
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)      # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
-    α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)      # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
 
-    # missing F values
-    N_missing = sum(ismissing.(Ḟ))
-    F_impute ~ filldist(Normal(), N_missing)
-    F_impute = convert(Array, F_impute)
-    ν ~ Normal(0.5, 1) # imputed mean
-    σ_F ~ Exponential() # imputed SD
+  # missing F values
+  N_missing = sum(ismissing.(Ḟ))
+  F_impute ~ filldist(Normal(), N_missing)
+  F_impute = convert(Array, F_impute)
+  ν ~ Normal(0.5, 1) # imputed mean
+  σ_F ~ Exponential() # imputed SD
 
-    i_missing = 1
-    for i in eachindex(Ḟ)
-        if ismissing(Ḟ[i])
-            F_impute[i_missing] ~ Normal(ν, σ_F)
-            f_imputed = F_impute[i_missing]
-            i_missing += 1
-        else
-            Ḟ[i] ~ Normal(ν, σ_F)
-            f_imputed = Ḟ[i]
-        end
-        # likelihood
-        Ê = @. α + α_ID[IDidx][i] + α_vax[Vidx][i] + βDE * D[i] + βFE * f_imputed + βHE * H[i] + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i]
-        E[i] ~ Normal(Ê, σ)
+  i_missing = 1
+  for i in eachindex(Ḟ)
+    if ismissing(Ḟ[i])
+      F_impute[i_missing] ~ Normal(ν, σ_F)
+      f_imputed = F_impute[i_missing]
+      i_missing += 1
+    else
+      Ḟ[i] ~ Normal(ν, σ_F)
+      f_imputed = Ḟ[i]
     end
+    # likelihood
+    Ê = @. α + α_ID[IDidx][i] + α_vax[Vidx][i] + βDE * D[i] + βFE * f_imputed + βHE * H[i] + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i]
+    E[i] ~ Normal(Ê, σ)
+  end
 end
 
 DE_D_E_model = DE_D_E(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S);
@@ -1310,45 +1310,45 @@ p2
 adjustmentSets(dag, "F", "E", effect="direct") # { D, H, M, P, R, S, V }
 
 @model function DE_F_E(IDidx, Vidx, E, Ḟ, D, H, M, P, R, S; n_id=length(unique(IDidx)), n_vax=length(unique(Vidx)))
-    # population-level priors
-    α ~ Normal(mean(E), 2.5 * std(E))
+  # population-level priors
+  α ~ Normal(mean(E), 2.5 * std(E))
 
-    βDF ~ Normal(0, 0.5)
-    βFF ~ Normal(0, 0.5)
-    βHF ~ Normal(0, 0.5)
-    βMF ~ Normal(0, 0.5)
-    βPF ~ Normal(0, 0.5)
-    βRF ~ Normal(0, 0.5)
-    βSF ~ Normal(0, 0.5)
+  βDF ~ Normal(0, 0.5)
+  βFF ~ Normal(0, 0.5)
+  βHF ~ Normal(0, 0.5)
+  βMF ~ Normal(0, 0.5)
+  βPF ~ Normal(0, 0.5)
+  βRF ~ Normal(0, 0.5)
+  βSF ~ Normal(0, 0.5)
 
-    σ ~ Exponential(std(E))
+  σ ~ Exponential(std(E))
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)      # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
-    α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)      # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
 
-    # missing F values
-    N_missing = sum(ismissing.(Ḟ))
-    F_impute ~ filldist(Normal(), N_missing)
-    F_impute = convert(Array, F_impute)
-    ν ~ Normal(0.5, 1) # imputed mean
-    σ_F ~ Exponential() # imputed SD
+  # missing F values
+  N_missing = sum(ismissing.(Ḟ))
+  F_impute ~ filldist(Normal(), N_missing)
+  F_impute = convert(Array, F_impute)
+  ν ~ Normal(0.5, 1) # imputed mean
+  σ_F ~ Exponential() # imputed SD
 
-    i_missing = 1
-    for i in eachindex(Ḟ)
-        if ismissing(Ḟ[i])
-            F_impute[i_missing] ~ Normal(ν, σ_F)
-            f_imputed = F_impute[i_missing]
-            i_missing += 1
-        else
-            Ḟ[i] ~ Normal(ν, σ_F)
-            f_imputed = Ḟ[i]
-        end
-        # likelihood
-        Ê = @. α + α_ID[IDidx][i] + α_vax[Vidx][i] + βFE * f_imputed + βDF * D[i] + βHF * H[i] + βMF * M[i] + βPF * P[i] + βRF * R[i] + βSF * S[i]
-        E[i] ~ Normal(Ê, σ)
+  i_missing = 1
+  for i in eachindex(Ḟ)
+    if ismissing(Ḟ[i])
+      F_impute[i_missing] ~ Normal(ν, σ_F)
+      f_imputed = F_impute[i_missing]
+      i_missing += 1
+    else
+      Ḟ[i] ~ Normal(ν, σ_F)
+      f_imputed = Ḟ[i]
     end
+    # likelihood
+    Ê = @. α + α_ID[IDidx][i] + α_vax[Vidx][i] + βFE * f_imputed + βDF * D[i] + βHF * H[i] + βMF * M[i] + βPF * P[i] + βRF * R[i] + βSF * S[i]
+    E[i] ~ Normal(Ê, σ)
+  end
 end
 
 DE_F_E_model = DE_F_E(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.Ḟ, dag_df.D, dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S);
@@ -1383,36 +1383,36 @@ adjustmentSets(dag, "M", "E", effect="direct") # { D, F, H, P, R, S}
 
 @model function M_E(E, M, D, Ḟ, P, R, S, H)
 
-    α ~ Normal(mean(E), 2.5 * std(E))
-    σ ~ Exponential(std(E))
+  α ~ Normal(mean(E), 2.5 * std(E))
+  σ ~ Exponential(std(E))
 
-    σ_F ~ Exponential()
-    ν ~ Normal(0.5, 1)
+  σ_F ~ Exponential()
+  ν ~ Normal(0.5, 1)
 
-    βM ~ Normal(0, 1)
-    βD ~ Normal(0, 1)
-    βF ~ Normal(0, 1)
-    βH ~ Normal(0, 1)
-    βP ~ Normal(0, 1)
-    βR ~ Normal(0, 1)
-    βS ~ Normal(0, 1)
+  βM ~ Normal(0, 1)
+  βD ~ Normal(0, 1)
+  βF ~ Normal(0, 1)
+  βH ~ Normal(0, 1)
+  βP ~ Normal(0, 1)
+  βR ~ Normal(0, 1)
+  βS ~ Normal(0, 1)
 
-    N_missing = sum(ismissing.(Ḟ))
-    F_impute ~ filldist(Normal(), N_missing)
+  N_missing = sum(ismissing.(Ḟ))
+  F_impute ~ filldist(Normal(), N_missing)
 
-    i_missing = 1
-    for i in eachindex(Ḟ)
-        if ismissing(Ḟ[i])
-            F_impute[i_missing] ~ Normal(ν, σ_F)
-            f_imputed = F_impute[i_missing]
-            i_missing += 1
-        else
-            Ḟ[i] ~ Normal(ν, σ_F)
-            f_imputed = Ḟ[i]
-        end
-        µ = @. α + βM * M[i] + βD * D[i] + βF * f_imputed + βH * H[i] + βP * P[i] + βR * R[i] + βS * S[i]
-        E[i] ~ Normal(µ, σ^2 * I)
+  i_missing = 1
+  for i in eachindex(Ḟ)
+    if ismissing(Ḟ[i])
+      F_impute[i_missing] ~ Normal(ν, σ_F)
+      f_imputed = F_impute[i_missing]
+      i_missing += 1
+    else
+      Ḟ[i] ~ Normal(ν, σ_F)
+      f_imputed = Ḟ[i]
     end
+    µ = @. α + βM * M[i] + βD * D[i] + βF * f_imputed + βH * H[i] + βP * P[i] + βR * R[i] + βS * S[i]
+    E[i] ~ Normal(µ, σ^2 * I)
+  end
 end
 
 M_E_model = M_E(dag_df.E, dag_df.M, dag_df.D, dag_df.Ḟ, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S, dag_df.H)
@@ -1481,18 +1481,18 @@ ridgeplot(boot)
 
 @model function H_nP_unique(nP, H, D, R, S, T)
 
-    α ~ Normal(mean(nP), 2.5 * std(nP))
-    σ ~ Exponential(std(nP))
+  α ~ Normal(mean(nP), 2.5 * std(nP))
+  σ ~ Exponential(std(nP))
 
-    βH ~ Normal(0, 3)
-    βD ~ Normal(0, 3)
-    βR ~ Normal(0, 3)
-    βS ~ Normal(0, 3)
-    βT ~ Normal(0, 3)
+  βH ~ Normal(0, 3)
+  βD ~ Normal(0, 3)
+  βR ~ Normal(0, 3)
+  βS ~ Normal(0, 3)
+  βT ~ Normal(0, 3)
 
-    # likelihood
-    nP̂ = α .+ βH .* H .+ βD .* D .+ βR .* R .+ βS .* S .+ βT .* T
-    return nP ~ MvNormal(nP̂, σ^2 * I)
+  # likelihood
+  nP̂ = α .+ βH .* H .+ βD .* D .+ βR .* R .+ βS .* S .+ βT .* T
+  return nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
 H_nP_model_unique = H_nP_unique(log10.(1 .+ filtered_unique_df.nP), filtered_unique_df.H, filtered_unique_df.D, filtered_unique_df.R, filtered_unique_df.S, filtered_unique_df.T)
@@ -1546,23 +1546,23 @@ coefplot(boot)
 ridgeplot(boot)
 
 @model function H_nP(nP, H, D, R, S, IDidx, Vidx; n_id=length(unique(IDidx)), n_vax=length(unique(Vidx)))
-    # population-level priors
-    α ~ Normal(mean(nP), 2.5 * std(nP))
-    βH ~ Normal(0, 0.5)
-    βD ~ Normal(0, 0.5)
-    βR ~ Normal(0, 0.5)
-    βS ~ Normal(0, 0.5)
+  # population-level priors
+  α ~ Normal(mean(nP), 2.5 * std(nP))
+  βH ~ Normal(0, 0.5)
+  βD ~ Normal(0, 0.5)
+  βR ~ Normal(0, 0.5)
+  βS ~ Normal(0, 0.5)
 
-    σ ~ Exponential(std(nP))
+  σ ~ Exponential(std(nP))
 
-    # priors for variance of random intercepts
-    τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-    α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
-    α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
+  # priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  α_vax ~ filldist(Normal(0, τ), n_vax)     # group-level intercepts
 
-    # likelihood
-    nP̂ = @. α + α_ID[IDidx] + α_vax[Vidx] + βH * H + βD * D + βR * R + βS * S
-    return nP ~ MvNormal(nP̂, σ^2 * I)
+  # likelihood
+  nP̂ = @. α + α_ID[IDidx] + α_vax[Vidx] + βH * H + βD * D + βR * R + βS * S
+  return nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
 H_nP_model = H_nP(log10.(1 .+ dag_df.nP), dag_df.H, dag_df.D, dag_df.R, dag_df.S, dag_df.IDidx, dag_df.Vidx);
