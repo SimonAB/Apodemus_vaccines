@@ -115,8 +115,8 @@ function plot_chains_df(chns; mask=r"α\b|β", res=(8, 0.8 * length(names(DataFr
             ax.xlabel = xlab_dist
         end
         vlines!(ax, ref_value, color=:grey10, linestyle=:dot)
-        text!(ax, ref_value - 1, 0; text="–", color=:grey10, weight=:bold)
-        text!(ax, ref_value + 0.5, 0; text="+", color=:grey10, weight=:bold)
+        text!(ax, ref_value - 1, 0; text="–", color=:grey10, font=:bold)
+        text!(ax, ref_value + 0.5, 0; text="+", color=:grey10, font=:bold)
 
     end
     # Link x-axes of all density plots
