@@ -74,6 +74,8 @@ dag_df_unique = df_unique[!, [:E, :H, :V, :D, :R, :S, :M, :Ḟ, :T, :P, :nP, :Vi
 filtered_df = dag_df[dag_df.P.==1, :];
 filtered_unique_df = dag_df_unique[dag_df_unique.P.==1, :];
 
+# select only infected mice
+dag_df_infected = dag_df[dag_df.P.==2, :] # select rows of dag_df for which dag_df.P.==2
 
 # DAG specification - this is our graphical causal hypothesis
 
@@ -256,9 +258,6 @@ ridgeplot(boot)
 
 ## Total effect of `nP` on `E`
 adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, V}
-
-# selected only infected mice
-dag_df_infected = dag_df[dag_df.P.==2, :] # select rows of dag_df for which dag_df.P.==2
 
 # Plot
 layers = linear() + visual(Scatter)
@@ -730,7 +729,7 @@ precis(R_nP_chn_df)
 p = plot_chains_df(R_nP_chn; show_intercept=true)
 save("../manuscript/Figures/plots/R_nP_chn.pdf", p)
 
-## Total effect of D on nP
+## Total effect of D on nP [among the infected]
 
 adjustmentSets(dag, "D", "P", effect="total") # {H}
 
@@ -747,10 +746,12 @@ adjustmentSets(dag, "D", "P", effect="total") # {H}
 
   # likelihood
   nP̂ = @. α + α_ID[IDidx] + βD * D + βH * H
-  nP ~ MvNormal(nP̂, σ^2 * I)
+  nP ~ MvNormal(nP̂, σ^2)
 end
 
-D_nP_model = D_nP(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.IDidx)
+D_nP_model = D_nP(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.IDidx) # among all mice
+# D_nP_model = D_nP(dag_df_infected.nP, dag_df_infected.D, dag_df_infected.H, dag_df_infected.IDidx) # among the infected; this doesn't converge...
+
 D_nP_chn = sample(D_nP_model, NUTS(), MCMCThreads(), 3_000, 4);
 D_nP_chn_df = DataFrame(D_nP_chn)[!, r"α\b|β"];
 precis(D_nP_chn_df)
@@ -764,6 +765,36 @@ precis(D_nP_chn_df)
 └───────┴─────────────────────────────────────────────────────┘
 
 """
+
+# GLMM for the total effect of D on nP among the infected
+
+glmm_D_nP = fit(MixedModel, @formula(lognP ~ D + (1 | ID)), dag_df_infected)
+
+"""
+Linear mixed model fit by maximum likelihood
+ lognP ~ 1 + D + (1 | ID)
+   logLik   -2 logLik     AIC       AICc        BIC
+    13.1019   -26.2039   -18.2039   -17.3343   -10.4766
+
+Variance components:
+            Column    Variance  Std.Dev.
+ID       (Intercept)  0.1648723 0.4060446
+Residual              0.0083749 0.0915143
+ Number of obs: 51; levels of grouping factors: 19
+
+  Fixed-effects parameters:
+──────────────────────────────────────────────────
+                 Coef.  Std. Error     z  Pr(>|z|)
+──────────────────────────────────────────────────
+(Intercept)  1.20796     0.131198   9.21    <1e-19
+D            0.0449608   0.0622307  0.72    0.4700
+──────────────────────────────────────────────────
+
+"""
+
+boot = parametricbootstrap(MersenneTwister(1234), 10000, glmm_D_nP);
+coefplot(boot)
+ridgeplot(boot)
 
 # Plot
 df = (; x=Bool.(dag_df.D[dag_df.P.==2] .- 1), y=dag_df.nP[dag_df.P.==2])
