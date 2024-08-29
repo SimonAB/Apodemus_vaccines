@@ -5,13 +5,6 @@ SCM Specification
 - Date: 2022-08-01
 =#
 
-## Start REPL
-
-"""
-# If you run this in terminal (ctrl-I, then ctrl-\)
-julia  --threads auto --project=.
-"""
-
 ## Import packages
 
 print("Running on ", Threads.nthreads(), " threads.")
