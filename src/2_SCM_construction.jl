@@ -5,13 +5,6 @@ SCM construction
 - Date: 2022-08-01
 =#
 
-## Start REPL
-
-"""
-# Run this in terminal (ctrl-I, then ctrl-\)
-julia  --threads auto --project=.
-"""
-
 ## Import packages
 print("Running on ", Threads.nthreads(), " threads.")
 using CSV, DataFrames

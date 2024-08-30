@@ -1,0 +1,52 @@
+\documentclass{standalone} % or any other document class
+
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tikz}
+
+\begin{document}
+
+\begin{tikzpicture}[scale=0.75, inner sep=0pt]
+    \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (V) at (-3,0) {\(V\)};
+    \node[circle, draw, fill=RedOrange, text opacity=1, fill opacity=0.4, minimum width=16pt] (E) at (3,0) {\(E\)};
+    \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (H) at (-2.8,1.4) {\(H\)};
+    \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (D) at (-2.5,3) {\(D\)};
+    \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (F) at (0,1) {\(F\)};
+    \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (M) at (0,2.2) {\(M\)};
+    \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (R) at (0,3.4) {\(R\)};
+    \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (P) at (0,4.6) {\(P\)};
+    \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (S) at (2.2,3) {\(S\)};
+    \draw [-stealth] (D) edge (E);
+    \draw [-stealth] (D) edge (F);
+    \draw [-stealth] (D) edge (M);
+    \draw [-stealth] (D) edge (P);
+    \draw [-stealth] (D) edge (R);
+    \draw [-stealth] (F) edge (E);
+    \draw [-stealth] (F) edge (M);
+    \draw [-stealth] (M) edge (E);
+    \draw [-stealth] (P) edge (E);
+    \draw [-stealth] (P) .. controls (1, 2.4) .. (F);
+    \draw [-stealth] (P) .. controls (0.7, 2.6) .. (M);
+    \draw [-stealth] (R) edge (E);
+    \draw [-stealth] (R) .. controls (0.7, 2.2) .. (F);
+    \draw [-stealth] (R) edge (M);
+    \draw [-stealth] (R) edge (P);
+    \draw [-stealth] (S) edge (E);
+    \draw [-stealth] (S) edge (F);
+    \draw [-stealth] (S) edge (M);
+    \draw [-stealth] (S) edge (P);
+    \draw [-stealth] (S) edge (R);
+    \draw [-stealth] (V) edge (E);
+    \draw [-stealth] (V) edge (F);
+    \draw [-stealth] (V) edge (M);
+    \draw [-stealth] (V) edge (R);
+    \draw [-stealth] (V) edge (P);
+    \draw [-stealth] (V) edge (E);
+    \draw [-stealth] (H) edge (D);
+    \draw [-stealth] (H) .. controls (0, 0.4) .. (E);
+    \draw [-stealth] (H) edge (F);
+    \draw [-stealth] (H) edge (M);
+    \draw [-stealth] (H) edge (P);
+    \draw [-stealth] (H) edge (R);
+\end{tikzpicture}
+
+\end{document}
