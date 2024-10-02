@@ -1,6 +1,6 @@
 PWD /Users/s_a_b/Documents/Work/Projects/Apodemus vaccines/Apodemus-DTP_Vaccines/Apodemus_vaccines/manuscript
 INPUT /usr/local/texlive/2024/texmf-var/web2c/luahbtex/lualatex.fmt
-INPUT ./apodemus-vacc-main.tex
+INPUT /Users/s_a_b/Documents/Work/Projects/Apodemus vaccines/Apodemus-DTP_Vaccines/Apodemus_vaccines/manuscript/apodemus-vacc-main.tex
 OUTPUT apodemus-vacc-main.log
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/tex-ini-files/lualatexquotejobname.lua
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/base/ltluatex.lua
@@ -98,6 +98,8 @@ INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/amsmath/amstext.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/amsmath/amsgen.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/amsmath/amsbsy.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/amsmath/amsopn.sty
+INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/base/textcomp.sty
+INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/eurosym/eurosym.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/unicode-math/unicode-math.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/unicode-math/unicode-math-luatex.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/l3packages/l3keys2e/l3keys2e.sty
@@ -106,20 +108,18 @@ INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/base/ts1enc.def
 INPUT /usr/local/texlive/2024/texmf-dist/tex/lualatex/lualatex-math/lualatex-math.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/lualatex/lualatex-math/lualatex-math.lua
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/unicode-math/unicode-math-table.tex
-INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/base/textcomp.sty
-INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/eurosym/eurosym.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/mnsymbol/MnSymbol.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/lipsum/lipsum.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/lipsum/lipsum.ltd.tex
 INPUT /Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/names/luaotfload-lookup-cache.luc
 INPUT /Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyrepagella-regular.luc
-INPUT /Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyrepagella-bolditalic.luc
 INPUT /Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyrepagella-bold.luc
 INPUT /Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyrepagella-italic.luc
+INPUT /Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyrepagella-bolditalic.luc
 INPUT /Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyreheros-regular.luc
-INPUT /Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyreheros-bolditalic.luc
 INPUT /Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyreheros-bold.luc
 INPUT /Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyreheros-italic.luc
+INPUT /Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyreheros-bolditalic.luc
 INPUT /Users/s_a_b/Library/texlive/2024/texmf-var/luatex-cache/generic/fonts/otl/texgyrepagella-math.luc
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/cm/cmmi10.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/public/cm/cmmi8.tfm

@@ -72,39 +72,7 @@ dag_df_infected = dag_df[dag_df.P.==2, :] # select rows of dag_df for which dag_
 
 # DAG specification - this is our graphical causal hypothesis
 
-dag = dagitty("dag{
-D -> E;
-D -> F;
-D -> M;
-D -> P;
-D -> R;
-F -> E;
-F -> M;
-H -> D;
-H -> E;
-H -> F;
-H -> M;
-H -> P;
-H -> R;
-M -> E;
-P -> E;
-P -> F;
-P -> M;
-R -> E;
-R -> F;
-R -> M;
-R -> P;
-S -> E;
-S -> F;
-S -> M;
-S -> P;
-S -> R;
-V -> E;
-V -> F;
-V -> M;
-V -> P;
-V -> R;
-}")
+dag = dagitty("dag{ D -> E; D -> F; D -> M; D -> P; D -> R; F -> E; F -> M; H -> D; H -> E; H -> F; H -> M; H -> P; H -> R; M -> E; P -> E; P -> F; P -> M; R -> E; R -> F; R -> M; R -> P; S -> E; S -> F; S -> M; S -> P; S -> R; V -> E; V -> F; V -> M; V -> P; V -> R; }")
 
 ## Average causal effect of V on E
 adjustmentSets(dag, "V", "E", effect="total") # {} -> V is assumed to be a RCT
@@ -404,7 +372,6 @@ boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_P_E);
 coefplot(boot)
 ridgeplot(boot)
 ridge2d(boot)
-
 
 
 
@@ -1530,6 +1497,15 @@ precis(H_nP_df_unique)
 p = plot_chains_df(H_nP_ch_unique; show_intercept=true)
 save("../manuscript/Figures/plots/H_nP_unique_chn.pdf", p)
 p
+
+## Total effect of D on P
+
+adjustmentSets(dag, "D", "P", effect="total")   # { H }
+
+glmm_D_P = fit(MixedModel, @formula(lognP ~ 1 + D + H + (1 | ID)), dag_df)
+
+qqnorm(glmm_D_P; qqline=:fitrobust)
+hist(residuals(glmm_D_P))
 
 ## Direct effet of D on P
 
