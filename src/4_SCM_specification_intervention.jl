@@ -1,6 +1,6 @@
 #=
 SCM Specification post intervention
-- Julia version: 1.10
+- Julia version: 1.11
 - Author: Simon A Babayan
 - Date: 2024-07-24
 =#
@@ -179,18 +179,19 @@ V             1.03056     0.344176    2.99    0.0028
 
 """
 
+# Plot the distribution of the effects of P on E
 qqnorm(glmm_P_E; qqline=:fitrobust)
 boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_P_E);
 coefplot(boot)
 ridgeplot(boot)
 
+# Post-intervention
 qqnorm(glmm_P_E_post; qqline=:fitrobust)
 boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_P_E_post);
 coefplot(boot)
 ridgeplot(boot)
 
 # Difference in E between pre- and post-intervention
-
 dag_df_infected.E_pre = predict(glmm_P_E)
 dag_df_infected.E_post = predict(glmm_P_E_post)
 dag_df_infected.E_diff = dag_df_infected.E_pre - dag_df_infected.E_post

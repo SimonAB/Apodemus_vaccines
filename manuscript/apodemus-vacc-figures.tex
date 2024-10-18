@@ -4,121 +4,138 @@
 % DESIGN
 
 \newcommand{\FigDesign}{
-	\begin{figure}[H]
-		\includegraphics[width=1\textwidth, keepaspectratio=true]{./Figures/Apodemus-vacc-figures/StudyDesign_paper.pdf}
-		\caption{\textbf{Allocation of diet and vaccines.} Wood mice from a laboratory colony, and from the wild were provided enriched (TransBreed) or standard (lab: normal chow; wild: no supplementation) diets. After at least 12 days, mice were allocated at random to immunisation with a 2Lf/100µl Diphtheria Toxoid + 9\% alum vaccine (D) or with adjuvant alone (A). Twenty-one days after their first immunisation, mice that had been immunised with D were then given a second shot of the vaccine (DD) or adjuvant alone (DA), while mice that had received an initial adjuvant vaccine (A) were all given D for their second shot (AD).}
-		\label{fig:design}
-	\end{figure}
+  \begin{figure}[H]
+    \includegraphics[width=1\textwidth, keepaspectratio=true]{./Figures/Apodemus-vacc-figures/StudyDesign_paper.pdf}
+    \caption{\textbf{Allocation of diet and vaccines.} Wood mice from a laboratory colony, and from the wild were provided enriched (TransBreed) or standard (lab: normal chow; wild: no supplementation) diets. After at least 12 days, mice were allocated at random to immunisation with a 2Lf/100µl Diphtheria Toxoid + 9\% alum vaccine (D) or with adjuvant alone (A). Twenty-one days after their first immunisation, mice that had been immunised with D were then given a second shot of the vaccine (DD) or adjuvant alone (DA), while mice that had received an initial adjuvant vaccine (A) were all given D for their second shot (AD).}
+    \label{fig:design}
+  \end{figure}
 }
-
 
 % ELISA
 
 \newcommand{\FigIgG}{
-	\begin{figure}[hp]
+  \begin{figure}[hp]
 
-		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/IgG1.pdf}
+    \includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/IgG1.pdf}
 
-		\caption{\textbf{Vaccine-induced DTV-specific IgG1.} \textbf{A}, diphtheria toxoid vaccine (DTV)-specific IgG1 optical density in mice from laboratory- and wild-habitats provided high and low quality dietary supplements. Mice were immunised either once, with adjuvant as control (A) or DTV (D), or twice, using adjuvant alone followed by DTV (AD), DTV and subsequently adjuvant alone (DA), or two separate doses of DTV (DD). Only mice immunised at least 7 days prior to serum ELISA sampling are shown. \textbf{B}, posterior conditional distributions of the coefficients for diet, habitat, and vaccine formulation (A, D, AD, DA, DD), and effect of the same vaccines. Each density curve represents the distribution of 3,000 samples from one of four MCMC chains; dotted line represents the the value for which the reference (global intercept for Diet and Habitat; Adjuvant alone for the vaccines) is null (see parameter estimates in Table~\ref{tbl:precis}).}
+    \caption{\textbf{Vaccine-induced DTV-specific IgG1.} \textbf{A}, diphtheria toxoid vaccine (DTV)-specific IgG1 optical density in mice from laboratory- and wild-habitats provided high and low quality dietary supplements. Mice were immunised either once, with adjuvant as control (A) or DTV (D), or twice, using adjuvant alone followed by DTV (AD), DTV and subsequently adjuvant alone (DA), or two separate doses of DTV (DD). Only mice immunised at least 7 days prior to serum ELISA sampling are shown. \textbf{B}, posterior conditional distributions of the coefficients for diet, habitat, and vaccine formulation (A, D, AD, DA, DD), and effect of the same vaccines. Each density curve represents the distribution of 3,000 samples from one of four MCMC chains; dotted line represents the the value for which the reference (global intercept for Diet and Habitat; Adjuvant alone for the vaccines) is null (see parameter estimates in Table~\ref{tbl:precis}).}
 
-		\label{fig:igg1}
+    \label{fig:igg1}
 
-	\end{figure}
+  \end{figure}
 }
 
 % DAG
 
 \newcommand{\FigDAGtikz}{
-	\begin{figure}
-		\centering
-		% This code uses the tikz package
-		\input{./Figures/DAGtikz.tex}
-		\caption{\textbf{Causal Model of vaccine responsiveness.} \textbf{A}, Directed acyclic graph $\mathbb{G}_{VE}$ representing hypothesised causal effects driving variation in efficacy \(E\) of vaccine \(V\) in laboratory or wild mice \(H\), under supplemented or control diet \(D\) (green nodes depict experimental treatments). Covariates, mediators, and potential confounders (blue nodes) were time since vaccination \(T\), parasite infection (presence or burden) \(P\), reproductive status \(R\), body mass \(M\), fat scores \(F\), and sex \(S\). Directed edges depict causal effects hypothesised to operate between nodes. \textbf{B}, Structural causal model \(\mathbb{C}_{VE}\) derived from $\mathbb{G}_{VE}$ with coefficients $\beta_{ij}$ representing the effect of cause $i$ on effect $j$. $\mathcal{U}_j$ represents the unmeasured variation of the response variable, not represented in $\mathbb{G}_{VE}$ (panel A) for clarity.}
+  \begin{figure}
+    \centering
+    % This code uses the tikz package
+    \input{./Figures/DAGtikz.tex}
+    \caption{\textbf{Causal Model of vaccine responsiveness.} \textbf{A}, Directed acyclic graph $\mathbb{G}_{VE}$ representing hypothesised causal effects driving variation in efficacy \(E\) of vaccine \(V\) in laboratory or wild mice \(H\), under supplemented or control diet \(D\) (green nodes depict experimental treatments). Covariates, mediators, and potential confounders (blue nodes) were time since vaccination \(T\), parasite infection (presence or burden) \(P\), reproductive status \(R\), body mass \(M\), fat scores \(F\), and sex \(S\). Directed edges depict causal effects hypothesised to operate between nodes. \textbf{B}, Structural causal model \(\mathbb{C}_{VE}\) derived from $\mathbb{G}_{VE}$ with coefficients $\beta_{ij}$ representing the effect of cause $i$ on effect $j$. $\mathcal{U}_j$ represents the unmeasured variation of the response variable, not represented in $\mathbb{G}_{VE}$ (panel A) for clarity.}
 
-		\label{fig:DAGtikz}
-	\end{figure}
+    \label{fig:DAGtikz}
+  \end{figure}
 }
 
 \newcommand{\FigDAGtikzParam}{
-	\begin{figure}
-		\centering
-		% This code uses the tikz package
-		\input{Figures/DAGtikz-param.tex}
-		\caption{\textbf{Fully resolved Causal Model of vaccine efficacy.} \textbf{A}, Directed acyclic graph representing point estimates of positive (blue) and negative (red) direct causal effects ± std driving vaccine responsiveness \(E\). \textbf{B}, MCMC sampling of posterior distributions of the coefficients estimating the direct effect of the wild habitat $H$ on vaccine responsiveness $E$, with the adjustment set including, Diet $D$, Fat scores $F$, body mass $M$, parasite burden $P$, active reproductive status $R$, and female sex $S$; vaccine formulation $V$ and individual treated as random effects:
-		$E \coloneq β_{Hab}H + β_{Diet}D + β_{Fat}F + β_{Mass}M + β_{Para}P + β_{Rep}R + β_{Sex}S + \mathcal{N}(0,Exp(\sigma_E))$
-		(see \nameref{sec:parameterisation} methods). Note that each edge in panel A shows the direct causal effect of its parent node on its child node, which is conditional on the specific adjustment set for that model; thus, only the coefficient $β_{Diet}$ for the edge between $D$ and $E$ is a causal estimate in panel B, while the others are only associative.}
-		\label{fig:DAGtikzParam}
-	\end{figure}
+  \begin{figure}
+    \centering
+    % This code uses the tikz package
+    \input{Figures/DAGtikz-param.tex}
+    \caption{\textbf{Fully resolved Causal Model of vaccine efficacy.} \textbf{A}, Directed acyclic graph representing point estimates of positive (blue) and negative (red) direct causal effects ± std driving vaccine responsiveness \(E\). \textbf{B}, MCMC sampling of posterior distributions of the coefficients estimating the direct effect of the wild habitat $H$ on vaccine responsiveness $E$, with the adjustment set including, Diet $D$, Fat scores $F$, body mass $M$, parasite burden $P$, active reproductive status $R$, and female sex $S$; vaccine formulation $V$ and individual treated as random effects:
+      $E \coloneq β_{Hab}H + β_{Diet}D + β_{Fat}F + β_{Mass}M + β_{Para}P + β_{Rep}R + β_{Sex}S + \mathcal{N}(0,Exp(\sigma_E))$
+    (see \nameref{sec:parameterisation} methods). Note that each edge in panel A shows the direct causal effect of its parent node on its child node, which is conditional on the specific adjustment set for that model; thus, only the coefficient $β_{Diet}$ for the edge between $D$ and $E$ is a causal estimate in panel B, while the others are only associative.}
+    \label{fig:DAGtikzParam}
+  \end{figure}
 }
 
 \newcommand{\FigDAG}{
-	\begin{figure}
-		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/Apodemus-vacc-figures/DAG.pdf}
-		\caption{\textbf{Graphical Causal Model of vaccine efficacy.} Directed acyclic graph representing validated causal relationships expressed by the SCM \(\mathbb{C}_{VE}\) (Model~\ref{eq:SCM}). Covariates and potential confounders (blue nodes) were time since vaccination \(T\), parasite infection (presence or burden) \(P\), reproductive status \(R\), body mass \(M\), fat scores \(F\), and sex \(S\). }
-		\label{fig:DAG}
-	\end{figure}
+  \begin{figure}
+    \includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/Apodemus-vacc-figures/DAG.pdf}
+    \caption{\textbf{Graphical Causal Model of vaccine efficacy.} Directed acyclic graph representing validated causal relationships expressed by the SCM \(\mathbb{C}_{VE}\) (Model~\ref{eq:SCM}). Covariates and potential confounders (blue nodes) were time since vaccination \(T\), parasite infection (presence or burden) \(P\), reproductive status \(R\), body mass \(M\), fat scores \(F\), and sex \(S\). }
+    \label{fig:DAG}
+  \end{figure}
 }
 
-
 \newcommand{\FigHabitat}{
-	\begin{figure}[hp]
-		\centering
+  \begin{figure}[hp]
+    \centering
 
-		\includegraphics[width=0.7\textwidth, keepaspectratio=true]{./Figures/plots/H_E_chn.pdf}
+    \includegraphics[width=0.7\textwidth, keepaspectratio=true]{./Figures/plots/H_E_chn.pdf}
 
-		\caption{\textbf{Total causal effect of the wild habitat on vaccine responsiveness.}}
+    \caption{\textbf{Total causal effect of the wild habitat on vaccine responsiveness.}}
 
-		\label{fig:habitat}
+    \label{fig:habitat}
 
-	\end{figure}
+  \end{figure}
 }
 
 \newcommand{\FigDiet}{
-	\begin{figure}[hp]
-		\centering
+  \begin{figure}[hp]
+    \centering
 
-		\includegraphics[width=0.5\textwidth, keepaspectratio=true]{./Figures/plots/MultiLevel_DE_D_E_chn.pdf}
+    \includegraphics[width=0.5\textwidth, keepaspectratio=true]{./Figures/plots/MultiLevel_DE_D_E_chn.pdf}
 
-		\caption{\textbf{Natural direct causal effect of diet etc. on vaccine responsiveness.}}
+    \caption{\textbf{Natural direct causal effect of diet etc. on vaccine responsiveness.}}
 
-		%        \label{fig:diet}
+    %        \label{fig:diet}
 
-	\end{figure}
+  \end{figure}
 }
 
 \newcommand{\FigParasite}{
-	\begin{figure}[hp]
-		\centering
+  \begin{figure}[hp]
+    \centering
 
-		\includegraphics[width=0.5\textwidth, keepaspectratio=true]{./Figures/plots/MultiLevel_NDE_P_E_chn.pdf}
+    \includegraphics[width=0.5\textwidth, keepaspectratio=true]{./Figures/plots/MultiLevel_NDE_P_E_chn.pdf}
 
-		\caption{\textbf{Natural direct causal effect of parasite burden, etc. on vaccine responsiveness.}}
+    \caption{\textbf{Natural direct causal effect of parasite burden, etc. on vaccine responsiveness.}}
 
-		\label{fig:parasite}
+    \label{fig:parasite}
 
-	\end{figure}
+  \end{figure}
 }
+
+\newcommand{\FigPostAnthelminthic}{
+  \begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.5\textwidth}
+      \centering
+      \includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/E_pre_post.pdf}
+      \put(-200, 160){\sffamily \textbf{A}} % Adjust coordinates as needed
+    \end{subfigure}%
+    \begin{subfigure}[b]{0.5\textwidth}
+      \centering
+      \includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/post_anthelminthic_effect_on_E.pdf}
+      \put(-200, 160){\sffamily \textbf{B}} % Adjust coordinates as needed
+    \end{subfigure}
+    \caption{\textbf{Effect of simulated population-wide anthelmintic intervention on vaccine responsiveness.} \textbf{A}, Effect on population-wide vaccine responsiveness. \textbf{B}, Effect on individual vaccine responsiveness as a function of pre-intervention parasite burden.}
+    \label{fig:post_anthelminthic}
+  \end{figure}
+}
+
 %%%%%%% SUPPLEMENTARY FIGURES %%%%%%%
 
 \newcommand{\SupFigSCMFlow}{
-	\begin{figure}[hp]
-		\centering
-		\includegraphics[width=1\textwidth, keepaspectratio=true]{./Figures/Apodemus-vacc-figures/SCM_flow.pdf}
-		\caption{\textbf{Flow diagram of the SCM.} The Structural Causal Model (SCM) process explicitly represents scientific hypotheses (1) as a directed acyclic graph (DAG). This DAG is mathematically encoded as a set of nested equations that describe the flow of causation between variables, and helps inform lab and field experimental design (3) and data collection (4). After processing, the data are used to test the validity of the causal assumptions underlying the SCM, e.g. by testing the conditional independencies implied by the DAG (5). If the assumptions are not supported, refinements of the SCM (6) are necessary. When all conditions are met, the SCM is identifiable and statistical models can be formulated to adjust for confounding (7). Parameters from these models can then be used as estimates of direct and indirect causal effects (8).
-		}
-		\label{supfig:SCM_flow}
-	\end{figure}
+  \begin{figure}[hp]
+    \centering
+    \includegraphics[width=1\textwidth, keepaspectratio=true]{./Figures/Apodemus-vacc-figures/SCM_flow.pdf}
+    \caption{\textbf{Flow diagram of the SCM.} The Structural Causal Model (SCM) process explicitly represents scientific hypotheses (1) as a directed acyclic graph (DAG). This DAG is mathematically encoded as a set of nested equations that describe the flow of causation between variables, and helps inform lab and field experimental design (3) and data collection (4). After processing, the data are used to test the validity of the causal assumptions underlying the SCM, e.g. by testing the conditional independencies implied by the DAG (5). If the assumptions are not supported, refinements of the SCM (6) are necessary. When all conditions are met, the SCM is identifiable and statistical models can be formulated to adjust for confounding (7). Parameters from these models can then be used as estimates of direct and indirect causal effects (8).
+    }
+    \label{supfig:SCM_flow}
+  \end{figure}
 }
 
 \newcommand{\SupFigMCMCChainIgG}{
-	\begin{figure}[hp]
+  \begin{figure}[hp]
 
-		\includegraphics[width=0.7\textwidth, keepaspectratio=true]{./Figures/plots/IgG1_varint.pdf}
-		\caption{MCMC chains and posterior distributions of coefficients for Diet, Habitat, Time post immunisation, and vaccine formulations A, AD, D, DA, and DD.}
+    \includegraphics[width=0.7\textwidth, keepaspectratio=true]{./Figures/plots/IgG1_varint.pdf}
+    \caption{MCMC chains and posterior distributions of coefficients for Diet, Habitat, Time post immunisation, and vaccine formulations A, AD, D, DA, and DD.}
 
-		\label{supfig:igg1}
+    \label{supfig:igg1}
 
-	\end{figure}
+  \end{figure}
 }
 
 %%%%%%%%% TABLES
@@ -145,31 +162,30 @@
 % }
 
 \newcommand{\TblPrecis}{
-	\begin{table}[htbp]
-		\centering
-		\caption{Posterior predictions of model parameters for random intercept Gaussian model \(E \sim Normal(\alpha[ID] + H + D + V + V:H, \sigma)\).}
-		\sffamily
-		\begin{tabular}{|>{\bfseries}l|ccccc|}
-			\hline
-			Parameter & \textbf{Mean} & \textbf{Std} & \textbf{5\%} & \textbf{50\%} & \textbf{95\%} \\
-			\hline
-			Intercept & 1.02          & 0.85         & -0.39        & 1.032         & 2.43          \\
-			Habitat   & -0.519        & 0.806        & -1.863       & -0.513        & 0.795         \\
-			Diet      & -0.253        & 0.072        & -0.373       & -0.253        & -0.137        \\
-			A         & 0.0           & 0.871        & -3.307       & -1.892        & -0.438        \\
-			D         & 2.062         & 0.856        & -1.228       & 0.175         & 1.598         \\
-			AD        & 1.256         & 0.875        & -2.061       & -0.651        & 0.84          \\
-			DA        & 3.652         & 0.87         & 0.343        & 1.751         & 3.215         \\
-			DD        & 2.996         & 0.865        & -0.304       & 1.091         & 2.534         \\
-			A:H       & 0.0           & 0.818        & -0.864       & 0.47          & 1.831         \\
-			D:H       & -0.594        & 0.811        & -1.434       & -0.125        & 1.223         \\
-			AD:H      & -0.371        & 0.823        & -1.244       & 0.103         & 1.472         \\
-			DA:H      & -1.348        & 0.818        & -2.228       & -0.874        & 0.496         \\
-			DD:H      & -0.527        & 0.818        & -1.389       & -0.061        & 1.31          \\
+  \begin{table}[htbp]
+    \centering
+    \caption{Posterior predictions of model parameters for random intercept Gaussian model \(E \sim Normal(\alpha[ID] + H + D + V + V:H, \sigma)\).}
+    \sffamily
+    \begin{tabular}{|>{\bfseries}l|ccccc|}
+      \hline
+      Parameter & \textbf{Mean} & \textbf{Std} & \textbf{5\%} & \textbf{50\%} & \textbf{95\%} \\
+      \hline
+      Intercept & 1.02          & 0.85         & -0.39        & 1.032         & 2.43          \\
+      Habitat   & -0.519        & 0.806        & -1.863       & -0.513        & 0.795         \\
+      Diet      & -0.253        & 0.072        & -0.373       & -0.253        & -0.137        \\
+      A         & 0.0           & 0.871        & -3.307       & -1.892        & -0.438        \\
+      D         & 2.062         & 0.856        & -1.228       & 0.175         & 1.598         \\
+      AD        & 1.256         & 0.875        & -2.061       & -0.651        & 0.84          \\
+      DA        & 3.652         & 0.87         & 0.343        & 1.751         & 3.215         \\
+      DD        & 2.996         & 0.865        & -0.304       & 1.091         & 2.534         \\
+      A:H       & 0.0           & 0.818        & -0.864       & 0.47          & 1.831         \\
+      D:H       & -0.594        & 0.811        & -1.434       & -0.125        & 1.223         \\
+      AD:H      & -0.371        & 0.823        & -1.244       & 0.103         & 1.472         \\
+      DA:H      & -1.348        & 0.818        & -2.228       & -0.874        & 0.496         \\
+      DD:H      & -0.527        & 0.818        & -1.389       & -0.061        & 1.31          \\
 
-
-			\hline
-		\end{tabular}
-		\label{tbl:precis}
-	\end{table}
+      \hline
+    \end{tabular}
+    \label{tbl:precis}
+  \end{table}
 }

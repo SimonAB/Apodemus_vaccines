@@ -1,6 +1,6 @@
 #=
 SCM construction
-- Julia version: 1.10
+- Julia version: 1.11
 - Author: Simon A Babayan
 - Date: 2022-08-01
 =#
