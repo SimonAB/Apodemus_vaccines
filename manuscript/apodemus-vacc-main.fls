@@ -378,6 +378,8 @@ INPUT ./Figures/Apodemus-vacc-figures/SCM_flow.pdf
 INPUT ./Figures/Apodemus-vacc-figures/SCM_flow.pdf
 INPUT ./Figures/plots/IgG1_varint.pdf
 INPUT ./Figures/plots/IgG1_varint.pdf
+INPUT ./Figures/plots/E_diff_association.pdf
+INPUT ./Figures/plots/E_diff_association.pdf
 INPUT ./apodemus-vacc-main.aux
 INPUT ./apodemus-vacc-main.run.xml
 OUTPUT apodemus-vacc-main.run.xml
