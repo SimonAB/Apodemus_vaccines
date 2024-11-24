@@ -183,6 +183,7 @@ INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/hyperref/hluatex.def
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/base/atveryend-ltx.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty
+INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/xurl/xurl.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/bookmark/bookmark.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/bookmark/bkm-pdftex.def
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/caption/subcaption.sty

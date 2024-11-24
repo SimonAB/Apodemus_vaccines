@@ -2470,27 +2470,26 @@
     <bcf:citekey order="52" intorder="1">Bezanson2017</bcf:citekey>
     <bcf:citekey order="53" intorder="1">CSV2022</bcf:citekey>
     <bcf:citekey order="54" intorder="1">DataFrames2022</bcf:citekey>
-    <bcf:citekey order="55" intorder="1">Bezanson2017</bcf:citekey>
-    <bcf:citekey order="56" intorder="1">douglas_bates_2022</bcf:citekey>
-    <bcf:citekey order="57" intorder="1">Hoffman2014</bcf:citekey>
-    <bcf:citekey order="58" intorder="1">ge2018t</bcf:citekey>
-    <bcf:citekey order="59" intorder="1">Danisch2021</bcf:citekey>
-    <bcf:citekey order="60" intorder="1">Pearl2009b</bcf:citekey>
-    <bcf:citekey order="60" intorder="2">Peters2017a</bcf:citekey>
-    <bcf:citekey order="61" intorder="1">Bareinboim2016</bcf:citekey>
-    <bcf:citekey order="61" intorder="2">Pearl2012b</bcf:citekey>
-    <bcf:citekey order="62" intorder="1">McElreath2020</bcf:citekey>
-    <bcf:citekey order="63" intorder="1">Gelman2013</bcf:citekey>
-    <bcf:citekey order="64" intorder="1">Bezanson2017</bcf:citekey>
-    <bcf:citekey order="65" intorder="1">ge2018t</bcf:citekey>
-    <bcf:citekey order="66" intorder="1">Tan12</bcf:citekey>
-    <bcf:citekey order="67" intorder="1">Pearl2009b</bcf:citekey>
-    <bcf:citekey order="67" intorder="2">Cinelli2021</bcf:citekey>
-    <bcf:citekey order="68" intorder="1">douglas_bates_2022</bcf:citekey>
-    <bcf:citekey order="69" intorder="1">ge2018t</bcf:citekey>
-    <bcf:citekey order="70" intorder="1">douglas_bates_2022</bcf:citekey>
-    <bcf:citekey order="71" intorder="1">Bezanson2017</bcf:citekey>
-    <bcf:citekey order="72" intorder="1">ge2018t</bcf:citekey>
+    <bcf:citekey order="55" intorder="1">douglas_bates_2022</bcf:citekey>
+    <bcf:citekey order="56" intorder="1">Hoffman2014</bcf:citekey>
+    <bcf:citekey order="57" intorder="1">ge2018t</bcf:citekey>
+    <bcf:citekey order="58" intorder="1">Danisch2021</bcf:citekey>
+    <bcf:citekey order="59" intorder="1">Pearl2009b</bcf:citekey>
+    <bcf:citekey order="59" intorder="2">Peters2017a</bcf:citekey>
+    <bcf:citekey order="60" intorder="1">Bareinboim2016</bcf:citekey>
+    <bcf:citekey order="60" intorder="2">Pearl2012b</bcf:citekey>
+    <bcf:citekey order="61" intorder="1">McElreath2020</bcf:citekey>
+    <bcf:citekey order="62" intorder="1">Gelman2013</bcf:citekey>
+    <bcf:citekey order="63" intorder="1">Bezanson2017</bcf:citekey>
+    <bcf:citekey order="64" intorder="1">ge2018t</bcf:citekey>
+    <bcf:citekey order="65" intorder="1">Tan12</bcf:citekey>
+    <bcf:citekey order="66" intorder="1">Pearl2009b</bcf:citekey>
+    <bcf:citekey order="66" intorder="2">Cinelli2021</bcf:citekey>
+    <bcf:citekey order="67" intorder="1">douglas_bates_2022</bcf:citekey>
+    <bcf:citekey order="68" intorder="1">ge2018t</bcf:citekey>
+    <bcf:citekey order="69" intorder="1">douglas_bates_2022</bcf:citekey>
+    <bcf:citekey order="70" intorder="1">Bezanson2017</bcf:citekey>
+    <bcf:citekey order="71" intorder="1">ge2018t</bcf:citekey>
   </bcf:section>
   <!-- SECTION 1 -->
   <bcf:bibdata section="1">
