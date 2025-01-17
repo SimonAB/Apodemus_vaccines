@@ -11,7 +11,7 @@
 *.fls
 *.tdo
 *.synctex.gz
-
+*.fdb_latexmk
 # Julia #
 #########
 
