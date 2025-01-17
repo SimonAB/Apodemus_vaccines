@@ -159,7 +159,6 @@ INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/l3backend/l3backend-luatex.de
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/l3backend/l3backend-luatex.lua
 INPUT ./NakedDAGtikz.aux
 OUTPUT NakedDAGtikz.aux
-INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/base/ts1cmr.fd
 INPUT /usr/local/texlive/2024/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg

@@ -41,7 +41,7 @@
   \draw [-stealth] (V) edge (R);
   \draw [-stealth] (V) edge (P);
   \draw [-stealth] (V) edge (E);
-  \draw [-stealth] (H) edge (D);
+  % \draw [-stealth] (H) edge (D);
   \draw [-stealth] (H) .. controls (0, 0.4) .. (E);
   \draw [-stealth] (H) edge (F);
   \draw [-stealth] (H) edge (M);
@@ -56,12 +56,12 @@
     \begin{minipage}[!t]{0.63\textwidth}
       \begin{equation} \label{eq:SCM}
         \footnotesize
-        \openup -1ex % affecting the line spacing in the environment
+        \openup -0.5ex % affecting the line spacing in the environment
         \begin{split}
           V & \coloneq \mathcal{U}_V                                                                                     \\
           H & \coloneq \mathcal{U}_H                                                                                     \\
           S & \coloneq \mathcal{U}_S                                                                                     \\
-          D & \coloneq \beta_{HD}H + \mathcal{U}_D                                                                       \\
+          % D & \coloneq \beta_{HD}H + \mathcal{U}_D                                                                       \\
           % T &\coloneq \beta_{VT}V + \beta_{HT}H + \mathcal{U}_T \\
           R & \coloneq \beta_{DR}D + \beta_{HR}H + \beta_{VR}V + \beta_{SR}S + \mathcal{U}_R                             \\
           P & \coloneq \beta_{TP}V + \beta_{DP}D + \beta_{HP}H + \beta_{RP}R + \beta_{SP}S + \mathcal{U}_P               \\
