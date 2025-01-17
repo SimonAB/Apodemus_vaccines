@@ -72,7 +72,7 @@ dag_df_infected = dag_df[dag_df.P.==2, :] # select rows of dag_df for which dag_
 
 # DAG specification - this is our graphical causal hypothesis
 
-dag = dagitty("dag{ D -> E; D -> F; D -> M; D -> P; D -> R; F -> E; F -> M; H -> D; H -> E; H -> F; H -> M; H -> P; H -> R; M -> E; P -> E; P -> F; P -> M; R -> E; R -> F; R -> M; R -> P; S -> E; S -> F; S -> M; S -> P; S -> R; V -> E; V -> F; V -> M; V -> P; V -> R; }")
+dag = dagitty("dag{ D -> E; D -> F; D -> M; D -> P; D -> R; F -> E; F -> M; H -> E; H -> F; H -> M; H -> P; H -> R; M -> E; P -> E; P -> F; P -> M; R -> E; R -> F; R -> M; R -> P; S -> E; S -> F; S -> M; S -> P; S -> R; V -> E; V -> F; V -> M; V -> P; V -> R; }")
 
 ## Average causal effect of V on E
 adjustmentSets(dag, "V", "E", effect="total") # {} -> V is assumed to be a RCT
