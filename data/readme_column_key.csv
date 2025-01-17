@@ -1,0 +1,45 @@
+Variable,Variable type,Desription,Notes
+Plate,,,
+Measure,,,
+Row,,,
+Col.5,,,
+Col.6,,,
+Col.7,,,
+Blank,,,
+ID,,,
+Block,,,Only for lab
+Sex,,,
+Diet,,,
+DOB,,,
+Treatment,,,
+Weight,Numeric,grams,
+Fat.Scores.Dorsal,Numeric,from 0-5,
+Fat.Scores.Pelvic,Numeric,from 0-5,
+days.since.1st.trt,,,
+days.since.2nd.trt,,,
+trt.history,Factor,"D,A, DA, AD, DD",This is the main treatment variable
+blank.avg,,,
+blank.sd,,,
+cutoff.new,,,
+age.lab,Numeric ,(Days),Only for lab
+Env,,,
+grid,,,
+age.wild,Factor,"(A= Adult, SA = Sub-Adult)",Only for wild
+repro,,"A= Abdominal, D = Descended, S = Scrotal, P = Perforate, G = Gestating, L = Lactating, NP = Non-perforate",Only for wild
+body.length.mm,Numeric,mm,Only for wild
+ticks.total,Numeric,no. of ticks,Only for wild
+fleas,Numeric,no. of fleas,Only for wild
+mites,Numeric,no. of mites,Only for wild
+repro.bin,Binary,"Non- reproductive (A, D, NP); Reproductive(S, P, G, L)",Only for wild
+Testes,Numeric,grams,Only for wild
+H.poly,Numeric,no. of worms,Only for wild
+Pinworms,Numeric,no. of worms,Only for wild
+Cestode,Numeric,no. of worms,Only for wild
+Col.5.bcen,,,
+Col.6.bcen,,,
+Col.7.bcen,,,
+Col.5.avg,,,
+Col.6.avg,,,
+Col.7.avg,,,
+OD.avg,Numeric,,This is the main response variable for analysis and plotting
+days.since.1st.D.inj,,,
