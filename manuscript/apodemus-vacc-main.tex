@@ -257,24 +257,26 @@ Vaccination had an average causal effect of 1.50 ± 0.13 ($log10 + 1$)-transform
 
 \subsection{Habitat had wide-ranging effects on wood mice and their response to vaccination}
 
-Living in the wild had a total negative effect on vaccine-specific IgG1 of -0.46 ± 0.24 $logOD$, partitioned between body mass $M$ with a direct negative impact of -0.66 ± 0.15 $logOD$ (corresponding to wild wood mice being on average 1.3 ± 0.2 g lighter than their laboratory counterparts), and body fat $F$ (reduction by 2.3 fat score points on the 6-point scale).
+Living in the wild had a negative total effect on vaccine-specific IgG1 of -0.46 ± 0.24 $logOD$, corresponding to a \sim 40\% drop in vaccine responsiveness, and a direct negative impact of -0.66 ± 0.15 $logOD$ once all other mediating factors were adjusted for (Fig.~\ref{fig:DAGtikzParam}A).
 
-Wood mice in the wild but not in the lab could freely reproduce and were naturally exposed to \emph{H. polygyrus}, reflected in direct causal effects of 0.66 ± 0.05 and 0.52 ± 0.08 of $H$ on $R$ and $P$, respectively. Consistent with expectations under random diet allocation, there was no effect of habitat $H$ on diet $D$.
+Wood mice in the wild but not in the lab could freely reproduce and were naturally exposed to \emph{H. polygyrus}, reflected in direct causal effects of 0.66 ± 0.05 and 0.52 ± 0.08 of $H$ on $R$ and $P$, respectively.
 
 \subsection{Diet supplementation reduced vaccine responsiveness}
 
-The total causal effect of diet supplementation on vaccine responsiveness was estimated to be -0.25 ± 0.09 $logOD$, adjusted for habitat. However, the direct effect of diet supplementation on vaccine responsiveness was estimated to be -0.23 ± 0.09 $logOD$, when adjusting for body mass, fat stores, habitat, sex, reproductive status, parasite burden, and vaccine formulation. This indicates that the effect of diet supplementation on vaccine responsiveness was mostly direct (or mediated by unobserved variables along the path $D \rightarrow E$, e.g. immune pathways affecting DTV-specific IgG1 production or the microbiome), but was not mediated by its effects on body mass, fat stores, reproductive status, or parasite burden.
+The total causal effect of diet supplementation on vaccine responsiveness was estimated to be -0.25 ± 0.09 $logOD$, adjusted for habitat. This corresponds to an approximate 22\% reduction in vaccine responsiveness due to diet alone. However, the direct effect of diet supplementation on vaccine responsiveness was estimated to be -0.23 ± 0.09 $logOD$, when adjusting for body mass, fat stores, habitat, sex, reproductive status, parasite burden, and vaccine formulation. This indicates that the effect of diet supplementation on vaccine responsiveness was mostly direct (or mediated by unobserved variables along the path $D \rightarrow E$, e.g. immune pathways affecting DTV-specific IgG1 production or the microbiome), but was not mediated by its effects on body mass, fat stores, reproductive status, or parasite burden.
 Dietary supplementation increased body mass on average by 2.53 ± 0.3 g, though did not affect body fat scores.
 
 \subsection{Sex had both direct and indirect effects on vaccine responsiveness}
 
 The total causal effect of sex on DTV-specific antibody production $E$ indicated greater vaccine responsiveness in females (0.26 ± 0.15 $logOD$). However, only a little more than half of the effect of sex (0.15 ± 0.10 $logOD$) was direct, with body mass (0.08 ± 0.01 $logOD$) and body fat (0.03 ± 0.005 $logOD$) mediating the rest (Fig.~\ref{fig:DAGtikzParam}) as males were both larger and had higher body fat.
 
-\subsection{Parasite infection reduced vaccine responsiveness }
+\subsection{Parasite infection reduced vaccine responsiveness}
 
-When considering the entire population, including uninfected mice, \emph{H. polygyrus} burden had no clear effect on DT vaccine responsiveness (-0.13 ± 0.11 $logOD$). However, because parasite burdens (measured as worm burdens) are overdispersed and zero-inflated, we also estimated the causal effects of infection burden on DT vaccine responsiveness only among infected wild wood mice. Here we found that parasite burdens among the infected mice had a negative direct causal effect on vaccine responsiveness (-0.58 ± 0.35 $logOD$), when adjusting for diet, sex, reproductive status, and vaccination.
+When considering the entire population, including uninfected mice, \emph{H. polygyrus} burden had no clear effect on DT vaccine responsiveness (-0.13 ± 0.11 $logOD$). However, because parasite burdens (measured as worm burdens) are overdispersed and zero-inflated, we also estimated the causal effects of infection burden on DT vaccine responsiveness only among infected. Here we found that parasite burdens among the infected mice had a strong negative effect on vaccine responsiveness, with a slope of -0.58 ± 0.35 $logOD$, after adjusting for diet, sex, reproductive status, and vaccination. This indicates that higher parasite burdens are associated with a significant decrease in vaccine responsiveness.
 
-\subsection{OPTIONAL: Prediction of the effect of population-wide anthelmintic treatment on vaccine responsiveness}\todo{Decide whether to include anthelmtintic counterfactual; if so, need to expand explanations \& discussion}
+\subsection{Prediction of the effect of population-wide anthelmintic treatment on vaccine responsiveness}
+
+\todo{Include anthelmtintic counterfactual; expand methods, results, \& discussion}
 
 Using the fully-parametrised SCM, we can make predictions of the effects of population-wide anthelmintic treatment on vaccine responsiveness (Fig.~\ref{fig:post_anthelminthic}).
 
