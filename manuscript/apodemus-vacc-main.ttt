@@ -1,0 +1,26 @@
+\begin{table}[htbp]
+  \centering
+  \caption{Posterior predictions of model parameters for random intercept Gaussian model \(E \sim Normal(\alpha[ID] + H + D + V + V:H, \sigma)\).}
+  \sffamily
+  \begin{tabular}{|>{\bfseries}l|ccccc|}
+    \hline
+    Parameter & \textbf{Mean} & \textbf{Std} & \textbf{5\%} & \textbf{50\%} & \textbf{95\%} \\
+    \hline
+    Intercept & 1.02          & 0.85         & -0.39        & 1.032         & 2.43          \\
+    Habitat   & -0.519        & 0.806        & -1.863       & -0.513        & 0.795         \\
+    Diet      & -0.253        & 0.072        & -0.373       & -0.253        & -0.137        \\
+    A         & 0.0           & 0.871        & -3.307       & -1.892        & -0.438        \\
+    D         & 2.062         & 0.856        & -1.228       & 0.175         & 1.598         \\
+    AD        & 1.256         & 0.875        & -2.061       & -0.651        & 0.84          \\
+    DA        & 3.652         & 0.87         & 0.343        & 1.751         & 3.215         \\
+    DD        & 2.996         & 0.865        & -0.304       & 1.091         & 2.534         \\
+    A:H       & 0.0           & 0.818        & -0.864       & 0.47          & 1.831         \\
+    D:H       & -0.594        & 0.811        & -1.434       & -0.125        & 1.223         \\
+    AD:H      & -0.371        & 0.823        & -1.244       & 0.103         & 1.472         \\
+    DA:H      & -1.348        & 0.818        & -2.228       & -0.874        & 0.496         \\
+    DD:H      & -0.527        & 0.818        & -1.389       & -0.061        & 1.31          \\
+
+    \hline
+  \end{tabular}
+  \label{tbl:precis}
+\end{table}
