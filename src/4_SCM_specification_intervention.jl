@@ -1,7 +1,7 @@
 #=
 SCM Specification post intervention
 - Julia version: 1.11
-- Author: Simon A Babayan
+with - Author: Simon A Babayan
 - Date: 2024-07-24
 =#
 
@@ -29,7 +29,7 @@ using ReverseDiff
 # Turing.setrdcache(true)
 
 using RCall
-@rlibrary dagitty # we use the original dagitty from R until julia native version improves
+@rlibrary dagitty
 
 # plotting & diagnostics
 using CairoMakie
@@ -48,10 +48,10 @@ include("DataWrangler.jl")
 # all cases
 df = encode_df(df) # choose between df and df_unique (the latter has no repeated measures)
 df =
-  df |>
-  # @filter(_.vax_history != "DD") |> # keep only mice with a single vaccination or adjuvant
-  @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
-  DataFrame
+    df |>
+    # @filter(_.vax_history != "DD") |> # keep only mice with a single vaccination or adjuvant
+    @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
+    DataFrame
 df.IDidx = get_idx(:ID, df)[1]
 
 # Set up intervention: post-intervention P, Pn = 0 (no infection)
@@ -66,9 +66,9 @@ df.post_D1 .= 1
 # restrict to unique cases (no repeated measures):
 df_unique = encode_df(df_unique)
 df_unique =
-  df_unique |>
-  @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
-  DataFrame
+    df_unique |>
+    @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
+    DataFrame
 
 # Build DAG dataFrame
 dag_df = df[!, [:E, :H, :V, :D, :R, :S, :M, :Ḟ, :T, :P, :nP, :ID, :IDidx, :vax_history, :Vidx, :post_P, :post_nP, :post_D0, :post_D1]]
@@ -88,7 +88,6 @@ D -> P;
 D -> R;
 F -> E;
 F -> M;
-# H -> D;
 H -> E;
 H -> F;
 H -> M;
@@ -114,9 +113,37 @@ V -> P;
 V -> R;
 }")
 
+dag_m = dagitty("dag{
+D -> E;
+D -> F;
+D -> M;
+D -> R;
+F -> E;
+F -> M;
+H -> E;
+H -> F;
+H -> M;
+H -> R;
+M -> E;
+P -> E;
+P -> F;
+P -> M;
+R -> E;
+R -> F;
+R -> M;
+S -> E;
+S -> F;
+S -> M;
+S -> R;
+V -> E;
+V -> F;
+V -> M;
+V -> R;
+}")
 
 ## Total effect of P on E among the infected
 adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, V}
+adjustmentSets(dag_m, "P", "E", effect="total") # { }
 
 # Mixed model
 
@@ -198,66 +225,75 @@ dag_df_infected.E_diff = dag_df_infected.E_pre - dag_df_infected.E_post
 
 # Plot E_pre and E_post
 function plot_E_pre_post(df; saveplot=false)
-  fig = Figure()
-  ax = Axis(fig[1, 1])
-  hist!(ax, df.E_pre, label="Pre-intervention")
-  hist!(ax, df.E_post, color=:orange, label="Post-intervention")
-  axislegend(ax, position=:lt)
+    fig = Figure()
+    ax = Axis(fig[1, 1])
+    hist!(ax, df.E_pre, label="Pre-intervention (observed)")
+    hist!(ax, df.E_post, color=:orange, label="Post-intervention (simulated)")
+    axislegend(ax, position=:lt)
 
-  # Add labels and title
-  ax.xlabel = "Vaccine response"
-  ax.ylabel = "Population count"
-  # ax.title = "Effect of removing Parasite infection on vaccine response"
-  if saveplot
-    save("../manuscript/Figures/plots/E_pre_post.pdf", fig)
-  end
-  fig
+    # Add labels and title
+    ax.xlabel = "Vaccine response"
+    ax.ylabel = "Population count"
+    # ax.title = "Effect of removing Parasite infection on vaccine response"
+    if saveplot
+        save("../manuscript/Figures/plots/E_pre_post.pdf", fig)
+    end
+    fig
 end
 
 with_theme(theme_minimal()) do
-  plot_E_pre_post(dag_df_infected, saveplot=true)
+    plot_E_pre_post(dag_df_infected, saveplot=true)
 end
 
+
+## Total effect of V on E among the infected
+adjustmentSets(dag, "V", "E", effect="total") # {}
+adjustmentSets(dag_m, "V", "E", effect="total") # { }
+
+# Mixed model
+
+glmm_V_E = fit(MixedModel, @formula(E ~ V + (1 | ID)), dag_df_infected)
+glmm_V_E_post = fit(MixedModel, @formula(E ~ V + (1 | ID)), dag_df_infected)
 
 
 ## Plot each mouse before and after intervention as a point, with points of pre and pst intervention linked by an arrow using https://aog.makie.org/stable/ @aog
 
 function plot_post_anthelminthic(df; saveplot=false)
-  fig = Figure()
-  ax = Axis(fig[1, 1])
+    fig = Figure()
+    ax = Axis(fig[1, 1])
 
-  # Create a scatter plot for each mouse's pre- and post-intervention E values
-  for mouse in unique(df.IDidx)
-    mouse_data = df[df.IDidx.==mouse, :]
-    for i in 1:size(mouse_data, 1)
-      if mouse_data.E_pre[i] < mouse_data.E_post[i]
-        lines!(ax, [mouse_data.nP[i], mouse_data.nP[i]], [mouse_data.E_pre[i], mouse_data.E_post[i]], color=:orange, linewidth=3, alpha=0.7)
-      else
-        lines!(ax, [mouse_data.nP[i], mouse_data.nP[i]], [mouse_data.E_pre[i], mouse_data.E_post[i]], color=:black, alpha=0.7)
-      end
+    # Create a scatter plot for each mouse's pre- and post-intervention E values
+    for mouse in unique(df.IDidx)
+        mouse_data = df[df.IDidx.==mouse, :]
+        for i in 1:size(mouse_data, 1)
+            if mouse_data.E_pre[i] < mouse_data.E_post[i]
+                lines!(ax, [mouse_data.nP[i], mouse_data.nP[i]], [mouse_data.E_pre[i], mouse_data.E_post[i]], color=:orange, linewidth=3, alpha=0.7)
+            else
+                lines!(ax, [mouse_data.nP[i], mouse_data.nP[i]], [mouse_data.E_pre[i], mouse_data.E_post[i]], color=:black, alpha=0.7)
+            end
+        end
+        scatter!(ax, mouse_data.nP, mouse_data.E_pre, color=:blue, label="Pre-intervention", markersize=14)
+        scatter!(ax, mouse_data.nP, mouse_data.E_post, color=:orange, label="Post-intervention", marker=:utriangle, markersize=14)
     end
-    scatter!(ax, mouse_data.nP, mouse_data.E_pre, color=:blue, label="Pre-intervention", markersize=14)
-    scatter!(ax, mouse_data.nP, mouse_data.E_post, color=:orange, label="Post-intervention", marker=:utriangle, markersize=14)
-  end
 
-  # Add labels and title
-  ax.xlabel = "Parasite Count"
-  ax.ylabel = "Vaccine response"
-  # ax.title = "Effect of anthelmintic intervention on vaccine response"
-  # Add text box with orange and blue color labels
-  text!(ax, "• Pre-intervention", position=(145, -1.5), color=:blue, fontsize=13, font=:bold)
-  text!(ax, "• Post-intervention", position=(145, -1.6), color=:orange, fontsize=13, font=:bold)
-  if saveplot
-    save("../manuscript/Figures/plots/post_anthelminthic_effect_on_E.pdf", fig)
-  end
-  fig
+    # Add labels and title
+    ax.xlabel = "Observed Parasite Count"
+    ax.ylabel = "Vaccine response"
+    # ax.title = "Effect of anthelmintic intervention on vaccine response"
+    # Add text box with orange and blue color labels
+    text!(ax, "● Pre-intervention (observed)", position=(115, 0.3), color=:blue, fontsize=13, font=:bold)
+    text!(ax, "▲ Post-intervention (simulated)", position=(115, 0.2), color=:orange, fontsize=13, font=:bold)
+    if saveplot
+        save("../manuscript/Figures/plots/post_anthelminthic_effect_on_E.pdf", fig)
+    end
+    fig
 end
 
 with_theme(theme_minimal()) do
-  plot_post_anthelminthic(dag_df_infected, saveplot=true)
+    plot_post_anthelminthic(dag_df_infected, saveplot=true)
 end
 
-# Association between E_diff and sex, diet, etc.
+## Association between E_diff and sex, diet, etc.
 
 glmm_E_diff = fit(MixedModel, @formula(E_diff ~ 1 + D + R + S + V + M + Ḟ + (1 | ID)), dag_df_infected)
 
@@ -292,32 +328,32 @@ fig
 # Plot of effect of withdrawing supplementation on E (D=0)
 
 function plot_post_dietary(df; saveplot=false)
-  fig = Figure()
-  ax = Axis(fig[1, 1])
+    fig = Figure()
+    ax = Axis(fig[1, 1])
 
-  # Create a scatter plot for each mouse's pre- and post-intervention E values for D=0
-  for mouse in unique(df.IDidx)
-    mouse_data = df[df.IDidx.==mouse, :]
-    for i in 1:size(mouse_data, 1)
-      lines!(ax, [mouse_data.D0_E[i], mouse_data.E_pre[i]], [mouse_data.D0_E[i], mouse_data.D0_E[i]], color=:blue, linewidth=3)
+    # Create a scatter plot for each mouse's pre- and post-intervention E values for D=0
+    for mouse in unique(df.IDidx)
+        mouse_data = df[df.IDidx.==mouse, :]
+        for i in 1:size(mouse_data, 1)
+            lines!(ax, [mouse_data.D0_E[i], mouse_data.E_pre[i]], [mouse_data.D0_E[i], mouse_data.D0_E[i]], color=:blue, linewidth=3)
+        end
+        scatter!(ax, mouse_data.nP, mouse_data.E_pre, color=:blue, markersize=14, alpha=0.7)
+        scatter!(ax, mouse_data.nP, mouse_data.D0_E, color=:green, marker=:utriangle, markersize=14)
     end
-    scatter!(ax, mouse_data.nP, mouse_data.E_pre, color=:blue, markersize=14, alpha=0.7)
-    scatter!(ax, mouse_data.nP, mouse_data.D0_E, color=:green, marker=:utriangle, markersize=14)
-  end
 
-  # Add labels and title
-  ax.xlabel = "Dietary supplementation"
-  ax.ylabel = "Vaccine response"
-  ax.title = "Effect of withdrawing dietary supplementation on vaccine response"
-  # Add text box with orange and blue color labels
-  text!(ax, "• No supplementation", position=(145, -1.5), color=:blue, fontsize=13, font=:bold)
-  text!(ax, "• Supplementation", position=(145, -1.6), color=:green, fontsize=13, font=:bold)
-  if saveplot
-    save("../manuscript/Figures/plots/no_supplementation_on_E.pdf", fig)
-  end
-  fig
+    # Add labels and title
+    ax.xlabel = "Dietary supplementation"
+    ax.ylabel = "Vaccine response"
+    ax.title = "Effect of withdrawing dietary supplementation on vaccine response"
+    # Add text box with orange and blue color labels
+    text!(ax, "• No supplementation", position=(145, -1.5), color=:blue, fontsize=13, font=:bold)
+    text!(ax, "• Supplementation", position=(145, -1.6), color=:green, fontsize=13, font=:bold)
+    if saveplot
+        save("../manuscript/Figures/plots/no_supplementation_on_E.pdf", fig)
+    end
+    fig
 end
 
 with_theme(theme_minimal()) do
-  plot_post_dietary(dag_df, saveplot=false)
+    plot_post_dietary(dag_df, saveplot=false)
 end

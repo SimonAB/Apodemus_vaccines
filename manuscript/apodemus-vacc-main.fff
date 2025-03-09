@@ -1,55 +1,55 @@
 \begin{figure}[ht]
-  \centering
-  \includegraphics[width=1\textwidth, keepaspectratio=true]{./Figures/Apodemus-vacc-figures/StudyDesign_paper.pdf}
-  \caption{\textbf{Allocation of diet and vaccines.} Wood mice from a laboratory colony, and from the wild were provided enriched (TransBreed) or standard (lab: normal chow; wild: no supplementation) diets. After at least 12 days, mice were allocated at random to immunisation with a 2Lf/100µl Diphtheria Toxoid + 9\% alum vaccine (D) or with adjuvant alone (A). Twenty-one days after their first immunisation, mice that had been immunised with D were then given a second shot of the vaccine (DD) or adjuvant alone (DA), while mice that had received an initial adjuvant vaccine (A) were all given D for their second shot (AD).}
-  \label{fig:design}
+\centering
+\includegraphics[width=1\textwidth, keepaspectratio=true]{./Figures/Apodemus-vacc-figures/StudyDesign_paper.pdf}
+\caption{\textbf{Allocation of diet and vaccines.} Wood mice from a laboratory colony, and from the wild were provided enriched (TransBreed) or standard (lab: normal chow; wild: no supplementation) diets. After at least 12 days, mice were allocated at random to immunisation with a 2Lf/100µl Diphtheria Toxoid + 9\% alum vaccine (D) or with adjuvant alone (A). Twenty-one days after their first immunisation, mice that had been immunised with D were then given a second shot of the vaccine (DD) or adjuvant alone (DA), while mice that had received an initial adjuvant vaccine (A) were all given D for their second shot (AD).}
+\label{fig:design}
 \end{figure}
 \efloatseparator
  
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/IgG1.pdf}
+\centering
+\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/IgG1.pdf}
 
-  \caption{\textbf{Vaccine-induced DTV-specific IgG1.} \textbf{A}, diphtheria toxoid vaccine (DTV)-specific IgG1 optical density in mice from laboratory- and wild-habitats provided high and low quality dietary supplements. Mice were immunised either once, with adjuvant as control (A) or DTV (D), or twice, using adjuvant alone followed by DTV (AD), DTV and subsequently adjuvant alone (DA), or two separate doses of DTV (DD). Only mice immunised at least 7 days prior to serum ELISA sampling are shown. \textbf{B}, posterior conditional distributions of the coefficients for diet, habitat, and vaccine formulation (A, D, AD, DA, DD), and effect of the same vaccines. Each density curve represents the distribution of 3,000 samples from one of four MCMC chains; dotted line represents the the value for which the reference (global intercept for Diet and Habitat; Adjuvant alone for the vaccines) is null (see parameter estimates in Table~\ref{tbl:precis}).}
+\caption{\textbf{Vaccine-induced DTV-specific IgG1.} \textbf{A}, diphtheria toxoid vaccine (DTV)-specific IgG1 optical density in mice from laboratory- and wild-habitats provided high and low quality dietary supplements. Mice were immunised either once, with adjuvant as control (A) or DTV (D), or twice, using adjuvant alone followed by DTV (AD), DTV and subsequently adjuvant alone (DA), or two separate doses of DTV (DD). Only mice immunised at least 7 days before serum ELISA sampling are shown. \textbf{B}, posterior conditional distributions of the coefficients for diet, habitat, and vaccine formulation (A, D, AD, DA, DD), and effect of the same vaccines. Each density curve represents the distribution of 3,000 samples from one of four MCMC chains; the dotted line represents the value for which the reference (global intercept for Diet and Habitat; Adjuvant alone for the vaccines) is null (see parameter estimates in Table~\ref{tbl:precis}).}
 
-  \label{fig:igg1}
+\label{fig:igg1}
 
 \end{figure}
 \efloatseparator
  
 \begin{figure}[htbp]
-  \centering
-  % This code uses the tikz package
-  \input{./Figures/DAGtikz.tex}
-  \caption{\textbf{Causal Model of vaccine responsiveness.} \textbf{A}, Directed acyclic graph $\mathbb{G}_{VE}$ representing hypothesised causal effects driving variation in efficacy \(E\) of vaccine \(V\) in laboratory or wild mice \(H\), under supplemented or control diet \(D\) (green nodes depict experimental treatments). Covariates, mediators, and potential confounders (blue nodes) were time since vaccination \(T\), parasite infection (presence or burden) \(P\), reproductive status \(R\), body mass \(M\), fat scores \(F\), and sex \(S\). Directed edges depict causal effects hypothesised to operate between nodes. \textbf{B}, Structural causal model \(\mathbb{C}_{VE}\) derived from $\mathbb{G}_{VE}$ with coefficients $\beta_{ij}$ representing the effect of cause $i$ on effect $j$. $\mathcal{U}_j$ represents the unmeasured variation of the response variable, not represented in $\mathbb{G}_{VE}$ (panel A) for clarity.}
+\centering
+% This code uses the tikz package
+\input{./Figures/DAGtikz.tex}
+\caption{\textbf{Causal Model of vaccine responsiveness.} \textbf{A}, Directed acyclic graph $\mathbb{G}_{VE}$ representing hypothesised causal effects driving variation in efficacy \(E\) of vaccine \(V\) in laboratory or wild mice \(H\), under supplemented or control diet \(D\) (green nodes depict experimental treatments). Covariates, mediators, and potential confounders (blue nodes) were time since vaccination \(T\), parasite infection (presence or burden) \(P\), reproductive status \(R\), body mass \(M\), fat scores \(F\), and sex \(S\). Directed edges depict causal effects hypothesised to operate between nodes. \textbf{B}, Structural causal model \(\mathbb{C}_{VE}\) derived from $\mathbb{G}_{VE}$ with coefficients $\beta_{ij}$ representing the effect of cause $i$ on effect $j$. $\mathcal{U}_j$ represents the unmeasured variation of the response variable, not represented in $\mathbb{G}_{VE}$ (panel A) for clarity.}
 
-  \label{fig:DAGtikz}
+\label{fig:DAGtikz}
 \end{figure}
 \efloatseparator
  
 \begin{figure}[htbp]
-  \centering
-  % This code uses the tikz package
-  \input{Figures/DAGtikz-param.tex}
-  \caption{\textbf{Fully resolved Causal Model of vaccine efficacy.} \textbf{A}, Directed acyclic graph representing point estimates of positive (blue), negative (red), and null (gray) direct causal effects ± std driving vaccine responsiveness \(E\). \textbf{B}, MCMC sampling of posterior distributions of the coefficients estimating the direct effect of the wild habitat $H$ on vaccine responsiveness $E$, with the adjustment set including, Diet $D$, Fat scores $F$, body mass $M$, parasite burden $P$, active reproductive status $R$, and female sex $S$; vaccine formulation $V$ and individual treated as random effects:
-    $E \coloneq β_{Hab}H + β_{Diet}D + β_{Fat}F + β_{Mass}M + β_{Para}P + β_{Rep}R + β_{Sex}S + \mathcal{N}(0,Exp(\sigma_E))$
-  (see \nameref{sec:parameterisation} methods). Note that each edge in panel A shows the direct causal effect of its parent node on its child node, which is conditional on the specific adjustment set for that model; thus, only the coefficient $β_{Diet}$ for the edge between $D$ and $E$ is a causal estimate in panel B, while the others are only associative.}
-  \label{fig:DAGtikzParam}
+\centering
+% This code uses the tikz package
+\input{Figures/DAGtikz-param.tex}
+\caption{\textbf{Fully resolved Causal Model of vaccine efficacy.} \textbf{A}, Directed acyclic graph representing point estimates of positive (blue), negative (red), and null (gray) direct causal effects ± std driving vaccine responsiveness \(E\). \textbf{B}, MCMC sampling of posterior distributions of the coefficients estimating the direct effect of the wild habitat $H$ on vaccine responsiveness $E$, with the adjustment set including, Diet $D$, Fat scores $F$, body mass $M$, parasite burden $P$, active reproductive status $R$, and female sex $S$; vaccine formulation $V$ and individual treated as random effects:
+$E \coloneq β_{Hab}H + β_{Diet}D + β_{Fat}F + β_{Mass}M + β_{Para}P + β_{Rep}R + β_{Sex}S + \mathcal{N}(0,Exp(\sigma_E))$
+(see \nameref{sec:parameterisation} methods). Note that each edge in panel A shows the direct causal effect of its parent node on its child node, which is conditional on the specific adjustment set for that model; thus, only the coefficient $β_{Diet}$ for the edge between $D$ and $E$ is a causal estimate in panel B, while the others are only associative.}
+\label{fig:DAGtikzParam}
 \end{figure}
 \efloatseparator
  
 \begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[b]{0.5\textwidth}
-    \centering
-    \includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/E_pre_post.pdf}
-    \put(-200, 160){\sffamily \textbf{A}} % Adjust coordinates as needed
-  \end{subfigure}%
-  \begin{subfigure}[b]{0.5\textwidth}
-    \centering
-    \includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/post_anthelminthic_effect_on_E.pdf}
-    \put(-200, 160){\sffamily \textbf{B}} % Adjust coordinates as needed
-  \end{subfigure}
-  \caption{\textbf{Effect of simulated population-wide anthelmintic intervention on vaccine responsiveness.} \textbf{A}, Effect on population-wide vaccine responsiveness. \textbf{B}, Effect on individual vaccine responsiveness as a function of pre-intervention parasite burden.}
-  \label{fig:post_anthelminthic}
+\centering
+\begin{subfigure}[b]{0.5\textwidth}
+\centering
+\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/E_pre_post.pdf}
+\put(-200, 160){\sffamily \textbf{A}} % Adjust coordinates as needed
+\end{subfigure}%
+\begin{subfigure}[b]{0.5\textwidth}
+\centering
+\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/post_anthelminthic_effect_on_E.pdf}
+\put(-200, 160){\sffamily \textbf{B}} % Adjust coordinates as needed
+\end{subfigure}
+\caption{\textbf{Effect of simulated population-wide anthelmintic intervention on vaccine responsiveness.} \textbf{A}, Effect on population-wide vaccine responsiveness. \textbf{B}, Effect on individual vaccine responsiveness as a function of pre-intervention parasite burden.}
+\label{fig:post_anthelminthic}
 \end{figure}
