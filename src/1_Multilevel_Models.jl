@@ -5,9 +5,10 @@ MultiLevel Models
 - Date: 2022-08-01
 =#
 
-## Import packages
+# %% Import packages
 
 print("Running on ", Threads.nthreads(), " threads.")
+# installkernel("Julia", "--project=@.", env=Dict("JULIA_NUM_THREADS" => "8"))
 using CategoricalArrays, LazyArrays
 using DataFrames, CSV, Query
 using Random
@@ -25,11 +26,11 @@ using Colors
 CairoMakie.activate!(; type="svg")
 using MixedModelsMakie
 
-cd("./src/")
+# cd("./src/")
 include("TuringUtils.jl")
 include("TuringPlots.jl")
 
-## import data
+# %% import data
 include("DataWrangler.jl")
 df = encode_df(df) # df includes repeated measures
 df =
@@ -54,7 +55,7 @@ df.IDidx = get_idx(:ID, df)[1];
 
 countmap(df.vax_history)
 
-## Check distribution of transformed E
+# %% Check distribution of transformed E
 seroconv = standardize(ZScoreTransform, df.E[df[!, :logOD].>0], dims=1);
 
 f = Figure()
@@ -80,7 +81,7 @@ Details:
 
 """
 
-## Difference between boosted, non-boosted, and control mice in lab vs wild
+# %% Difference between boosted, non-boosted, and control mice in lab vs wild
 
 # Wild Boosted vs Lab Boosted
 Δm = mean(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)]) - mean(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)]) |> x -> round(x; digits=2);
