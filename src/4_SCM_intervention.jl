@@ -70,7 +70,7 @@ df_unique =
     DataFrame
 
 # Build DAG dataFrame
-dag_df = df[!, [:E, :H, :V, :D, :R, :S, :M, :Ḟ, :T, :P, :nP, :ID, :IDidx, :vax_history, :Vidx, :post_P, :post_nP, :post_D0, :post_D1]]
+dag_df = df[!, [:E, :H, :V, :D, :R, :S, :M, :Ḟ, :P, :nP, :ID, :IDidx, :vax_history, :Vidx, :post_P, :post_nP, :post_D0, :post_D1]]
 dag_df.lognP = log10.(1 .+ dag_df.nP);
 # describe(dag_df)
 
@@ -79,66 +79,9 @@ dag_df_infected = dag_df[dag_df.P.==2, :] # select rows of dag_df for which dag_
 
 # DAG specification - this is our graphical causal hypothesis
 
-dag = dagitty("dag{
-D -> E;
-D -> F;
-D -> M;
-D -> P;
-D -> R;
-F -> E;
-F -> M;
-H -> E;
-H -> F;
-H -> M;
-H -> P;
-H -> R;
-M -> E;
-P -> E;
-P -> F;
-P -> M;
-R -> E;
-R -> F;
-R -> M;
-R -> P;
-S -> E;
-S -> F;
-S -> M;
-S -> P;
-S -> R;
-V -> E;
-V -> F;
-V -> M;
-V -> P;
-V -> R;
-}")
+dag = dagitty("dag{ D -> E; D -> F; D -> M; D -> P; D -> R; F -> E; F -> M; H -> E; H -> F; H -> M; H -> P; H -> R; M -> E; P -> E; P -> F; P -> M; R -> E; R -> F; R -> M; R -> P; S -> E; S -> F; S -> M; S -> P; S -> R; V -> E; V -> F; V -> M; V -> P; V -> R; }")
 
-dag_m = dagitty("dag{
-D -> E;
-D -> F;
-D -> M;
-D -> R;
-F -> E;
-F -> M;
-H -> E;
-H -> F;
-H -> M;
-H -> R;
-M -> E;
-P -> E;
-P -> F;
-P -> M;
-R -> E;
-R -> F;
-R -> M;
-S -> E;
-S -> F;
-S -> M;
-S -> R;
-V -> E;
-V -> F;
-V -> M;
-V -> R;
-}")
+dag_m = dagitty("dag{ D -> E; D -> F; D -> M; D -> R; F -> E; F -> M; H -> E; H -> F; H -> M; H -> R; M -> E; P -> E; P -> F; P -> M; R -> E; R -> F; R -> M; S -> E; S -> F; S -> M; S -> R; V -> E; V -> F; V -> M; V -> R; }")
 
 ## Total effect of P on E among the infected
 adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, V}
