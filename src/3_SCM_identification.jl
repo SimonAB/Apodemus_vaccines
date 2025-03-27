@@ -1,8 +1,7 @@
 #=
-SCM Specification
+SCM Identification
 - Julia version: 1.11
 - Author: Simon A Babayan
-- Date: 2022-08-01
 =#
 
 ## Import packages

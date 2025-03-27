@@ -1,8 +1,7 @@
 #=
-SCM Specification post intervention
+SCM Intervention
 - Julia version: 1.11
 with - Author: Simon A Babayan
-- Date: 2024-07-24
 =#
 
 #=
