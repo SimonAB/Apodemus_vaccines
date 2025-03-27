@@ -58,11 +58,11 @@ df_unique =
   DataFrame
 
 # Build DAG dataFrame
-dag_df = df[!, [:E, :H, :V, :D, :R, :S, :M, :Ḟ, :T, :P, :nP, :ID, :IDidx, :vax_history, :Vidx]]
+dag_df = df[!, [:E, :H, :V, :D, :R, :S, :M, :Ḟ, :P, :nP, :ID, :IDidx, :vax_history, :Vidx]]
 dag_df.lognP = log10.(1 .+ dag_df.nP);
 # describe(dag_df)
 
-dag_df_unique = df_unique[!, [:E, :H, :V, :D, :R, :S, :M, :Ḟ, :T, :P, :nP, :Vidx, :vax_history, :ID]];
+dag_df_unique = df_unique[!, [:E, :H, :V, :D, :R, :S, :M, :Ḟ, :P, :nP, :Vidx, :vax_history, :ID]];
 filtered_df = dag_df[dag_df.P.==1, :];
 filtered_unique_df = dag_df_unique[dag_df_unique.P.==1, :];
 
