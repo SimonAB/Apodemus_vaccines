@@ -92,61 +92,6 @@ adjustmentSets(dag_m, "P", "E", effect="total") # { }
 glmm_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + D + R + S + V + (1 | ID)), dag_df_infected)
 glmm_P_E_post = fit(MixedModel, @formula(E ~ 1 + post_nP + D + R + S + V + (1 | ID)), dag_df_infected)
 
-"""
-Pre-intervention:
-Linear mixed model fit by maximum likelihood
- E ~ 1 + lognP + D + R + S + V + (1 | ID)
-	 logLik   -2 logLik     AIC       AICc        BIC
-	 -54.1721   108.3441   124.3441   127.7727   139.7987
-
-Variance components:
-						Column   Variance Std.Dev.
-ID       (Intercept)  0.019575 0.139909
-Residual              0.471247 0.686474
- Number of obs: 51; levels of grouping factors: 19
-
-	Fixed-effects parameters:
-───────────────────────────────────────────────────
-								 Coef.  Std. Error      z  Pr(>|z|)
-───────────────────────────────────────────────────
-(Intercept)  -1.61109     0.960908  -1.68    0.0936
-lognP        -0.52165     0.315781  -1.65    0.0985
-D            -0.151094    0.24211   -0.62    0.5326
-R            -0.116407    0.324117  -0.36    0.7195
-S             0.157128    0.240046   0.65    0.5127
-V             1.16835     0.338118   3.46    0.0005
-───────────────────────────────────────────────────
-
-
-
-Post-intervention:
-┌ Warning: Fixed-effects matrix is rank deficient
-└ @ MixedModels ~/.julia/packages/MixedModels/hs2Ke/src/Xymat.jl:41
-Linear mixed model fit by maximum likelihood
- E ~ 1 + post_nP + D + R + S + V + (1 | ID)
-	 logLik   -2 logLik     AIC       AICc        BIC
-	 -55.4672   110.9344   124.9344   127.5391   138.4572
-
-Variance components:
-						Column   Variance Std.Dev.
-ID       (Intercept)  0.036547 0.191174
-Residual              0.481738 0.694073
- Number of obs: 51; levels of grouping factors: 19
-
-	Fixed-effects parameters:
-────────────────────────────────────────────────────
-								 Coef.  Std. Error       z  Pr(>|z|)
-────────────────────────────────────────────────────
-(Intercept)  -1.35493     0.992592   -1.37    0.1722
-post_nP      -0.0       NaN         NaN       NaN
-D            -0.286635    0.236475   -1.21    0.2255
-R            -0.437918    0.271235   -1.61    0.1064
-S             0.228331    0.24924     0.92    0.3596
-V             1.03056     0.344176    2.99    0.0028
-────────────────────────────────────────────────────
-
-
-"""
 
 # Plot the distribution of the effects of P on E
 qqnorm(glmm_P_E; qqline=:fitrobust)
@@ -374,7 +319,7 @@ function plot_S_R_interaction(df; saveplot=false)
             linewidth=1)
         scatter!(ax, R_values, means[i, :],
             marker=:circle,
-            markersize=10,
+            markersize=14,
             color=sex_color)
     end
 
