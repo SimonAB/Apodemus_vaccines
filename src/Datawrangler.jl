@@ -1,3 +1,7 @@
+#=
+This script will wrangle the data from the raw data file into a clean data file.
+=#
+
 # PACKAGES
 using CSV, DataFrames, Query
 using CategoricalArrays
@@ -62,14 +66,6 @@ function encode_df(df)
     # df.T = standardize(ZScoreTransform, df.T, dims=1)
     df.nP = df.nHp .+ df.Cestode #.+ df.Pinworms;
 
-    # index variables
-    # df.Vidx = convert(Vector{Int64}, recode(df.vax_history,
-    #     "A" => 1,
-    #     "D" => 2,
-    #     "AD" => 3,
-    #     "DA" => 4,
-    #     "DD" => 5))
-
     # index variable
     df.H = @. ifelse(df.Env == "Lab", 1, 2)
     df.D = @. ifelse(df.Diet == "Low", 1, 2)
@@ -78,14 +74,6 @@ function encode_df(df)
     df.P = @. ifelse(df.isHp == 0, 1, 2)
     df.V = @. ifelse(df.isvax == 1, 2, 1)
     df.Vidx = @. ifelse(df.vax_history == "A", 1, ifelse(df.vax_history == "D", 2, ifelse(df.vax_history == "AD", 3, ifelse(df.vax_history == "DA", 4, 5))))
-
-    # indicator variable (binary)
-    # df.H = df.Env .∈ Ref(["Wild"])
-    # df.D = df.Diet .∈ Ref(["High"])
-    # df.R = df.repro_bin .∈ Ref(["Reproductive"])
-    # df.S = df.Sex .∈ Ref(["M"])
-    # df.P = df.isHp
-    # df.V = df.isvax
 
     # missingness
     t = Vector{Union{Missing,Float64}}(missing, nrow(df))

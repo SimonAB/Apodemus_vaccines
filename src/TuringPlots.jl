@@ -2,7 +2,10 @@
 TuringPlots:
 - Julia version: 1.11
 - Author: Simon A Babayan
-- Date: 2022-09-20
+=#
+
+#=
+This script will plot the chains from a Turing model using CairoMakie.
 =#
 
 using DataFrames

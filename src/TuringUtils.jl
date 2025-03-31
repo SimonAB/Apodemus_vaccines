@@ -2,7 +2,10 @@
 TuringUtils:
 - Julia version: 1.11
 - Author: Simon A Babayan
-- Date: 2022-03-25
+=#
+
+#=
+This script contains utility functions for the Turing models.
 =#
 
 using PrettyTables

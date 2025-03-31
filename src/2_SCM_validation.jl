@@ -4,6 +4,10 @@ SCM validation
 - Author: Simon A Babayan
 =#
 
+#=
+This script will validate the SCM using the data from the manuscript.
+=#
+
 ## Import packages
 print("Running on ", Threads.nthreads(), " threads.")
 using CSV, DataFrames
@@ -44,29 +48,9 @@ dag = dagitty("dag{ D -> E; D -> F; D -> M; D -> P; D -> R; F -> E; F -> M; H ->
 impliedCovarianceMatrix(dag)
 
 impliedConditionalIndependencies(dag)
-"""
-D _||_ H
-D _||_ S
-D _||_ V
-H _||_ S
-H _||_ V
-S _||_ V
-
-"""
 
 # rough test of conditional independencies in light of observed data
 localTests(dag, data=dag_df[!, [:E, :H, :V, :D, :R, :S, :M, :F, :P, :nP]])
-
-"""
-            estimate   p.value        2.5%      97.5%
-D _||_ H  0.01209285 0.8579640 -0.11977262 0.14354148
-D _||_ S -0.01722668 0.7987565 -0.14856766 0.11470795
-D _||_ V -0.01364319 0.8399845 -0.14506002 0.11824387
-H _||_ S -0.04396661 0.5150038 -0.17463969 0.08821756
-H _||_ V  0.10151318 0.1316953 -0.03056852 0.23015431
-S _||_ V -0.06766278 0.3159333 -0.19759595 0.06458582
-"""
-
 
 # more sophisticated test of conditional independencies in light of observed data using mixed models
 # D _||_ S

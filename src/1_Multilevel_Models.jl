@@ -2,10 +2,13 @@
 MultiLevel Models
 - Julia version: 1.11
 - Author: Simon A Babayan
-- Date: 2022-08-01
 =#
 
-# %% Import packages
+#=
+This script will fit a multilevel model to the data and generate the figures for the manuscript.
+=#
+
+## Import packages
 
 print("Running on ", Threads.nthreads(), " threads.")
 # installkernel("Julia", "--project=@.", env=Dict("JULIA_NUM_THREADS" => "8"))
@@ -30,7 +33,7 @@ using MixedModelsMakie
 include("TuringUtils.jl")
 include("TuringPlots.jl")
 
-# %% import data
+## Import data
 include("DataWrangler.jl")
 df = encode_df(df) # df includes repeated measures
 df =
@@ -55,7 +58,7 @@ df.IDidx = get_idx(:ID, df)[1];
 
 countmap(df.vax_history)
 
-# %% Check distribution of transformed E
+## Check distribution of transformed E
 seroconv = standardize(ZScoreTransform, df.E[df[!, :logOD].>0], dims=1);
 
 f = Figure()
@@ -64,24 +67,9 @@ save("../manuscript/Figures/plots/E_hist.pdf", f)
 f
 
 ExactOneSampleKSTest(seroconv, Normal())
-"""
-Exact one sample Kolmogorov-Smirnov test
-----------------------------------------
-Population details:
-    parameter of interest:   Supremum of CDF differences
-    value under h_0:         0.0
-    point estimate:          0.0669681
 
-Test summary:
-    outcome with 95% confidence: fail to reject h_0
-    two-sided p-value:           0.2448
 
-Details:
-    number of observations:   229
-
-"""
-
-# %% Difference between boosted, non-boosted, and control mice in lab vs wild
+## Difference between boosted, non-boosted, and control mice in lab vs wild
 
 # Wild Boosted vs Lab Boosted
 Δm = mean(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)]) - mean(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)]) |> x -> round(x; digits=2);
@@ -123,212 +111,22 @@ vi_form_4 = @formula(E ~ (1 | ID) + vax_history + H + D)
 
 # Linear mixed model
 mm1 = fit(MixedModel, vi_form_1, df)
-
-"""
-Linear mixed model fit by maximum likelihood
- E ~ 1 + vax_history + H + D + vax_history & H + H & D + (1 | ID)
-   logLik   -2 logLik     AIC       AICc        BIC
-  -256.1625   512.3250   540.3250   541.7683   592.4552
-
-Variance components:
-            Column   Variance Std.Dev.
-ID       (Intercept)  0.023588 0.153583
-Residual              0.290597 0.539070
- Number of obs: 306; levels of grouping factors: 111
-
-  Fixed-effects parameters:
-────────────────────────────────────────────────────────────
-                          Coef.  Std. Error      z  Pr(>|z|)
-────────────────────────────────────────────────────────────
-(Intercept)          -0.996679     0.408709  -2.44    0.0147
-vax_history: D        2.10621      0.311163   6.77    <1e-10
-vax_history: AD       1.2898       0.350575   3.68    0.0002
-vax_history: DA       3.7257       0.350636  10.63    <1e-25
-vax_history: DD       3.06113      0.350444   8.74    <1e-17
-H                     0.0515372    0.290924   0.18    0.8594
-D                    -0.192551     0.206688  -0.93    0.3515
-vax_history: D & H   -0.623578     0.221786  -2.81    0.0049
-vax_history: AD & H  -0.395607     0.263034  -1.50    0.1326
-vax_history: DA & H  -1.39953      0.252658  -5.54    <1e-07
-vax_history: DD & H  -0.569947     0.250667  -2.27    0.0230
-H & D                -0.0463013    0.147164  -0.31    0.7530
-────────────────────────────────────────────────────────────
-
-"""
-
 mm2 = fit(MixedModel, vi_form_2, df)
 
-"""
-Linear mixed model fit by maximum likelihood
- E ~ 1 + vax_history + H + D + vax_history & H + (1 | ID)
-   logLik   -2 logLik     AIC       AICc        BIC
-  -256.2118   512.4236   538.4236   539.6702   586.8302
 
-Variance components:
-            Column   VarianceStd.Dev.
-ID       (Intercept)  0.02395 0.15475
-Residual              0.29039 0.53888
- Number of obs: 306; levels of grouping factors: 111
-
-  Fixed-effects parameters:
-────────────────────────────────────────────────────────────
-                          Coef.  Std. Error      z  Pr(>|z|)
-────────────────────────────────────────────────────────────
-(Intercept)          -0.903765    0.282284   -3.20    0.0014
-vax_history: D        2.1078      0.311322    6.77    <1e-10
-vax_history: AD       1.28526     0.350196    3.67    0.0002
-vax_history: DA       3.7263      0.35085    10.62    <1e-25
-vax_history: DD       3.05852     0.350563    8.72    <1e-17
-H                    -0.0183844   0.187321   -0.10    0.9218
-D                    -0.253916    0.0689616  -3.68    0.0002
-vax_history: D & H   -0.625372    0.221869   -2.82    0.0048
-vax_history: AD & H  -0.390852    0.26256    -1.49    0.1366
-vax_history: DA & H  -1.40037     0.252815   -5.54    <1e-07
-vax_history: DD & H  -0.568815    0.250797   -2.27    0.0233
-────────────────────────────────────────────────────────────
-
-"""
 # LRT: mm1 vs mm2
 MixedModels.likelihoodratiotest(mm1, mm2)
-
-"""
-Model Formulae
-1: E ~ 1 + vax_history + H + D + vax_history & H + (1 | ID)
-2: E ~ 1 + vax_history + H + D + vax_history & H + H & D + (1 | ID)
-─────────────────────────────────────────────────
-     model-dof  -2 logLik      χ²  χ²-dof  P(>χ²)
-─────────────────────────────────────────────────
-[1]         13   512.4236
-[2]         14   512.3250  0.0986       1  0.7535
-─────────────────────────────────────────────────
-
-"""
-
 mm3 = fit(MixedModel, vi_form_3, df)
-
-"""
-Linear mixed model fit by maximum likelihood
- E ~ 1 + vax_history + H + D + H & D + (1 | ID)
-   logLik   -2 logLik     AIC       AICc        BIC
-  -271.4715   542.9431   562.9431   563.6888   600.1789
-
-Variance components:
-            Column   Variance Std.Dev.
-ID       (Intercept)  0.042669 0.206564
-Residual              0.307718 0.554724
- Number of obs: 306; levels of grouping factors: 111
-
-  Fixed-effects parameters:
-────────────────────────────────────────────────────────
-                      Coef.  Std. Error      z  Pr(>|z|)
-────────────────────────────────────────────────────────
-(Intercept)      -0.176857     0.370188  -0.48    0.6328
-vax_history: D    1.27974      0.111026  11.53    <1e-30
-vax_history: AD   0.761144     0.119261   6.38    <1e-09
-vax_history: DA   1.90328      0.124943  15.23    <1e-51
-vax_history: DD   2.30338      0.124939  18.44    <1e-75
-H                -0.560726     0.254118  -2.21    0.0273
-D                -0.185484     0.225546  -0.82    0.4109
-H & D            -0.0597382    0.159233  -0.38    0.7075
-────────────────────────────────────────────────────────
-"""
-
 
 # LRT: mm1 vs mm3
 MixedModels.likelihoodratiotest(mm1, mm3)
-
-"""
-Model Formulae
-1: E ~ 1 + vax_history + H + D + H & D + (1 | ID)
-2: E ~ 1 + vax_history + H + D + vax_history & H + H & D + (1 | ID)
-──────────────────────────────────────────────────
-     model-dof  -2 logLik       χ²  χ²-dof  P(>χ²)
-──────────────────────────────────────────────────
-[1]         10   542.9431
-[2]         14   512.3250  30.6180       4  <1e-05
-──────────────────────────────────────────────────
-
-"""
-
-
 mm4 = fit(MixedModel, vi_form_4, df)
-
-"""
-Linear mixed model fit by maximum likelihood
- E ~ 1 + vax_history + H + D + (1 | ID)
-   logLik   -2 logLik     AIC       AICc        BIC
-  -271.5416   543.0831   561.0831   561.6913   594.5954
-
-Variance components:
-            Column   Variance Std.Dev.
-ID       (Intercept)  0.043238 0.207937
-Residual              0.307435 0.554468
- Number of obs: 306; levels of grouping factors: 111
-
-  Fixed-effects parameters:
-────────────────────────────────────────────────────────
-                      Coef.  Std. Error      z  Pr(>|z|)
-────────────────────────────────────────────────────────
-(Intercept)      -0.0559073   0.182375   -0.31    0.7592
-vax_history: D    1.27861     0.111086   11.51    <1e-29
-vax_history: AD   0.762977    0.119162    6.40    <1e-09
-vax_history: DA   1.90266     0.125024   15.22    <1e-51
-vax_history: DD   2.3019      0.124996   18.42    <1e-75
-H                -0.651016    0.0817969  -7.96    <1e-14
-D                -0.265308    0.0752443  -3.53    0.0004
-────────────────────────────────────────────────────────
-
-"""
 
 # LRT: mm2 vs mm4
 MixedModels.likelihoodratiotest(mm2, mm4)
 
-"""
-Model Formulae
-1: E ~ 1 + vax_history + H + D + (1 | ID)
-2: E ~ 1 + vax_history + H + D + vax_history & H + (1 | ID)
-──────────────────────────────────────────────────
-     model-dof  -2 logLik       χ²  χ²-dof  P(>χ²)
-──────────────────────────────────────────────────
-[1]          9   543.0831
-[2]         13   512.4236  30.6595       4  <1e-05
-──────────────────────────────────────────────────
-
-"""
-
 # Final model (mm2)
 mm = fit(MixedModel, vi_form_2, df)
-
-"""
-Linear mixed model fit by maximum likelihood
- E ~ 1 + vax_history + H + D + vax_history & H + (1 | ID)
-   logLik   -2 logLik     AIC       AICc        BIC
-  -256.2118   512.4236   538.4236   539.6702   586.8302
-
-Variance components:
-            Column   VarianceStd.Dev.
-ID       (Intercept)  0.02395 0.15475
-Residual              0.29039 0.53888
- Number of obs: 306; levels of grouping factors: 111
-
-  Fixed-effects parameters:
-────────────────────────────────────────────────────────────
-                          Coef.  Std. Error      z  Pr(>|z|)
-────────────────────────────────────────────────────────────
-(Intercept)          -0.903765    0.282284   -3.20    0.0014
-vax_history: D        2.1078      0.311322    6.77    <1e-10
-vax_history: AD       1.28526     0.350196    3.67    0.0002
-vax_history: DA       3.7263      0.35085    10.62    <1e-25
-vax_history: DD       3.05852     0.350563    8.72    <1e-17
-H                    -0.0183844   0.187321   -0.10    0.9218
-D                    -0.253916    0.0689616  -3.68    0.0002
-vax_history: D & H   -0.625372    0.221869   -2.82    0.0048
-vax_history: AD & H  -0.390852    0.26256    -1.49    0.1366
-vax_history: DA & H  -1.40037     0.252815   -5.54    <1e-07
-vax_history: DD & H  -0.568815    0.250797   -2.27    0.0233
-────────────────────────────────────────────────────────────
-
-"""
 
 
 qqnorm(mm; qqline=:fitrobust)
@@ -372,28 +170,6 @@ p
 
 vi_chn_df = DataFrame(vi_chn)[!, r"α\b|β"];
 precis(vi_chn_df)
-
-"""
-┌────────┬─────────────────────────────────────────────────────────────┐
-│  param │    mean      std    5.0 %     50 %   95.0 %       histogram │
-│ String │ Float64  Float64  Float64  Float64  Float64          String │
-├────────┼─────────────────────────────────────────────────────────────┤
-│      α │    1.02     0.85    -0.39    1.032     2.43  ▁▁▁▂▃▆██▇▃▂▁▁▁ │
-│     βh │  -0.519    0.806   -1.863   -0.513    0.795   ▁▁▁▁▃▆██▆▃▁▁▁ │
-│     βd │  -0.253    0.072   -0.373   -0.253   -0.137    ▁▁▁▃▅██▅▂▁▁▁ │
-│  βv[1] │     0.0    0.871   -3.307   -1.892   -0.438        ▁▁▂██▃▁▁ │
-│  βv[2] │   2.062    0.856   -1.228    0.175    1.598         ▁▂▇█▃▁▁ │
-│  βv[3] │   1.256    0.875   -2.061   -0.651     0.84  ▁▁▁▂▄▇█▇▅▃▁▁▁▁ │
-│  βv[4] │   3.652     0.87    0.343    1.751    3.215        ▁▁▄█▆▂▁▁ │
-│  βv[5] │   2.996    0.865   -0.304    1.091    2.534  ▁▁▁▁▃▆██▇▄▂▁▁▁ │
-│ βvh[1] │     0.0    0.818   -0.864     0.47    1.831   ▁▁▁▁▃▆██▆▃▁▁▁ │
-│ βvh[2] │  -0.594    0.811   -1.434   -0.125    1.223  ▁▁▁▂▄▆██▅▂▁▁▁▁ │
-│ βvh[3] │  -0.371    0.823   -1.244    0.103    1.472  ▁▁▁▁▃▅██▆▃▂▁▁▁ │
-│ βvh[4] │  -1.348    0.818   -2.228   -0.874    0.496   ▁▁▁▃▅██▆▃▂▁▁▁ │
-│ βvh[5] │  -0.527    0.818   -1.389   -0.061     1.31  ▁▁▁▁▃▆██▅▃▁▁▁▁ │
-└────────┴─────────────────────────────────────────────────────────────┘
-
-"""
 
 ## Draw figures
 
