@@ -325,7 +325,7 @@ When considering the entire population, including uninfected mice, \textit{H. po
 
 \subsection{Prediction of the effect of population-wide anthelmintic treatment on vaccine responsiveness}
 
-Parametrised SCMs allow predicting how interventions on a set of variables might affect the values of downstream, causally posterior, variables for any individual on the population. Here, we wanted to (i) quantify how effective the vaccine might have been, had the whole population been treated against worms (i.e. all worm burdens held at 0 in the modified SCM), and (ii) identify which individuals would have seen the greatest effect of anthelmintic treatment on their individual response to the vaccine. To answer these counterfactual questions, we used our SCM as parametrised with the observed values reported above, and substituted non-zero parasite counts with zeros to generate synthetic counterfactual outcomes, all other variables remaining intact.
+Parametrised SCMs allow predicting how interventions on a set of variables might affect the values of downstream, causally posterior, variables for any individual on the population. Here, we wanted to (i) quantify how effective the vaccine might have been, had the whole population been treated against worms (i.e. all worm burdens held at 0 in the modified SCM), (ii) identify which individuals would have seen the greatest effect of anthelmintic treatment on their individual response to the vaccine, and (iii) identify which of the factors that we measured were the best predictors of the effect of anthelmintic treatment on vaccine responsiveness in those individuals. To answer these counterfactual questions, we used our SCM as parametrised with the observed values reported above, and substituted non-zero parasite counts with zeros to generate synthetic counterfactual outcomes, all other variables remaining intact.
 
 % \FigPostAnthelminthic
 \begin{figure}[htbp]
@@ -333,20 +333,24 @@ Parametrised SCMs allow predicting how interventions on a set of variables might
 	\begin{subfigure}[b]{0.45\textwidth}
 		\centering
 		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/E_pre_post.pdf}
-		\put(-200, 160){\sffamily \textbf{A}} % Adjust coordinates as needed
+		\put(-200, 140){\sffamily \textbf{A}} % Adjust coordinates as needed
 	\end{subfigure}%
 	\begin{subfigure}[b]{0.45\textwidth}
 		\centering
 		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/post_anthelminthic_effect_on_E.pdf}
-		\put(-200, 160){\sffamily \textbf{B}} % Adjust coordinates as needed
+		\put(-200, 140){\sffamily \textbf{B}} % Adjust coordinates as needed
 	\end{subfigure}
-	\caption{\textbf{Effect of simulated population-wide anthelmintic intervention on vaccine responsiveness.} \textbf{A}, Effect on population-wide vaccine responsiveness. \textbf{B}, Effect on individual vaccine responsiveness as a function of pre-intervention parasite burden.}
-	\label{fig:post_anthelminthic}
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/S_R_interaction.pdf}
+		\put(-200, 140){\sffamily \textbf{C}} % Adjust coordinates as needed
+	\end{subfigure}
+	\caption{\textbf{Effect of simulated population-wide anthelmintic intervention on vaccine responsiveness.} \textbf{A}, Distribution of vaccine responses before and after the simulated intervention, showing the population-wide shift in responsiveness, with pre-intervention (observed) values in blue and post-intervention (simulated) values in orange. \textbf{B}, Individual-level changes in vaccine responsiveness plotted against pre-intervention parasite burden, with vertical lines connecting each individual's pre-intervention (blue circles) and post-intervention (orange triangles) responses; upward-pointing orange lines indicate improved vaccine response after intervention. \textbf{C}, Interaction between sex and reproductive status on the predicted change in vaccine responsiveness under simulated anthelmintic intervention, showing mean changes in vaccine response ($E\_diff = E\_post - E\_pre$) for each combination of sex and reproductive status, with error bars representing the standard error of the mean. Positive values indicate an increase in vaccine response after the intervention.}
+	\label{fig:counterfactual}
 \end{figure}
 
-We found that, had all mice been treated including those that had not received treatment in our experiment, would have resulted in an overall 15\% increase in vaccine responsiveness, had all mice been treated with anthelmintic drugs (Fig. \ref{fig:post_anthelminthic}A).
-
-The predicted difference in vaccine responsiveness varied between individuals, though not proportionally with observed parasite burdens (Fig. \ref{fig:post_anthelminthic}B). Instead, the strongest predictor of the effect of anthelmintic treatment on vaccine responsiveness was individual reproductive status, followed by diet (Fig. \ref{supfig:Ediff}). This suggests that reproductive individuals may benefit most from anthelmintic treatment for improving vaccine responsiveness.
+We found that, had all mice been treated including those that had not received treatment in our experiment, would have resulted in an overall 15\% increase in vaccine responsiveness, had all mice been treated with anthelmintic drugs (Fig. \ref{fig:counterfactual}A).
+The predicted difference in vaccine responsiveness varied between individuals, though not proportionally with observed parasite burdens (Fig. \ref{fig:counterfactual}B). Instead, the strongest predictor of the effect of anthelmintic treatment on vaccine responsiveness was individual reproductive status and sex, such that reproductive females were predicted to benefit most from anthelmintic treatment for improving vaccine responsiveness (Fig. \ref{fig:counterfactual}C).
 
 \section{Discussion}
 
@@ -424,7 +428,7 @@ Model construction was performed in Julia v1.11~\cite{Bezanson2017} using packag
 To validate $\mathbb{C}_{VE}$ (Model~\ref{eq:SCM}), we tested the independencies it implies~\cite{Pearl2009b,Cinelli2021}. Specifically, we used the observed values for each of the nodes of the causal graph (Figure~\ref{fig:DAGtikz}) to test the truth of the following 13 implied independences: ($D \upmodels S$), ($D \upmodels T \mid H$), ($D \upmodels V$), ($F \upmodels V \mid T, H$), ($H \upmodels S$), ($H \upmodels V$), ($M \upmodels V \mid T, H$), ($P \upmodels T \mid D, R, S, H$), ($P \upmodels V \mid T, H$), ($P \upmodels V \mid D, R, S, H$), ($R \upmodels V \mid T, H$), ($S \upmodels T$), and ($S \upmodels V$). For each of these tests, we constructed a generalised linear mixed model with the appropriate link function, with mouse ID and immunisation protocol as random effects, and considered the statement true if $P_X \greater 0.1$, where $X \subseteq \mathbb{C}_{VE}$ (\nameref{supdata:SCMconstruction}). We used MixedModels.jl ~\cite{douglas_bates_2022} to test the conditional independencies implied by $\mathbb{C}_{VE}$.
 The unmeasured noise variables $\mathcal{U}_j$ (Model~\ref{eq:SCM}), were assumed to be independent and identically distributed.
 
-\subsubsection{Model parameterisation, statistical estimation, ad simulation}\label{sec:parameterisation}
+\subsubsection{Model parameterisation, statistical estimation, and simulation}\label{sec:parameterisation}
 
 Bayesian models were used for statistical estimation of causal effects, assuming linearity and independence of noise variables as above. All Bayesian modelling was performed in Julia v1.11~\cite{Bezanson2017} using Turing.jl~\cite{ge2018t}.
 
@@ -432,7 +436,7 @@ Bayesian models were used for statistical estimation of causal effects, assuming
 
 \paragraph{Missing data.} Twenty-two mice had no fat scores, resulting in 67 missing values in the full repeated sampling dataset. To avoid having to remove those mice from the analysis, we used Bayesian imputation to estimate plausible probability distributions of each of the missing values given the values of parent nodes in $\mathbb{C}_{VE}$ (Model~\ref{eq:SCM}) for each of the 22 mice. For example, missing fat scores were imputed as $ \dot F \sim \alpha + \beta_T \cdot T + \beta_H \cdot H + \beta_D \cdot D + \beta_P \cdot P + \beta_S \cdot S$, where $\dot F$ is the vector of fat scores containing missing values, $\alpha$ is the intercept and each of the $\beta$ parameters are the partial regression coefficients of the linear model (Figure~\ref{fig:DAGtikz}).
 
-\paragraph{Counterfactual estimation of anthelmintic treatment.} Do quantify vaccine responsiveness in mice, had they been fully de-wormed at the time of immunisation, we fixed all values of parasite counts $P$ at 0, resulting in the blocking of all paths into $P$, thereby simulating the blocking of causal effects mediated by or originating from \textit{H. polygyrus} infection. Comparing parameter values of unmodified (true) and modified (counterfactual) scenarios allowed (a) estimation of the population-wide change in vaccine responsiveness, had all mice been administered the anthelmintic, and (b) identification of the covariates associated with the greatest change in vaccine responsiveness at the individual level, using the individual differences between observed pre- and predicted post-intervention values of $E$ as the response variable of a generalised linear mixed effects model with the explanatory variables indicated by $\mathbb{G}_{VE}$.
+\paragraph{Counterfactual estimation of anthelmintic treatment.} To quantify vaccine responsiveness in mice, had they been fully de-wormed at the time of immunisation, we fixed all values of parasite counts $P$ at 0, resulting in the blocking of all paths into $P$, thereby simulating the blocking of causal effects mediated by or originating from \textit{H. polygyrus} infection. Comparing parameter values of unmodified (true) and modified (counterfactual) scenarios allowed (a) estimation of the population-wide change in vaccine responsiveness, had all mice been administered the anthelmintic, and (b) identification of the covariates associated with the greatest change in vaccine responsiveness at the individual level, using the individual differences between observed pre- and predicted post-intervention values of $E$ as the response variable of a generalised linear mixed effects model with the explanatory variables indicated by $\mathbb{G}_{VE}$ and their interactions.
 
 \section{Acknowledgements}
 
@@ -530,14 +534,6 @@ Contributed reagents/materials/analysis tools: ABP, SAB \\ All the authors revie
 
 		\label{supfig:igg1}
 
-	\end{figure}
-
-	\subsection{Effect of anthelmintic intervention on vaccine responsiveness}
-	% \SupFigEdiff
-	\begin{figure}[H]
-		\includegraphics[width=0.7\textwidth, keepaspectratio=true]{./Figures/plots/E_diff_association.pdf}
-		\caption{Effect of anthelmintic intervention on vaccine responsiveness.}
-		\label{supfig:Ediff}
 	\end{figure}
 
 \end{appendices}
