@@ -286,7 +286,7 @@ However, this model does not explain how habitat and diet are driving poor vacci
 	\label{fig:DAGtikz}
 \end{figure}
 
-We tested the validity of the causal hypotheses represented in the DAG $\mathbb{G}_{VE}$ using the observed data (Fig~\ref{fig:DAGtikz}; see also methods section on \nameref{sec:construction}). For example, $\mathbb{G}_{VE}$ (Figure~\ref{fig:DAGtikz}A) indicates that parasite infection should be independent of vaccination if adjusted for diet, reproductive status, sex, and habitat ($P \upmodels V \mid D, R, S, H$); therefore, we fitted a binomial generalised linear mixed model $P \sim \alpha + \beta_V V + \beta_D D + \beta_R R + \beta_S S + \beta_H H + (1 | ID)$, and confirmed that the posterior distribution of $\beta_V$ was not significantly different from zero. This process was repeated for all implied independencies derived from the causal graph $\mathbb{G}_{VE}$ (see \nameref{sec:structure} methods), and $\mathbb{G}_{VE}$ was updated until all causal paths were both supported by the observed data and consistent with biological expectations.
+We tested the validity of the causal hypotheses represented in the DAG $\mathbb{G}_{VE}$ using the observed data (Fig~\ref{fig:DAGtikz}; and see methods section on \nameref{sec:construction}). For example, $\mathbb{G}_{VE}$ (Figure~\ref{fig:DAGtikz}A) indicates that parasite infection should be independent of vaccination if adjusted for diet, reproductive status, sex, and habitat ($P \upmodels V \mid D, R, S, H$); therefore, assuming linearity, we fitted a binomial generalised linear mixed model $P \sim \alpha + \beta_V V + \beta_D D + \beta_R R + \beta_S S + \beta_H H + (1 | ID)$, and confirmed that the posterior distribution of $\beta_V$ was not significantly different from zero. This process was repeated for all implied independencies derived from the causal graph $\mathbb{G}_{VE}$ (see \nameref{sec:structure} methods), and $\mathbb{G}_{VE}$ was updated until all causal paths were both supported by the observed data and consistent with biological expectations. The final DAG $\mathbb{G}_{VE}$ and structural equations $\mathbb{C}_{VE}$ are shown in figure \ref{fig:DAGtikz}.
 
 \subsection{Causal analysis demonstrates that diet and habitat strongly impact vaccine responsiveness}
 
@@ -302,7 +302,7 @@ We tested the validity of the causal hypotheses represented in the DAG $\mathbb{
 \end{figure}
 
 Using the resulting, validated, DAG $\mathbb{G}_{VE}$, we fit the set of structural equations $\mathbb{C}_{VE}$ (Model \ref{eq:SCM}) as Bayesian hierarchical linear models to estimate the total and direct causal effects indicated by the edges in $\mathbb{G}_{VE}$ (Fig.~\ref{fig:DAGtikzParam}).
-The posterior distributions of causal parameters (regression coefficients) indicate that vaccination had an average causal effect of 1.50 ± 0.13 ($log10 + 1$)-transformed OD units relative to unvaccinated animals and no indirect effects mediated by body fat $F$, body mass $M$, reproductive status $R$ or parasite burden $P$ (Fig.~\ref{fig:DAGtikzParam}B). However, vaccine responsiveness was strongly influenced by both wild habitat and dietary supplementation.
+The posterior distributions of causal parameters (regression coefficients) indicated that vaccination had an average causal effect of 1.50 ± 0.13 ($log10 + 1$)-transformed OD units relative to unvaccinated animal and that vaccine responsiveness was strongly affected by both wild habitat and dietary supplementation. However, while body fat $F$, body mass $M$, and reproductive status $R$ were strongly impacted by Diet and Habitat, they did not mediate those effects onto vaccine responsiveness.
 
 \subsection{Habitat had wide-ranging effects on wood mice and their response to vaccination}
 
@@ -321,11 +321,11 @@ The total causal effect of sex on DTV-specific antibody production $E$ indicated
 
 \subsection{Parasite infection reduced vaccine responsiveness}
 
-When considering the entire population, including uninfected mice, \textit{H. polygyrus} burden had no clear effect on DT vaccine responsiveness (-0.13 ± 0.11 $logOD$). However, because parasite burdens (measured as worm burdens) are overdispersed and zero-inflated, we also estimated the causal effects of infection burden on DT vaccine responsiveness only among infected. Here we found that parasite burdens among the infected mice had a strong negative effect on vaccine responsiveness, with a slope of -0.58 ± 0.35 $logOD$, after adjusting for diet, sex, reproductive status, and vaccination. This indicates that higher parasite burdens are associated with a significant decrease in vaccine responsiveness.
+When considering the entire population, including uninfected mice, \textit{H. polygyrus} burden had no clear effect on DT vaccine responsiveness (-0.13 ± 0.11 $logOD$). However, because parasite burdens (measured as worm burdens) are overdispersed and zero-inflated, we also estimated the causal effects of infection burden on DT vaccine responsiveness only among the infected. Here we found that parasite burdens among the infected mice had a strong negative effect on vaccine responsiveness, with a slope of -0.58 ± 0.35 $logOD$, after adjusting for diet, sex, reproductive status, and vaccination. This indicates that higher parasite burdens are associated with a significant decrease in vaccine responsiveness.
 
 \subsection{Prediction of the effect of population-wide anthelmintic treatment on vaccine responsiveness}
 
-Next, we wanted to know (i) how effective the vaccine might have been, had the whole population been treated against worms (i.e. all worm burdens held at 0 in the modified SCM), and (ii) which individuals would have seen the greatest effect of anthelmintic treatment on their individual response to the vaccine. To answer the counterfactuals, we used our SCM as parametrised with the observed values reported above.
+Parametrised SCMs allow predicting how interventions on a set of variables might affect the values of downstream, causally posterior, variables for any individual on the population. Here, we wanted to (i) quantify how effective the vaccine might have been, had the whole population been treated against worms (i.e. all worm burdens held at 0 in the modified SCM), and (ii) identify which individuals would have seen the greatest effect of anthelmintic treatment on their individual response to the vaccine. To answer these counterfactual questions, we used our SCM as parametrised with the observed values reported above, and substituted non-zero parasite counts with zeros to generate synthetic counterfactual outcomes, all other variables remaining intact.
 
 % \FigPostAnthelminthic
 \begin{figure}[htbp]
@@ -344,7 +344,7 @@ Next, we wanted to know (i) how effective the vaccine might have been, had the w
 	\label{fig:post_anthelminthic}
 \end{figure}
 
-Population-wide anthelmintic treatment would have increased vaccine responsiveness by 15\% on average, had all mice been treated with antihelminthic drugs (Fig. \ref{fig:post_anthelminthic}A).
+We found that, had all mice been treated including those that had not received treatment in our experiment, would have resulted in an overall 15\% increase in vaccine responsiveness, had all mice been treated with anthelmintic drugs (Fig. \ref{fig:post_anthelminthic}A).
 
 The predicted difference in vaccine responsiveness varied between individuals, though not proportionally with observed parasite burdens (Fig. \ref{fig:post_anthelminthic}B). Instead, the strongest predictor of the effect of anthelmintic treatment on vaccine responsiveness was individual reproductive status, followed by diet (Fig. \ref{supfig:Ediff}). This suggests that reproductive individuals may benefit most from anthelmintic treatment for improving vaccine responsiveness.
 
