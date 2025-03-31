@@ -274,11 +274,7 @@ To further quantify how habitat (lab \textit{vs.} wild), diet (supplemented \tex
 
 However, this model does not explain how habitat and diet are driving poor vaccine responsiveness. Further, it does not account for potential confounding and mediating effects of mouse sex, reproductive status, body mass, body fat, or gastrointestinal parasite burdens, which we hypothesise also contribute to variation in vaccine responsiveness. To address these limitations, we constructed a structural causal model (SCM) of the processes generating variation in vaccine responsiveness $\mathbb{C}_{VE}$ in this system.
 
-\subsection{Construction of a structural causal model of vaccine responsiveness}
-
-To understand more specifically the relative contributions of diet and habitat to vaccine responsiveness, and how these effects might be mediated by parasite infection, reproductive status, and body condition, we built a causal model of vaccine efficacy in our wood mouse system, first by constructing a graphical model of our hypotheses, then using our data to validate and refine its structure (see casual flow diagram, Fig.~\ref{supfig:SCM_flow}).
-
-The resulting causal directed acyclic graph (DAG) $\mathbb{G}_{VE}$ and corresponding SCM $\mathbb{C}_{VE}$ then allowed us to estimate vaccine responsiveness $E$ as a function of vaccination $V$, habitat $H$ and diet supplementation $D$, and more importantly, to identify which variables could act as confounders or mediators that might modulate vaccine responsiveness. In summary, the DAG $\mathbb{G}_{VE}$ (Figure~\ref{fig:DAGtikz}A) represents the hypothesised structure of the biological processes that cause the variation in vaccine responsiveness observed in this system, and the corresponding SCM $\mathbb{C}_{VE}$ (Figure~\ref{fig:DAGtikz}B) that links (via the edges in $\mathbb{G}_{VE}$) our variables of interest (nodes in $\mathbb{G}_{VE}$) to vaccine efficacy $E$ under the different habitat and dietary treatments.
+\subsection{Updating the structural causal model of vaccine responsiveness in light of the data}
 
 % \FigDAGtikz
 \begin{figure}[htbp]
@@ -290,17 +286,7 @@ The resulting causal directed acyclic graph (DAG) $\mathbb{G}_{VE}$ and correspo
 	\label{fig:DAGtikz}
 \end{figure}
 
-Vaccination $V$ was allocated at random, and therefore has no parent node. It was hypothesised to affect parasite infection $P$, reproductive status $R$, body mass $M$ and fat stores $F$ through non-specific effects in addition to its main intended effect on vaccine responsiveness $E$.
-Habitat $H$ was considered random and therefore took no parent node, but was hypothesised to affect all other variables except $V$ and sex $S$.
-Likewise, diet supplementation $D$ was allocated at random, and was hypothesised to affect reproductive status $R$, body mass $M$, body fat $F$ and parasite burdens $P$ as well as $E$, with fat scores $F$ hypothesised to be a cause of variation in body mass $M$.
-Sex $S$ being genetically determined and therefore subject to Mendelian randomisation~\cite{Lawlor2008}, and all treatments being randomised with respect to sex, $S$ had no parent node, and was considered causally prior to reproductive status $R$, body mass $M$, body fat $F$ and parasite burdens $P$.
-Reproductive status $R$ was hypothesised to affect body mass $M$ and parasite burden $P$.
-Vaccine responsiveness $E$ was hypothesised to be affected by all other variables.
-Each node also had its independent error term to capture all unobserved sources of variation, assumed to be independent and identically distributed (Figure~\ref{fig:DAGtikz}B).
-
-\subsection{Validation of the causal model}
-
-We then tested the validity of the causal hypotheses described above, using $\mathbb{G}_{VE}$ to construct each model. For example, $\mathbb{G}_{VE}$ (Figure~\ref{fig:DAGtikz}A) indicates that parasite infection should be independent of vaccination if adjusted for diet, reproductive status, sex, and habitat ($P \upmodels V \mid D, R, S, H$); therefore, we fitted a binomial generalised linear mixed model $P \sim \alpha + \beta_V V + \beta_D D + \beta_R R + \beta_S S + \beta_H H + (1 | ID)$, and confirmed that the posterior distribution of $\beta_V$ was not significantly different from zero. This process was repeated for all implied independencies derived from the causal graph $\mathbb{G}_{VE}$ (see \nameref{sec:structure} methods), and $\mathbb{G}_{VE}$ was updated until all causal paths were both supported by the observed data and consistent with biological expectations.
+We tested the validity of the causal hypotheses represented in the DAG $\mathbb{G}_{VE}$ using the observed data (Fig~\ref{fig:DAGtikz}; see also methods section on \nameref{sec:construction}). For example, $\mathbb{G}_{VE}$ (Figure~\ref{fig:DAGtikz}A) indicates that parasite infection should be independent of vaccination if adjusted for diet, reproductive status, sex, and habitat ($P \upmodels V \mid D, R, S, H$); therefore, we fitted a binomial generalised linear mixed model $P \sim \alpha + \beta_V V + \beta_D D + \beta_R R + \beta_S S + \beta_H H + (1 | ID)$, and confirmed that the posterior distribution of $\beta_V$ was not significantly different from zero. This process was repeated for all implied independencies derived from the causal graph $\mathbb{G}_{VE}$ (see \nameref{sec:structure} methods), and $\mathbb{G}_{VE}$ was updated until all causal paths were both supported by the observed data and consistent with biological expectations.
 
 \subsection{Causal analysis demonstrates that diet and habitat strongly impact vaccine responsiveness}
 
@@ -311,12 +297,12 @@ We then tested the validity of the causal hypotheses described above, using $\ma
 	\input{Figures/DAGtikz-param.tex}
 	\caption{\textbf{Fully resolved Causal Model of vaccine efficacy.} \textbf{A}, Directed acyclic graph representing point estimates of positive (blue), negative (red), and null (gray) direct causal effects ± std driving vaccine responsiveness \(E\). \textbf{B}, MCMC sampling of posterior distributions of the coefficients estimating the direct effect of the wild habitat $H$ on vaccine responsiveness $E$, with the adjustment set including, Diet $D$, Fat scores $F$, body mass $M$, parasite burden $P$, active reproductive status $R$, and female sex $S$; vaccine formulation $V$ and individual treated as random effects:
 	$E \coloneq β_{Hab}H + β_{Diet}D + β_{Fat}F + β_{Mass}M + β_{Para}P + β_{Rep}R + β_{Sex}S + \mathcal{N}(0,Exp(\sigma_E))$
-	(see \nameref{sec:parameterisation} methods). Note that each edge in panel A shows the direct causal effect of its parent node on its child node, which is conditional on the specific adjustment set for that model; thus, only the coefficient $β_{Diet}$ for the edge between $D$ and $E$ is a causal estimate in panel B, while the others are only associative.}
+	(see \nameref{sec:parameterisation} methods). Note that each edge in panel A shows the direct causal effect of its parent node on its child node, which is conditional on the specific adjustment set for that model.}
 	\label{fig:DAGtikzParam}
 \end{figure}
 
-Using the resulting, validated, DAG, we parametrised the casual model~\ref{eq:SCM} using Bayesian linear models to estimate the total and direct causal effects indicated by the edges in $\mathbb{G}_{VE}$ (Fig.~\ref{fig:DAGtikzParam}).
-Vaccination had an average causal effect of 1.50 ± 0.13 ($log10 + 1$)-transformed OD units ($logOD$) relative to unvaccinated animals and no indirect effects mediated by body fat $F$, body mass $M$, reproductive status $R$ or parasite burden $P$ (Fig.~\ref{fig:DAGtikzParam}B). However, vaccine responsiveness was strongly influenced by both wild habitat and dietary supplementation.
+Using the resulting, validated, DAG $\mathbb{G}_{VE}$, we fit the set of structural equations $\mathbb{C}_{VE}$ (Model \ref{eq:SCM}) as Bayesian hierarchical linear models to estimate the total and direct causal effects indicated by the edges in $\mathbb{G}_{VE}$ (Fig.~\ref{fig:DAGtikzParam}).
+The posterior distributions of causal parameters (regression coefficients) indicate that vaccination had an average causal effect of 1.50 ± 0.13 ($log10 + 1$)-transformed OD units relative to unvaccinated animals and no indirect effects mediated by body fat $F$, body mass $M$, reproductive status $R$ or parasite burden $P$ (Fig.~\ref{fig:DAGtikzParam}B). However, vaccine responsiveness was strongly influenced by both wild habitat and dietary supplementation.
 
 \subsection{Habitat had wide-ranging effects on wood mice and their response to vaccination}
 
@@ -419,9 +405,17 @@ We then used Bayesian hierarchical models to minimise the effects of imbalance o
 
 The structural causal modelling (SCM) framework~\cite{Pearl2009b,Peters2017a} proposes explicit qualitative solutions to biases inherent in datasets and can guide the statistical estimation of the causal mechanisms by which data are generated in complex systems~\cite{Bareinboim2016,Pearl2012b}. Further, Bayesian statistical methods for estimating the causal effects allow unbalanced small data and beetter imputation of missing values~\cite{McElreath2020}, and provide explicit estimation and propagation of uncertainty given assumptions made by the model~\cite{Gelman2013}. Specifically, here we have made three strong assumptions: that vaccine, diet, and habitat treatments were randomly allocated; that there were no unmeasured (statistically relevant) confounders; and that all relationships between variables were linear.
 
-\subsubsection{Model construction}
+\subsubsection{Model construction}\label{sec:construction}
 
-We constructed a directed acyclic graph (DAG) $\mathbb{G}_{VE}$ representing the effect of vaccination $V$ on vaccine responsiveness $E$ and hypothesised causal relationships between the variables described above (Fig.~\ref{fig:DAGtikz}A). The DAG $\mathbb{G}_{VE}$  is also expressed as a set of structural equations where child nodes are assigned some function of their parents $\mathbb{C}_{VE}$ and unmeasured noise, which is assumed to be independent (Model~\ref{eq:SCM}, Figure~\ref{fig:DAGtikz}B).
+To understand more specifically the relative contributions of diet and habitat to vaccine responsiveness, and how these effects might be mediated by parasite infection, reproductive status, and body condition, we built a causal model of vaccine efficacy in our wood mouse system, first by constructing a graphical model of our hypotheses, then using our data to validate and refine its structure (see \nameref{sec:structure} and casual flow diagram, Fig.~\ref{supfig:SCM_flow}).
+
+Vaccination $V$ was allocated at random, and therefore has no parent node. It was hypothesised to affect parasite infection $P$, reproductive status $R$, body mass $M$ and fat stores $F$ through non-specific effects in addition to its main intended effect on vaccine responsiveness $E$.
+Habitat $H$ was considered random and therefore took no parent node, but was hypothesised to affect all other variables except $V$ and sex $S$.
+Likewise, diet supplementation $D$ was allocated at random, and was hypothesised to affect reproductive status $R$, body mass $M$, body fat $F$ and parasite burdens $P$ as well as $E$, with fat scores $F$ hypothesised to be a cause of variation in body mass $M$.
+Sex $S$ being genetically determined and therefore subject to Mendelian randomisation~\cite{Lawlor2008}, and all treatments being randomised with respect to sex, $S$ had no parent node, and was considered causally prior to reproductive status $R$, body mass $M$, body fat $F$ and parasite burdens $P$.
+Reproductive status $R$ was hypothesised to affect body mass $M$ and parasite burden $P$.
+Vaccine responsiveness $E$ was hypothesised to be affected by all other variables.
+Each node also had its independent error term to capture all unobserved sources of variation, assumed to be independent and identically distributed (Figure~\ref{fig:DAGtikz}B).
 
 Model construction was performed in Julia v1.11~\cite{Bezanson2017} using package Dagitty.jl and Turing.jl~\cite{ge2018t}, and $\mathbb{G}_{VE}$ corresponding to $\mathbb{C}_{VE}$ was drawn in Tikz~\cite{Tan12}.
 
