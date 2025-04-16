@@ -4,6 +4,9 @@
 \usetikzlibrary{arrows.meta}
 
 % \begin{document}
+\begin{minipage}{\linewidth}
+\centering
+\scalebox{0.9}{
 \begin{tikzpicture}[scale=1.7]
 	\node[inner sep = 0, font=\sffamily] (panel A) at (-3.6,5.2) {\textbf{A}};
 	\node[circle, draw, inner sep=4pt, fill=LimeGreen, font=\bfseries, text opacity=1, fill opacity=0.4, minimum width=22pt] (V) at (-3,0) {\(V\)};
@@ -56,8 +59,6 @@
 		fill=white, sloped, inner sep=1] {0.00 ± 0.01};
 	\draw [-stealth, blue, very thick] (V) -- (E) node[midway, font=\tiny\bfseries, text=blue,
 		fill=white, sloped, inner sep=1] {1.50 ± 0.13};
-	% \draw [-stealth, gray] (H) -- (D) node[midway, font=\tiny,
-		% fill=white, sloped, inner sep=1] {0.06 ± 0.1};
 	\draw [-stealth, red, very thick] (H) -- (E) node[midway, font=\tiny\bfseries, text=red,
 		fill=white, sloped, inner sep=1] {-0.66 ± 0.15};
 	\draw [-stealth, red, very thick] (H) -- (F) node[midway, font=\tiny\bfseries, text=red,
@@ -79,12 +80,19 @@
 	\draw [-stealth, gray] (D) -- (R) node[midway, font=\tiny,
 		fill=white, sloped, inner sep=1] {-0.01 ± 0.04};
 \end{tikzpicture}
+}
+\end{minipage}\par
 
-% \vspace{0.1cm}
+% \vspace{1em}
 
-\begin{tikzpicture}
-	\node[inner sep=0pt, left of = V, align=left] (probs)
-	{\includegraphics[width=0.8\textwidth]{./Figures/plots/MultiLevel_DE_H_E_chn_traces.pdf}};
-	\node[inner sep = 0, font=\sffamily, align=left] (panel A) at (-12,4.5) {\textbf{B}};
-\end{tikzpicture}
+\begin{minipage}{\linewidth}
+\centering
+\scalebox{0.85}{
+    \begin{tikzpicture}
+        \node[inner sep=0pt, anchor=center] (probs) at (0,0)
+        {\includegraphics[width=0.8\textwidth]{./Figures/plots/MultiLevel_DE_H_E_chn_traces.pdf}};
+        \node[inner sep = 0, font=\sffamily, anchor=north west] (panel B) at ([xshift=-1cm,yshift=1cm]probs.north west) {\textbf{B}};
+    \end{tikzpicture}
+}
+\end{minipage}
 % \end{document}
