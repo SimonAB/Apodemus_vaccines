@@ -34,7 +34,7 @@ using RCall
 using CairoMakie
 CairoMakie.activate!(type="svg")
 using MixedModelsMakie
-# using Formatting
+using Colors
 
 # include modules
 cd("./src/")
@@ -90,7 +90,8 @@ adjustmentSets(dag_m, "P", "E", effect="total") # { }
 # Mixed model
 
 glmm_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + D + R + S + V + (1 | ID)), dag_df_infected)
-glmm_P_E_post = fit(MixedModel, @formula(E ~ 1 + post_nP + D + R + S + V + (1 | ID)), dag_df_infected)
+# glmm_P_E_post = fit(MixedModel, @formula(E ~ 1 + post_nP + D + R + S + V + (1 | ID)), dag_df_infected)
+glmm_P_E_post = fit(MixedModel, @formula(E ~ 1 + post_nP + (1 | ID)), dag_df_infected)
 
 
 # Plot the distribution of the effects of P on E
@@ -136,8 +137,11 @@ function plot_E_pre_post(df; saveplot=false)
     fig = Figure()
     ax = Axis(fig[1, 1])
 
+    # Define custom colour (#c0c7db)
+    light_blue_grey = RGB(192 / 255, 199 / 255, 219 / 255) # Corresponds to #c0c7db
+
     # Plot histograms of pre- and post-intervention responses
-    hist!(ax, df.E_pre, label="Pre-intervention (observed)")
+    hist!(ax, df.E_pre, color=light_blue_grey, label="Pre-intervention (observed)")
     hist!(ax, df.E_post, color=:orange, label="Post-intervention (simulated)")
     axislegend(ax, position=:lt)
 
@@ -202,28 +206,46 @@ function plot_post_anthelminthic(df; saveplot=false)
     fig = Figure()
     ax = Axis(fig[1, 1])
 
+    # Define colours for sex and intervention state
+    male_color = :steelblue
+    female_color = :crimson
+    light_blue_grey = RGB(192 / 255, 199 / 255, 219 / 255) # Corresponds to #c0c7db
+
     # Plot data for each mouse
     for mouse in unique(df.IDidx)
         mouse_data = df[df.IDidx.==mouse, :]
+
+        # Determine sex colour for the outline - assumes sex is constant for a mouse
+        sex_outline_color = mouse_data.S[1] == 1 ? male_color : female_color
+
         for i in 1:size(mouse_data, 1)
             # Draw vertical lines connecting pre- and post-intervention points
             if mouse_data.E_pre[i] < mouse_data.E_post[i]
                 lines!(ax, [mouse_data.nP[i], mouse_data.nP[i]],
                     [mouse_data.E_pre[i], mouse_data.E_post[i]],
-                    color=:orange, linewidth=3, alpha=0.7)
+                    color=:orange, linewidth=3, alpha=0.5)
             else
                 lines!(ax, [mouse_data.nP[i], mouse_data.nP[i]],
                     [mouse_data.E_pre[i], mouse_data.E_post[i]],
-                    color=:black, alpha=0.7)
+                    color=:black, alpha=0.5)
             end
         end
-        # Plot pre- and post-intervention points
+        # Plot pre- and post-intervention points with sex-based outlines
         scatter!(ax, mouse_data.nP, mouse_data.E_pre,
-            color=:steelblue, label="Pre-intervention",
-            markersize=14)
+            color=light_blue_grey, # Changed fill to custom light blue-grey
+            strokecolor=sex_outline_color,
+            strokewidth=2,
+            label="Pre-intervention",
+            markersize=16,
+            alpha=0.7)
         scatter!(ax, mouse_data.nP, mouse_data.E_post,
-            color=:orange, label="Post-intervention",
-            marker=:utriangle, markersize=14)
+            color=:orange,
+            strokecolor=sex_outline_color,
+            strokewidth=2,
+            label="Post-intervention",
+            marker=:utriangle,
+            markersize=16,
+            alpha=0.7)
     end
 
     # Configure axis labels and styling
@@ -235,12 +257,16 @@ function plot_post_anthelminthic(df; saveplot=false)
     ax.ylabelfont = :bold
 
     # Add legend text
-    text!(ax, "● Pre-intervention (observed)",
-        position=(115, 0.3), color=:steelblue,
-        fontsize=13, font=:bold)
-    text!(ax, "▲ Post-intervention (simulated)",
-        position=(115, 0.2), color=:orange,
-        fontsize=13, font=:bold)
+    pre_male = MarkerElement(color=light_blue_grey, marker=:circle, markersize=16, strokecolor=male_color, strokewidth=2)
+    pre_female = MarkerElement(color=light_blue_grey, marker=:circle, markersize=16, strokecolor=female_color, strokewidth=2)
+    post_male = MarkerElement(color=:orange, marker=:utriangle, markersize=16, strokecolor=male_color, strokewidth=2)
+    post_female = MarkerElement(color=:orange, marker=:utriangle, markersize=16, strokecolor=female_color, strokewidth=2)
+
+    # Add legend with custom elements
+    axislegend(ax,
+        [pre_male, pre_female, post_male, post_female],
+        ["Pre-intervention (Male)", "Pre-intervention (Female)", "Post-intervention (Male)", "Post-intervention (Female)"],
+        position=:rt)
 
     # Save plot if requested
     if saveplot
@@ -341,7 +367,7 @@ function plot_S_R_interaction(df; saveplot=false)
     ax.ylabelfont = :bold
 
     # Add legend in top-left corner
-    axislegend(ax, position=:lt)
+    axislegend(ax, position=:rt)
 
     # Save plot if requested
     if saveplot

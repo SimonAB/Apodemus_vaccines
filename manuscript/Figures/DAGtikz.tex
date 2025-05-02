@@ -74,7 +74,76 @@
       \end{equation}
     \end{minipage}
   };
+\end{tikzpicture}
+\vspace{1cm}
+\begin{tikzpicture}[scale=0.75, inner sep=0pt, xshift=-1cm] % Added xshift
+  \node[inner sep = 0, font=\sffamily] (panel C) at (-1,5.3) {\textbf{C} $\mathbb{G}'_{VE}$ ($do(P=0)$):};
+  \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (V) at (-3,0) {\(V\)};
+  \node[circle, draw, fill=RedOrange, text opacity=1, fill opacity=0.4, minimum width=16pt] (E) at (3,0) {\(E\)};
+  \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (H) at (-2.8,1.4) {\(H\)};
+  \node[circle, draw, fill=LimeGreen, text opacity=1, fill opacity=0.4, minimum width=16pt] (D) at (-2.5,3) {\(D\)};
+  \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (F) at (0,1) {\(F\)};
+  \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (M) at (0,2.2) {\(M\)};
+  \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (R) at (0,3.4) {\(R\)};
+  \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (P) at (0,4.6) {\(P\)};
+  \node[circle, draw, fill=Cyan, text opacity=1, fill opacity=0.4, minimum width=16pt] (S) at (2.2,3) {\(S\)};
+  \draw [-stealth] (D) edge (E);
+  \draw [-stealth] (D) edge (F);
+  \draw [-stealth] (D) edge (M);
+  \draw [-stealth, dashed, gray] (D) edge (P); % Modified edge
+  \draw [-stealth] (D) edge (R);
+  \draw [-stealth] (F) edge (E);
+  \draw [-stealth] (F) edge (M);
+  \draw [-stealth] (M) edge (E);
+  \draw [-stealth] (P) edge (E);
+  \draw [-stealth] (P) .. controls (1, 2.4) .. (F);
+  \draw [-stealth] (P) .. controls (0.7, 2.6) .. (M);
+  \draw [-stealth] (R) edge (E);
+  \draw [-stealth] (R) .. controls (0.7, 2.2) .. (F);
+  \draw [-stealth] (R) edge (M);
+  \draw [-stealth, dashed, gray] (R) edge (P); % Modified edge
+  \draw [-stealth] (S) edge (E);
+  \draw [-stealth] (S) edge (F);
+  \draw [-stealth] (S) edge (M);
+  \draw [-stealth, dashed, gray] (S) edge (P); % Modified edge
+  \draw [-stealth] (S) edge (R);
+  \draw [-stealth] (V) edge (E);
+  \draw [-stealth] (V) edge (F);
+  \draw [-stealth] (V) edge (M);
+  \draw [-stealth] (V) edge (R);
+  \draw [-stealth, dashed, gray] (V) edge (P); % Modified edge
+  \draw [-stealth] (V) edge (E);
+  % \draw [-stealth] (H) edge (D);
+  \draw [-stealth] (H) .. controls (0, 0.4) .. (E);
+  \draw [-stealth] (H) edge (F);
+  \draw [-stealth] (H) edge (M);
+  \draw [-stealth, dashed, gray] (H) edge (P); % Modified edge
+  \draw [-stealth] (H) edge (R);
+\end{tikzpicture}
+\hfill
+\begin{tikzpicture}
+  \node[inner sep = 5, font=\sffamily] (panel D) at (4.3,2.3) {\textbf{D} $\mathbb{C}'_{VE}$ ($do(P=0)$):};
+  \node [mybox, right =of E] (box){%
+    \begin{minipage}[!t]{0.63\textwidth}
+      \begin{equation} \label{eq:SCM_post}
+        \footnotesize
+        \openup -0.5ex % affecting the line spacing in the environment
+        \begin{split}
+          V & \coloneq \mathcal{U}_V                                                                                     \\
+          H & \coloneq \mathcal{U}_H                                                                                     \\
+          S & \coloneq \mathcal{U}_S                                                                                     \\
+          % D & \coloneq \beta_{HD}H + \mathcal{U}_D                                                                       \\
+          % T &\coloneq \beta_{VT}V + \beta_{HT}H + \mathcal{U}_T \\
+          R & \coloneq \beta_{DR}D + \beta_{HR}H + \beta_{VR}V + \beta_{SR}S + \mathcal{U}_R                             \\
+          P & := 0                                                                                                        \\
+          F & \coloneq \beta_{TF}V + \beta_{DF}D + \beta_{HF}H + \beta_{SF}S + \beta_{RF}R + \beta_{PF}P + \mathcal{U}_F \\
+          M & \coloneq \beta_{VM}V + \beta_{HM}H + \beta_{SM}S + \beta_{RM}R + \beta_{PM}P + \beta_{FM}F\ +              \\
+            & \beta_{DM}D + \mathcal{U}_M                                                                                \\
+          E & \coloneq \beta_{VE}V + \beta_{HE}H + \beta_{FE}F + \beta_{DE}D + \beta_{ME}M + \beta_{RE}R\ +              \\
+            & \beta_{PE}P + \beta_{SE}S + \mathcal{U}_E
+        \end{split}
+      \end{equation}
+    \end{minipage}
+  };
 \end{tikzpicture}%
-%
-
 % \end{document}
