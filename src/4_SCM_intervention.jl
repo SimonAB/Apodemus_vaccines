@@ -349,18 +349,13 @@ function plot_S_R_interaction(df; saveplot=false)
             color=sex_color)
     end
 
-    # Add axis labels and title
-    ax.xlabel = "Reproductive status"
-    ax.ylabel = "Change in vaccine response (E_diff)"
-    # ax.title = "Interaction between Sex and Reproductive status on vaccine response change"
-
     # Set x-axis ticks and labels (Non-reproductive on left, Reproductive on right)
     ax.xticks = (R_values, ["Non-reproductive", "Reproductive"])
     ax.xreversed = true  # Invert x-axis to show Non-reproductive on left
 
     # Make axis labels bigger and bold
     ax.xlabel = "Reproductive status"
-    ax.ylabel = "Change in vaccine response (E_diff)"
+    ax.ylabel = "Predicted change in vaccine response (E_diff)"
     ax.xlabelsize = 16
     ax.ylabelsize = 16
     ax.xlabelfont = :bold
