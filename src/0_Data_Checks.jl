@@ -6,6 +6,7 @@ using DataFrames
 using CSV
 using StatsPlots
 using LaTeXStrings
+println("JULIA_NUM_THREADS: ", Threads.nthreads())
 
 # %% Load data
 
