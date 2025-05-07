@@ -11,7 +11,7 @@ This script will fit a multilevel model to the data and generate the figures for
 ## Import packages
 
 print("Running on ", Threads.nthreads(), " threads.")
-# installkernel("Julia", "--project=@.", env=Dict("JULIA_NUM_THREADS" => "8"))
+# installkernel("Julia", "--project=@. --threads=auto")
 using CategoricalArrays, LazyArrays
 using DataFrames, CSV, Query
 using Random
