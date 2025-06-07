@@ -168,3 +168,72 @@ function plot_chains(chns; mask=r"α\b|β", res=(10, 1.2 * length(filter(contain
     end
     return fig
 end
+
+"""
+    safe_plot_save(filename::String, figure; fallback_dir="plots")
+
+Safely save a plot with robust path handling.
+
+This function attempts to save plots to the manuscript/Figures/plots directory,
+but provides fallback options if the path doesn't exist or cannot be accessed.
+
+# Arguments
+- `filename::String`: The filename (without path) to save the plot as
+- `figure`: The plot/figure object to save
+- `fallback_dir::String="plots"`: Fallback directory name if manuscript path fails
+
+# Returns
+- `String`: The actual path where the file was saved
+
+# Examples
+```julia
+safe_plot_save("my_plot.pdf", my_figure)
+```
+"""
+function safe_plot_save(filename::String, figure; fallback_dir::String="plots", kwargs...)
+    # Try the manuscript path first (from src/ directory)
+    manuscript_path = joinpath("..", "manuscript", "Figures", "plots", filename)
+
+    try
+        # Check if the directory exists
+        manuscript_dir = dirname(manuscript_path)
+        if isdir(manuscript_dir)
+            save(manuscript_path, figure; kwargs...)
+            println("Plot saved to: $manuscript_path")
+            return manuscript_path
+        else
+            throw(SystemError("Directory does not exist", 2))
+        end
+    catch e
+        println("Warning: Could not save to manuscript path ($manuscript_path): $e")
+
+        # Fallback 1: Try absolute path construction
+        try
+            abs_manuscript_path = joinpath(dirname(dirname(@__DIR__)), "manuscript", "Figures", "plots", filename)
+            if isdir(dirname(abs_manuscript_path))
+                save(abs_manuscript_path, figure; kwargs...)
+                println("Plot saved to: $abs_manuscript_path")
+                return abs_manuscript_path
+            else
+                throw(SystemError("Absolute directory does not exist", 2))
+            end
+        catch e2
+            println("Warning: Could not save to absolute manuscript path: $e2")
+
+            # Fallback 2: Save to local plots directory
+            try
+                # Create plots directory if it doesn't exist
+                if !isdir(fallback_dir)
+                    mkdir(fallback_dir)
+                end
+                local_path = joinpath(fallback_dir, filename)
+                save(local_path, figure; kwargs...)
+                println("Plot saved to fallback location: $local_path")
+                return local_path
+            catch e3
+                println("Error: Could not save plot anywhere: $e3")
+                rethrow(e3)
+            end
+        end
+    end
+end

@@ -13,7 +13,7 @@ This script will fit a multilevel model to the data and generate the figures for
 print("Running on ", Threads.nthreads(), " threads.")
 # installkernel("Julia", "--project=@. --threads=auto")
 using CategoricalArrays, LazyArrays
-using DataFrames, CSV, Query
+using DataFrames, CSV
 using Random
 using Statistics, Distributions
 using StatsBase, HypothesisTests
@@ -35,18 +35,13 @@ include("TuringPlots.jl")
 
 ## Import data
 include("DataWrangler.jl")
+# All cases - use more efficient filtering with missing value handling
 df = encode_df(df) # df includes repeated measures
-df =
-    df |>
-    @filter(_.days_since_1st_D_or_A ≥ 1) |> # remove most recent post vaccination samples
-    DataFrame
+df = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 1, df)
 
-
+# Unique cases - use efficient filtering with missing value handling
 df_unique = encode_df(df_unique) # df_unique no repeated measures
-df_unique =
-    df_unique |>
-    @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
-    DataFrame
+df_unique = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 4, df_unique)
 
 levels!(df.vax_history, ["A", "D", "AD", "DA", "DD"]);
 levels(df[!, :vax_history])
@@ -63,7 +58,7 @@ seroconv = standardize(ZScoreTransform, df.E[df[!, :logOD].>0], dims=1);
 
 f = Figure()
 hist(f[1, 1], seroconv, bins=10, normalization=:pdf)
-save("../manuscript/Figures/plots/E_hist.pdf", f)
+safe_plot_save("E_hist.pdf", f)
 f
 
 ExactOneSampleKSTest(seroconv, Normal())
@@ -165,7 +160,7 @@ vi_model = varying_intercept(df.IDidx, df.Vidx, df.H, df.D, df.E);
 vi_chn = sample(vi_model, NUTS(), MCMCThreads(), 3000, 4);
 
 p = plot_chains_df(vi_chn)
-save("../manuscript/Figures/plots/IgG1_varint.pdf", p)
+safe_plot_save("IgG1_varint.pdf", p)
 p
 
 vi_chn_df = DataFrame(vi_chn)[!, r"α\b|β"];
@@ -274,5 +269,5 @@ end
 rowgap!(ax1.layout, 10)
 rowsize!(ax1.layout, 2, Relative(0.4))
 
-save("../manuscript/Figures/plots/IgG1.pdf", fig, pt_per_unit=1)
+safe_plot_save("IgG1.pdf", fig, pt_per_unit=1)
 fig

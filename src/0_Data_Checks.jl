@@ -17,25 +17,36 @@ filepath = isdir(datadir) ? joinpath("./", datadir, datafile) : joinpath("../", 
 df = CSV.File(filepath; select=[:Diet, :H_poly, :Pinworms, :Cestode, :Fat_Scores_Sum, :OD_avg], pool=true, missingstring="NA") |> DataFrame
 
 """
-    data_check(df, variable_choice)
+    data_check(df::DataFrame, variable_choice::String)
 
-This function takes a DataFrame `df` and a string `variable_choice` as input.
-It filters out rows where the value of the column specified by `variable_choice` is 0,
-and then drops rows with missing values.
-It then creates a scatter plot of the variable against the 'Diet' column.
-If the variable is 'H_poly', it applies a log transformation before plotting.
+Perform exploratory data analysis for a specified variable, creating visualisations
+showing the relationship between the variable and diet supplementation.
+
+This function filters the data to remove zero values and missing observations,
+then creates box plots to visualise the distribution of the variable by diet group.
+For parasite count variables, it applies a log10(1+x) transformation.
 
 # Arguments
-- `df::DataFrame`: The DataFrame to be checked.
-- `variable_choice::String`: The variable to be checked. This should be one of "Pinworms", "Cestode", "Fat_Scores_Sum", or "OD_avg".
+- `df::DataFrame`: The DataFrame containing the data to be analysed
+- `variable_choice::String`: The variable name to analyse. Should be one of:
+  - "H_poly": H. polygyrus parasite count (will be log-transformed)
+  - "Pinworms": Pinworm parasite count
+  - "Cestode": Cestode parasite count
+  - "Fat_Scores_Sum": Sum of fat scores
+  - "OD_avg": Average optical density (vaccine response)
 
 # Returns
-Nothing. The function creates a plot as a side effect.
+- Nothing (creates plot as side effect)
 
+# Details
+- Filters out zero values and missing observations
+- Applies log10(1+x) transformation to H_poly for better visualisation
+- Creates box plots showing variable distribution by diet group
+- Uses LaTeX formatting for axis labels where appropriate
 """
 function data_check(df::DataFrame, variable_choice::String)
-    df = df[df[!, variable_choice].!=0, :]
-    dropmissing!(df)
+    # More efficient filtering with proper missing value handling
+    df = filter(row -> !ismissing(row[variable_choice]) && row[variable_choice] != 0, df)
 
     ## Some quick plots
 

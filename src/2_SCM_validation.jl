@@ -22,13 +22,12 @@ using RCall
 ## import data
 cd("./src/")
 include("DataWrangler.jl")
-df = encode_df(df) # choose between df and df_unique (the latter has no repeated measures)
-df_sel =
-  df |>
-  # @filter(_.vax_history != "DD") |> # keep only mice with a single vaccination or adjuvant
-  @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
-  @dropna(:Fat_Scores_Sum) |> # drop missing fat scores (will be imputed in 4_Fat_Scores.jl)
-  DataFrame
+# Data preparation - use efficient filtering with missing value handling
+df = encode_df(df) # Choose between df and df_unique (the latter has no repeated measures)
+df_sel = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 4, df)
+df_sel = filter(row -> !ismissing(row.Fat_Scores_Sum), df_sel) # Drop missing fat scores
+# Optional filter (commented out)
+# df_sel = filter(row -> row.vax_history != "DD", df_sel) # Keep only mice with single vaccination or adjuvant
 
 dag_df = df_sel[!, [:E, :H, :V, :D, :R, :S, :M, :F, :T, :P, :nP, :Vidx, :vax_history, :ID]]
 # Convert 1 / 0 to true / false

@@ -16,33 +16,62 @@ rawdata = CSV.File(filepath;
     missingstring="NA", pool=true) |>
           DataFrame
 
-# Clean things up
-df =
-    rawdata |>
-    @dropna(:ID) |> # remove entries which lack lab ID or PIT tag IDs (cannot be imputed)
-    @dropna(:Weight) |> # remove entries which lack a body mass measurement
-    @dropna(:Diet) |> # remove entries which lack a Diet value
-    @dropna(:repro_bin) |> # remove entries which lack a repro value
-    @filter(_.days_since_1st_D_or_A ≥ 0) |> # remove entries which were measured less than a week after vaccination
-    # @filter(_.vax_history != "DD") |> # keep only mice with a single vaccination or adjuvant
-    # @filter(_.OD > 0) |> # remove individuals who didn't seroconvert
-    DataFrame
+# Clean data - use more efficient filtering with proper missing value handling
+df = rawdata
+# Remove entries with missing critical variables - more efficient than Query.jl
+df = filter(row -> !ismissing(row.ID), df)
+df = filter(row -> !ismissing(row.Weight), df)
+df = filter(row -> !ismissing(row.Diet), df)
+df = filter(row -> !ismissing(row.repro_bin), df)
+df = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 0, df)
+# Optional filters (commented out)
+# df = filter(row -> row.vax_history != "DD", df) # Keep only mice with single vaccination or adjuvant
+# df = filter(row -> row.OD > 0, df) # Remove individuals who didn't seroconvert
 
-# select only the last complete entry for each mouse
-dataunique = df |>
-             @groupby(_.ID) |>
-             @map({ID = key(_), days_since_1st_D_or_A = maximum(_.days_since_1st_D_or_A)}) |>
-             DataFrame;
+# Select only the last complete entry for each mouse - more efficient approach
+# Find maximum days_since_1st_D_or_A for each ID
+grouped_df = groupby(df, :ID)
+dataunique = combine(grouped_df, :days_since_1st_D_or_A => maximum => :days_since_1st_D_or_A)
 
-# join the rest of the columns
-df_unique = df |>
-            @join(dataunique, _.ID, _.ID, {_..., __...}) |>
-            @unique(_.ID) |> # ensure no repeated measures
-            DataFrame;
+# Join and ensure no repeated measures - using efficient DataFrame operations
+df_unique = innerjoin(df, dataunique, on=[:ID, :days_since_1st_D_or_A])
+df_unique = unique(df_unique, :ID) # Ensure no repeated measures
 "Total number of individual wood mice: $(length(unique(df.ID)))"
 
 # ENCODE & STANDARDISE
 
+"""
+    encode_df(df::DataFrame)
+
+Encode and standardise variables for structural causal model analysis.
+
+This function transforms the raw data into the variables used in the causal DAG,
+including standardisation of continuous variables and creation of appropriate
+node encodings for causal inference.
+
+# Arguments
+- `df::DataFrame`: Raw data frame containing vaccination experiment data
+
+# Returns
+- `DataFrame`: Processed data frame with encoded variables:
+  - `E`: Standardised vaccine response (log-transformed OD)
+  - `H`: Habitat (1=lab, 2=wild)
+  - `V`: Vaccination status (1=adjuvant, 2=vaccine)
+  - `D`: Diet supplementation (1=low, 2=high)
+  - `R`: Reproductive status (1=non-reproductive, 2=reproductive)
+  - `S`: Sex (1=male, 2=female)
+  - `P`: Parasite infection status (1=uninfected, 2=infected)
+  - `M`: Standardised body mass
+  - `F`: Fat scores (raw)
+  - `Ḟ`: Standardised fat scores with missingness preserved
+  - `nP`: Parasite count (H. polygyrus + Cestodes)
+  - `Vidx`: Vaccination history index (1=A, 2=D, 3=AD, 4=DA, 5=DD)
+
+# Details
+- Uses ZScore standardisation for continuous variables
+- Preserves missing values in fat scores for Bayesian imputation
+- Creates appropriate binary/categorical encodings for causal variables
+"""
 function encode_df(df)
     # create log OD response variable
     df.logOD = log.(10, 1 .+ df.OD)
@@ -84,8 +113,22 @@ function encode_df(df)
     return df
 end
 
-# save to disk
-CSV.write("../data/clean_data.csv", df)
+# Ensure the processed data is clean before saving
+df_clean = copy(df)  # Create a clean copy
+
+# save to disk with error handling
+try
+    # Use absolute path to avoid any relative path issues
+    output_path = joinpath(dirname(@__DIR__), "data", "clean_data.csv")
+    CSV.write(output_path, df_clean)
+    println("Successfully saved clean data to: $output_path")
+catch e
+    println("Error saving data: ", e)
+    println("Attempting alternative save location...")
+    # Fallback: try saving in current directory
+    CSV.write("clean_data.csv", df_clean)
+    println("Saved clean data to current directory: clean_data.csv")
+end
 
 # print outcome
-describe(df)
+describe(df_clean)

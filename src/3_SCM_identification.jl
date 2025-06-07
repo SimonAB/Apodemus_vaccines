@@ -5,20 +5,22 @@ SCM Identification
 =#
 
 #=
-This script will statistically identify the SCM using the data from the manuscript.
+This script implements statistical identification of the Structural Causal Model (SCM)
+for vaccine efficacy analysis in wood mice, using the adjustment sets derived from the
+causal DAG to estimate direct and total causal effects.
 =#
 
 ## Import packages
 
 print("Running on ", Threads.nthreads(), " threads.")
-# data handling
-using CSV, DataFrames, Query
-# stats
+# Data handling
+using CSV, DataFrames
+# Statistics
 using Random
 using Distributions
 using HypothesisTests
 using MixedModels
-# modelling
+# Modelling
 using LazyArrays
 using LinearAlgebra: I
 using MCMCChains
@@ -30,77 +32,100 @@ using ReverseDiff
 using RCall
 @rlibrary dagitty # we use the original dagitty from R until julia native version improves
 
-# plotting & diagnostics
+# Plotting & diagnostics
 using CairoMakie
 CairoMakie.activate!(type="svg")
 using MixedModelsMakie
 # using Formatting
 
-# include modules
+# Include modules
 cd("./src/")
 include("TuringUtils.jl")
 include("TuringPlots.jl")
 
-# import data
+# Import data
 include("DataWrangler.jl")
 
-# all cases
-df = encode_df(df) # choose between df and df_unique (the latter has no repeated measures)
-df =
-  df |>
-  # @filter(_.vax_history != "DD") |> # keep only mice with a single vaccination or adjuvant
-  @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
-  DataFrame
+## Data preparation
+
+# All cases
+df = encode_df(df) # Choose between df and df_unique (the latter has no repeated measures)
+df = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 4, df) # More efficient than Query.jl for simple filters
 df.IDidx = get_idx(:ID, df)[1]
 
-
-# restrict to unique cases (no repeated measures):
+# Restrict to unique cases (no repeated measures)
 df_unique = encode_df(df_unique)
-df_unique =
-  df_unique |>
-  @filter(_.days_since_1st_D_or_A ≥ 4) |> # remove entries which were measured less than a week after vaccination
-  DataFrame
+df_unique = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 4, df_unique)
 
-# Build DAG dataFrame
-dag_df = df[!, [:E, :H, :V, :D, :R, :S, :M, :Ḟ, :P, :nP, :ID, :IDidx, :vax_history, :Vidx]]
-dag_df.lognP = log10.(1 .+ dag_df.nP);
-# describe(dag_df)
+# Build DAG DataFrame
+dag_df = select(df, :E, :H, :V, :D, :R, :S, :M, :Ḟ, :P, :nP, :ID, :IDidx, :vax_history, :Vidx)
+dag_df.lognP = log10.(1 .+ dag_df.nP)
 
-dag_df_unique = df_unique[!, [:E, :H, :V, :D, :R, :S, :M, :Ḟ, :P, :nP, :Vidx, :vax_history, :ID]];
-filtered_df = dag_df[dag_df.P.==1, :];
-filtered_unique_df = dag_df_unique[dag_df_unique.P.==1, :];
+# Create views for infected and uninfected subsets - more memory efficient
+dag_df_unique = select(df_unique, :E, :H, :V, :D, :R, :S, :M, :Ḟ, :P, :nP, :Vidx, :vax_history, :ID)
+filtered_df = dag_df[dag_df.P.==1, :]
+filtered_unique_df = dag_df_unique[dag_df_unique.P.==1, :]
 
-# select only infected mice
-dag_df_infected = dag_df[dag_df.P.==2, :] # select rows of dag_df for which dag_df.P.==2
+# Select only infected mice - use efficient boolean indexing
+infected_mask = dag_df.P .== 2
+dag_df_infected = dag_df[infected_mask, :]
 
-# DAG specification - this is our graphical causal hypothesis
+## DAG specification
 
+# This is our graphical causal hypothesis
 dag = dagitty("dag{ D -> E; D -> F; D -> M; D -> P; D -> R; F -> E; F -> M; H -> E; H -> F; H -> M; H -> P; H -> R; M -> E; P -> E; P -> F; P -> M; R -> E; R -> F; R -> M; R -> P; S -> E; S -> F; S -> M; S -> P; S -> R; V -> E; V -> F; V -> M; V -> P; V -> R; }")
 
 ## Average causal effect of V on E
+
 adjustmentSets(dag, "V", "E", effect="total") # {} -> V is assumed to be a RCT
 
-@model function V_E(IDidx, E, V; n_id=length(unique(IDidx)))
-  # population-level priors
-  α ~ Normal(mean(E), 2.5 * std(E))
+"""
+    V_E_Model(IDidx, E, V; n_id=length(unique(IDidx)))
+
+A Bayesian generative model for the average causal effect of vaccination (V) on
+vaccine response (E) using a multilevel structure.
+
+Since vaccination is assumed to be randomised (RCT), no adjustment variables are
+needed to identify the total causal effect.
+
+# Arguments
+- `IDidx::Vector{Int}`: Mouse identifier indices
+- `E::Vector{Float64}`: Standardised vaccine response (outcome)
+- `V::Vector{Int}`: Vaccination status (1=adjuvant, 2=vaccine)
+- `n_id::Int`: Number of unique individuals
+
+# Returns
+- Posterior samples for vaccination effect (βVE) and other structural parameters
+
+# Model Structure
+- E ~ α + α_ID[IDidx] + βVE * V + ε
+- Uses weakly informative priors and multilevel random intercepts
+"""
+@model function V_E_Model(IDidx, E, V; n_id=length(unique(IDidx)))
+  # Pre-compute statistics for type stability
+  E_mean = mean(E)
+  E_std = std(E)
+
+  # Population-level priors
+  α ~ Normal(E_mean, 2.5 * E_std)
   βVE ~ Normal(0, 0.5)
-  σ ~ Exponential(std(E))
+  σ ~ Exponential(E_std)
   ν ~ LogNormal(2, 1)
 
-  # priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  # Priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)     # Group-level intercepts
 
-  # likelihood
+  # Likelihood
   Ê = @. α + α_ID[IDidx] + βVE * V
-  return E ~ MvNormal(Ê, σ^2 * I)
+  return E ~ MvNormal(Ê, σ^2 * I)
 end
 
-V_E_model = V_E(dag_df.IDidx, dag_df.E, dag_df.V); # note log10(1+X)-transformed parasite counts.
+V_E_model = V_E_Model(dag_df.IDidx, dag_df.E, dag_df.V)
 
 V_E_chn = sample(V_E_model, NUTS(), MCMCThreads(), 3000, 4)
 
-V_E_chn_df = DataFrame(V_E_chn)[!, r"α\b|β"];
+V_E_chn_df = DataFrame(V_E_chn)[!, r"α\b|β"]
 precis(V_E_chn_df)
 
 plot_chains_df(V_E_chn)
@@ -109,122 +134,185 @@ plot_chains_df(V_E_chn)
 
 adjustmentSets(dag, "V", "E", effect="direct") # { D, F, H, M, P, R, S }
 
-@model function V_E_NDE(IDidx, E, V, D, Ḟ, H, M, P, R, S; n_id=length(unique(IDidx)))
-  # population-level priors
-  α ~ Normal(mean(E), 2.5 * std(E))  # overall intercept
-  βVE ~ Normal(0, 0.5)  # slope of V on E
-  βDE ~ Normal(0, 0.5)  # slope of D on E
-  βFE ~ Normal(0, 0.5)  # slope of F on E
-  βHE ~ Normal(0, 0.5)  # slope of H on E
-  βME ~ Normal(0, 0.5)  # slope of M on E
-  βPE ~ Normal(0, 0.5)  # slope of P on E
-  βRE ~ Normal(0, 0.5)  # slope of R on E
-  βSE ~ Normal(0, 0.5)  # slope of S on E
-  σ ~ Exponential(std(E))  # residual SD
-  ν ~ LogNormal(2, 1)  # residual degrees of freedom
+"""
+    V_E_NDE_Model(IDidx, E, V, D, Ḟ, H, M, P, R, S; n_id=length(unique(IDidx)))
 
-  # priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-  α_ID ~ filldist(Normal(0, τ), n_id)     # group-level intercepts
+A Bayesian generative model for the natural direct effect (NDE) of vaccination on
+vaccine response, adjusting for all mediating variables.
 
-  # missing F values
-  N_missing = sum(ismissing.(Ḟ))
-  F_impute ~ filldist(Normal(0, 1), N_missing)
-  ν ~ Normal(0, 0.5) # imputed mean
-  σ_F ~ Exponential() # imputed SD
+# Arguments
+- `IDidx::Vector{Int}`: Mouse identifier indices
+- `E::Vector{Float64}`: Standardised vaccine response (outcome)
+- `V::Vector{Int}`: Vaccination status (1=adjuvant, 2=vaccine)
+- `D::Vector{Int}`: Diet supplementation (1=low, 2=high)
+- `Ḟ::Vector{Union{Missing,Float64}}`: Standardised fat scores (with missingness)
+- `H::Vector{Int}`: Habitat (1=lab, 2=wild)
+- `M::Vector{Float64}`: Standardised mass
+- `P::Vector{Int}`: Parasite infection status (1=uninfected, 2=infected)
+- `R::Vector{Int}`: Reproductive status (1=non-reproductive, 2=reproductive)
+- `S::Vector{Int}`: Sex (1=male, 2=female)
+- `n_id::Int`: Number of unique individuals
 
+# Returns
+- Posterior samples for direct vaccination effect and all adjustment coefficients
+
+# Model Structure
+- Adjusts for { D, F, H, M, P, R, S } to block all indirect pathways
+- Handles missing fat scores via imputation
+- Uses multilevel random intercepts for individual-level variation
+"""
+@model function V_E_NDE_Model(IDidx, E, V, D, Ḟ, H, M, P, R, S; n_id=length(unique(IDidx)))
+  # Pre-compute statistics for type stability
+  E_mean = mean(E)
+  E_std = std(E)
+
+  # Population-level priors
+  α ~ Normal(E_mean, 2.5 * E_std)  # Overall intercept
+  βVE ~ Normal(0, 0.5)  # Slope of V on E
+  βDE ~ Normal(0, 0.5)  # Slope of D on E
+  βFE ~ Normal(0, 0.5)  # Slope of F on E
+  βHE ~ Normal(0, 0.5)  # Slope of H on E
+  βME ~ Normal(0, 0.5)  # Slope of M on E
+  βPE ~ Normal(0, 0.5)  # Slope of P on E
+  βRE ~ Normal(0, 0.5)  # Slope of R on E
+  βSE ~ Normal(0, 0.5)  # Slope of S on E
+  σ ~ Exponential(E_std)  # Residual SD
+  ν ~ LogNormal(2, 1)  # Residual degrees of freedom
+
+  # Priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)     # Group-level intercepts
+
+  # Missing F values - proper imputation pattern
+  N_missing = sum(ismissing.(Ḟ))
+  if N_missing > 0
+    F_impute ~ filldist(Normal(0, 1), N_missing)
+    ν_F ~ Normal(0, 0.5) # Imputed mean
+    σ_F ~ Exponential() # Imputed SD
+  end
+
+  # Likelihood computation with corrected imputation
   i_missing = 1
-  for i in eachindex(Ḟ)
-    if ismissing(Ḟ[i])
-      F_impute[i_missing] ~ Normal(ν, σ_F)
-      f_imputed = F_impute[i_missing]
-      i_missing += 1
+  for i in eachindex(Ḟ)
+    # Handle missing fat scores
+    if ismissing(Ḟ[i])
+      if N_missing > 0
+        # Use the pre-sampled imputed value, applying transformation
+        f_imputed = ν_F + σ_F * F_impute[i_missing]
+        i_missing += 1
+      else
+        f_imputed = 0.0  # Fallback
+      end
     else
-      Ḟ[i] ~ Normal(ν, σ_F)
-      f_imputed = Ḟ[i]
+      # For observed values, optionally model them
+      if N_missing > 0
+        Ḟ[i] ~ Normal(ν_F, σ_F)
+      end
+      f_imputed = Ḟ[i]
     end
-    # likelihood
-    Ê = @. α + α_ID[IDidx][i] + βVE * V[i] + βDE * D[i] + βFE * f_imputed + βHE * H[i] + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i]
-    E[i] ~ Normal(Ê, σ)
+
+    # Likelihood
+    Ê = α + α_ID[IDidx[i]] + βVE * V[i] + βDE * D[i] + βFE * f_imputed +
+        βHE * H[i] + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i]
+    E[i] ~ Normal(Ê, σ)
   end
 end
 
-V_E_DE_model = V_E_NDE(dag_df.IDidx, dag_df.E, dag_df.V, dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S); # note log10(1+X)-transformed parasite counts.
+V_E_DE_model = V_E_NDE_Model(dag_df.IDidx, dag_df.E, dag_df.V, dag_df.D, dag_df.Ḟ,
+  dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S)
 
 # Turing.setadbackend(:forwarddiff)
 V_E_DE_chn = sample(V_E_DE_model, NUTS(), MCMCThreads(), 3000, 4)
 
-V_E_DE_chn_df = DataFrame(V_E_DE_chn)[!, r"α\b|β"];
+V_E_DE_chn_df = DataFrame(V_E_DE_chn)[!, r"α\b|β"]
 precis(V_E_DE_chn_df)
 
-# Mixed model
-glmm_V_E_NDE = fit(MixedModel, @formula(E ~ 1 + V + D + Ḟ + H + M + P + R + S + (1 | ID)), dag_df)
+# Mixed model for comparison
+glmm_V_E_NDE = fit(MixedModel, @formula(E ~ 1 + V + D + Ḟ + H + M + P + R + S + (1 | ID)), dag_df)
 
 qqnorm(glmm_V_E_NDE; qqline=:fitrobust)
-boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_V_E_NDE);
+boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_V_E_NDE)
 coefplot(boot)
 ridgeplot(boot)
 
-
 ## Total effect of `nP` on `E`
+
 adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, V}
 
-# Plot
+# Plot correlation
 layers = linear() + visual(Scatter)
 plt = data(dag_df_infected) * mapping(:lognP, :E)
 p = draw(layers * plt, axis=(xlabel="H. polygyrus worm count (log10(1 + nP))", ylabel="α-DT IgG1 (standardised)"))
-save("../manuscript/Figures/plots/P_E_cor.pdf", p)
+safe_plot_save("P_E_cor.pdf", p)
 
-# Naive model (does not use adjustment set)
-# point estimate sanity check
+# Naive model (does not use adjustment set) - for comparison
 naive_glmm_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + (1 | ID)), dag_df_infected; progress=false)
 
 qqnorm(naive_glmm_P_E; qqline=:fitrobust)
 
-boot = parametricbootstrap(MersenneTwister(42), 3000, naive_glmm_P_E);
+boot = parametricbootstrap(MersenneTwister(42), 3000, naive_glmm_P_E)
 cp = coefplot(boot; conf_level=0.95)
-save("../manuscript/Figures/plots/P_E_coefplot.pdf", cp)
+safe_plot_save("P_E_coefplot.pdf", cp)
 ridgeplot(boot; conf_level=0.95)
-save("../manuscript/Figures/plots/P_E_ridgeplot.pdf", cp)
+safe_plot_save("P_E_ridgeplot.pdf", cp)
 
-# Bayesian model
-@model function naive_P_E(IDidx, E, nP; n_id=length(unique(IDidx)))
-  # population-level priors
-  α ~ Normal(mean(E), 2.5 * std(E))
+"""
+    Naive_P_E_Model(IDidx, E, nP; n_id=length(unique(IDidx)))
+
+A naive Bayesian model for the effect of parasite burden on vaccine response
+without proper causal adjustment. Used for comparison with the properly adjusted model.
+
+# Arguments
+- `IDidx::Vector{Int}`: Mouse identifier indices
+- `E::Vector{Float64}`: Standardised vaccine response (outcome)
+- `nP::Vector{Float64}`: Log-transformed parasite count
+- `n_id::Int`: Number of unique individuals
+
+# Returns
+- Posterior samples for parasite effect (βPE) - likely confounded
+
+# Model Structure
+- E ~ α + α_ID[IDidx] + βPE * nP + ε
+- No adjustment for confounders - violates backdoor criterion
+"""
+@model function Naive_P_E_Model(IDidx, E, nP; n_id=length(unique(IDidx)))
+  # Pre-compute statistics for type stability
+  E_mean = mean(E)
+  E_std = std(E)
+
+  # Population-level priors
+  α ~ Normal(E_mean, 2.5 * E_std)
   βPE ~ Normal(0, 0.5)
-  σ ~ Exponential(std(E))
-  # ν ~ LogNormal(2, 1)
+  σ ~ Exponential(E_std)
 
-  # priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  # Priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)     # Group-level intercepts
 
-  # likelihood
+  # Likelihood
   Ê = @. α + α_ID[IDidx] + βPE * nP
-  return E ~ MvNormal(Ê, σ^2 * I)
+  return E ~ MvNormal(Ê, σ^2 * I)
 end
 
-naive_P_E_model = naive_P_E(dag_df_infected.IDidx, dag_df_infected.E, dag_df_infected.lognP); # note log10(1+X)-transformed parasite counts.
-# naive_P_E_model = naive_P_E(dag_df.IDidx, dag_df.E, dag_df.P); # note Probability of being infected
+naive_P_E_model = Naive_P_E_Model(dag_df_infected.IDidx, dag_df_infected.E, dag_df_infected.lognP)
 
-# naive_P_E_model = varying_intercept(dag_df.nP, dag_df.IDidx, dag_df.E); # note log10(1+X)-transformed parasite counts.
+naive_P_E_chn = sample(naive_P_E_model, NUTS(), MCMCThreads(), 3000, 4)
 
-naive_P_E_chn = sample(naive_P_E_model, NUTS(), MCMCThreads(), 3000, 4);
-
-naive_P_E_chn_df = DataFrame(naive_P_E_chn)[!, r"α\b|β"];
+naive_P_E_chn_df = DataFrame(naive_P_E_chn)[!, r"α\b|β"]
 precis(naive_P_E_chn_df)
 
 p = plot_chains_df(naive_P_E_chn; show_intercept=true, show_traces=false)
-save("../manuscript/Figures/plots/naive_P_E_chn_df.pdf", p)
+safe_plot_save("naive_P_E_chn_df.pdf", p)
 
 ## Properly-adjusted model: total effect of `nP` on `E`
+
 adjustmentSets(dag, "P", "E", effect="total") # { D, H, R, S, V }
 
-# Mixed Model - excluding H since length(unique(dag_df_infected.H))=1
+# Mixed Model - all mice
 glmm_P_E_all = fit(MixedModel, @formula(E ~ 1 + lognP + D + H + R + S + V + (1 | ID)), dag_df)
 
 qqnorm(glmm_P_E_all; qqline=:fitrobust)
-boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_P_E_all);
+boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_P_E_all)
 coefplot(glmm_P_E_all)
 coefplot(boot)
 ridgeplot(boot)
@@ -233,7 +321,7 @@ ridgeplot(boot)
 glmm_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + D + H + R + S + V + (1 | ID)), dag_df_infected)
 
 qqnorm(glmm_P_E; qqline=:fitrobust)
-boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_P_E);
+boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_P_E)
 coefplot(boot)
 ridgeplot(boot)
 ridge2d(boot)
@@ -241,58 +329,84 @@ ridge2d(boot)
 # Direct effect of P on E among the infected
 adjustmentSets(dag, "P", "E", effect="direct") # { D, F, H, M, R, S, V}
 
-# Mixed model
-
-glmm_DE_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + D + Ḟ + M + R + S + V + (1 | ID)), dag_df_infected)
+glmm_DE_P_E = fit(MixedModel, @formula(E ~ 1 + lognP + D + Ḟ + M + R + S + V + (1 | ID)), dag_df_infected)
 
 qqnorm(glmm_DE_P_E; qqline=:fitrobust)
-boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_DE_P_E);
+boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_DE_P_E)
 coefplot(boot)
 ridgeplot(boot)
 
-# Population-level model for the log of the expected number
-@model function P_E(IDidx, E, P, D, H, R, S, V; n_id=length(unique(IDidx)))
-  # population-level priors
-  α ~ Normal(mean(E), 2.5 * std(E))
+"""
+    P_E_Model(IDidx, E, P, D, H, R, S, V; n_id=length(unique(IDidx)))
+
+A Bayesian model for the total causal effect of parasite burden on vaccine response,
+properly adjusted for confounders using the minimal sufficient adjustment set.
+
+# Arguments
+- `IDidx::Vector{Int}`: Mouse identifier indices
+- `E::Vector{Float64}`: Standardised vaccine response (outcome)
+- `P::Vector{Float64}`: Log-transformed parasite count
+- `D::Vector{Int}`: Diet supplementation (confounding adjustment)
+- `H::Vector{Int}`: Habitat (confounding adjustment)
+- `R::Vector{Int}`: Reproductive status (confounding adjustment)
+- `S::Vector{Int}`: Sex (confounding adjustment)
+- `V::Vector{Int}`: Vaccination status (confounding adjustment)
+- `n_id::Int`: Number of unique individuals
+
+# Returns
+- Posterior samples for causal parasite effect and adjustment coefficients
+
+# Model Structure
+- Adjusts for { D, H, R, S, V } to satisfy backdoor criterion
+- Estimates total causal effect P → E
+"""
+@model function P_E_Model(IDidx, E, P, D, H, R, S, V; n_id=length(unique(IDidx)))
+  # Pre-compute statistics for type stability
+  E_mean = mean(E)
+  E_std = std(E)
+
+  # Population-level priors
+  α ~ Normal(E_mean, 2.5 * E_std)
   βPE ~ Normal(0, 0.5)
   βDE ~ Normal(0, 0.5)
   βHE ~ Normal(0, 0.5)
   βRE ~ Normal(0, 0.5)
   βSE ~ Normal(0, 0.5)
   βVE ~ Normal(0, 0.5)
-  σ ~ Exponential(std(E))
+  σ ~ Exponential(E_std)
   ν ~ LogNormal(2, 1)
 
-  # priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
+  # Priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)     # Group-level intercepts
 
-  # likelihood
+  # Likelihood
   Ê = α .+ α_ID[IDidx] .+ βPE * P .+ βDE * D .+ βHE * H .+ βRE * R .+ βSE * S .+ βVE * V
-  return E ~ MvNormal(Ê, σ^2 * I)
+  return E ~ MvNormal(Ê, σ^2 * I)
 end
 
-P_E_model = P_E(dag_df_infected.IDidx, dag_df_infected.E, log10.(1 .+ dag_df_infected.nP), dag_df_infected.D, dag_df_infected.H, dag_df_infected.R, dag_df_infected.S, dag_df_infected.V); # note log10(1+X)-transformed parasite counts.
+P_E_model = P_E_Model(dag_df_infected.IDidx, dag_df_infected.E, log10.(1 .+ dag_df_infected.nP),
+  dag_df_infected.D, dag_df_infected.H, dag_df_infected.R,
+  dag_df_infected.S, dag_df_infected.V)
 
-
-P_E_priors = sample(P_E_model, Prior(), MCMCThreads(), 3000, 4);
+P_E_priors = sample(P_E_model, Prior(), MCMCThreads(), 3000, 4)
 summarize(P_E_priors)
 
-P_E_priors_df = DataFrame(P_E_priors)[!, r"α\b|β"];
+P_E_priors_df = DataFrame(P_E_priors)[!, r"α\b|β"]
 precis(P_E_priors_df)
 
 p = plot_chains_df(P_E_priors; show_intercept=true)
-save("../manuscript/Figures/plots/P_E_priors.pdf", p)
+safe_plot_save("P_E_priors.pdf", p)
 p
 
-# updating with data
-P_E_chn = sample(P_E_model, NUTS(), MCMCThreads(), 3000, 4);
+# Updating with data
+P_E_chn = sample(P_E_model, NUTS(), MCMCThreads(), 3000, 4)
 
-P_E_chn_df = DataFrame(P_E_chn)[!, r"α\b|β"];
+P_E_chn_df = DataFrame(P_E_chn)[!, r"α\b|β"]
 precis(P_E_chn_df)
 
 p = plot_chains_df(P_E_chn)
-save("../manuscript/Figures/plots/P_E_chn_df.pdf", p)
+safe_plot_save("P_E_chn_df.pdf", p)
 
 ## Direct effect of `P` on `E`
 
@@ -300,20 +414,47 @@ save("../manuscript/Figures/plots/P_E_chn_df.pdf", p)
 adjustmentSets(dag, "P", "E", effect="direct") # { D, F, H, M, R, S, V }
 
 # GLMM
-
-glmm_DE_P_E = fit(MixedModel, @formula(E ~ 1 + P + D + Ḟ + H + M + R + S + V + (1 | ID)), dag_df)
+glmm_DE_P_E = fit(MixedModel, @formula(E ~ 1 + P + D + Ḟ + H + M + R + S + V + (1 | ID)), dag_df)
 
 qqnorm(glmm_DE_P_E; qqline=:fitrobust)
-boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_DE_P_E);
+boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_DE_P_E)
 coefplot(boot)
 ridgeplot(boot)
 
-# Bayesian model
+"""
+    DE_P_E_Model(IDidx, E, P, D, Ḟ, H, M, R, S, V; n_id=length(unique(IDidx)))
 
-@model function DE_P_E(IDidx, E, P, D, Ḟ, H, M, R, S, V; n_id=length(unique(IDidx)))
-  # population-level priors
-  α ~ Normal(mean(E), 2.5 * std(E))
+A Bayesian model for the natural direct effect of parasite infection on vaccine response,
+blocking all indirect pathways through mediating variables.
 
+# Arguments
+- `IDidx::Vector{Int}`: Mouse identifier indices
+- `E::Vector{Float64}`: Standardised vaccine response (outcome)
+- `P::Vector{Int}`: Parasite infection status (1=uninfected, 2=infected)
+- `D::Vector{Int}`: Diet supplementation (mediator adjustment)
+- `Ḟ::Vector{Union{Missing,Float64}}`: Standardised fat scores (mediator adjustment)
+- `H::Vector{Int}`: Habitat (confounder adjustment)
+- `M::Vector{Float64}`: Standardised mass (mediator adjustment)
+- `R::Vector{Int}`: Reproductive status (mediator adjustment)
+- `S::Vector{Int}`: Sex (confounder adjustment)
+- `V::Vector{Int}`: Vaccination status (mediator adjustment)
+- `n_id::Int`: Number of unique individuals
+
+# Returns
+- Posterior samples for direct parasite effect, blocking mediation pathways
+
+# Model Structure
+- Adjusts for { D, F, H, M, R, S, V } to block indirect effects
+- Estimates direct effect P → E (not mediated through other variables)
+- Handles missing fat scores via Bayesian imputation
+"""
+@model function DE_P_E_Model(IDidx, E, P, D, Ḟ, H, M, R, S, V; n_id=length(unique(IDidx)))
+  # Pre-compute statistics for type stability
+  E_mean = mean(E)
+  E_std = std(E)
+
+  # Population-level priors
+  α ~ Normal(E_mean, 2.5 * E_std)
   βPE ~ Normal(0, 0.5)
   βDE ~ Normal(0, 0.5)
   βFE ~ Normal(0, 0.5)
@@ -322,166 +463,242 @@ ridgeplot(boot)
   βRE ~ Normal(0, 0.5)
   βSE ~ Normal(0, 0.5)
   βVE ~ Normal(0, 0.5)
+  σ ~ Exponential(E_std)
 
-  σ ~ Exponential(std(E))
+  # Priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
+  α_ID ~ filldist(Normal(0, τ), n_id)     # Group-level intercepts
 
-  # priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-  α_ID ~ filldist(Normal(0, τ), n_id)       # group-level intercepts
-
-  # missing F values
-  N_missing = sum(ismissing.(Ḟ))
-  F_impute ~ filldist(Normal(0, 1), N_missing)
-  F_impute = convert(Array, F_impute)
-  ν ~ Normal(0, 0.5) # imputed mean
-  σ_F ~ Exponential() # imputed SD
+  # Missing F values - optimized imputation
+  N_missing = sum(ismissing.(Ḟ))
+  if N_missing > 0
+    F_impute ~ filldist(Normal(0, 1), N_missing)
+    ν ~ Normal(0, 0.5) # Imputed mean
+    σ_F ~ Exponential() # Imputed SD
+  end
 
   i_missing = 1
-  for i in eachindex(Ḟ)
-    if ismissing(Ḟ[i])
-      F_impute[i_missing] ~ Normal(ν, σ_F)
-      f_imputed = F_impute[i_missing]
-      i_missing += 1
+  for i in eachindex(Ḟ)
+    # Handle missing fat scores efficiently
+    if ismissing(Ḟ[i])
+      if N_missing > 0
+        # Use the pre-sampled imputed value, applying transformation
+        f_imputed = ν + σ_F * F_impute[i_missing]
+        i_missing += 1
+      else
+        f_imputed = 0.0
+      end
     else
-      Ḟ[i] ~ Normal(ν, σ_F)
-      f_imputed = Ḟ[i]
+      if N_missing > 0
+        Ḟ[i] ~ Normal(ν, σ_F)
+      end
+      f_imputed = Ḟ[i]
     end
-    # likelihood
-    Ê = @. α + α_ID[IDidx][i] + βPE * P[i] + βDE * D[i] + βFE * f_imputed + βHE * H[i] + βME * M[i] + βRE * R[i] + βSE * S[i] + βVE * V[i]
-    E[i] ~ Normal(Ê, σ)
+
+    # Likelihood
+    Ê = α + α_ID[IDidx[i]] + βPE * P[i] + βDE * D[i] + βFE * f_imputed +
+        βHE * H[i] + βME * M[i] + βRE * R[i] + βSE * S[i] + βVE * V[i]
+    E[i] ~ Normal(Ê, σ)
   end
 end
 
-DE_P_E_model = DE_P_E(dag_df.IDidx, dag_df.E, dag_df.P, dag_df.D, dag_df.Ḟ, dag_df.H, dag_df.M, dag_df.R, dag_df.S, dag_df.V);
+DE_P_E_model = DE_P_E_Model(dag_df.IDidx, dag_df.E, dag_df.P, dag_df.D, dag_df.Ḟ,
+  dag_df.H, dag_df.M, dag_df.R, dag_df.S, dag_df.V)
 
 Turing.setadbackend(:forwarddiff)
-# Turing.setrdcache(false)
-DE_P_E_chn = sample(DE_P_E_model, NUTS(), MCMCThreads(), 3000, 4);
+DE_P_E_chn = sample(DE_P_E_model, NUTS(), MCMCThreads(), 3000, 4)
 Turing.setadbackend(:reversediff)
-# Turing.setrdcache(true)
 
-DE_P_E_chn_df = DataFrame(DE_P_E_chn)[!, r"α\b|β"];
+DE_P_E_chn_df = DataFrame(DE_P_E_chn)[!, r"α\b|β"]
 precis(DE_P_E_chn_df)
 
 p1 = plot_chains_df(DE_P_E_chn; show_traces=true)
-save("../manuscript/Figures/plots/MultiLevel_DE_P_E_chn_traces.pdf", p1)
+safe_plot_save("MultiLevel_DE_P_E_chn_traces.pdf", p1)
 
-p2 = plot_chains_df(DE_P_E_chn; show_traces=false, xlab_dist="Direct Casual Effect")
-save("../manuscript/Figures/plots/MultiLevel_DE_P_E_chn.pdf", p2)
+p2 = plot_chains_df(DE_P_E_chn; show_traces=false, xlab_dist="Direct Causal Effect")
+safe_plot_save("MultiLevel_DE_P_E_chn.pdf", p2)
 
 ## Direct effect of reproductive status R on parasite burden P
 
 adjustmentSets(dag, "R", "P", effect="direct") # D, H, S, V
 
 # GLMM
-
 glmm_R_nP = fit(MixedModel, @formula(lognP ~ R + D + H + S + V + (1 | ID)), dag_df)
 
-# Bayesian model
-@model function R_nP(nP, R, D, H, S, V, IDidx; n_id=length(unique(IDidx)))
-  # population-level priors
+"""
+    R_nP_Model(nP, R, D, H, S, V, IDidx; n_id=length(unique(IDidx)))
+
+A Bayesian model for the direct causal effect of reproductive status on parasite burden,
+adjusting for confounding variables.
+
+# Arguments
+- `nP::Vector{Float64}`: Log-transformed parasite count (outcome)
+- `R::Vector{Int}`: Reproductive status (1=non-reproductive, 2=reproductive)
+- `D::Vector{Int}`: Diet supplementation (confounder adjustment)
+- `H::Vector{Int}`: Habitat (confounder adjustment)
+- `S::Vector{Int}`: Sex (confounder adjustment)
+- `V::Vector{Int}`: Vaccination status (confounder adjustment)
+- `IDidx::Vector{Int}`: Mouse identifier indices
+- `n_id::Int`: Number of unique individuals
+
+# Returns
+- Posterior samples for direct reproductive effect on parasite burden
+
+# Model Structure
+- Adjusts for { D, H, S, V } to satisfy backdoor criterion
+- Estimates direct effect R → P
+"""
+@model function R_nP_Model(nP, R, D, H, S, V, IDidx; n_id=length(unique(IDidx)))
+  # Pre-compute statistics for type stability
+  nP_std = std(nP)
+
+  # Population-level priors
   α ~ Normal(0, 2.5)
   βR ~ Normal(0, 0.5)
   βD ~ Normal(0, 0.5)
   βH ~ Normal(0, 0.5)
   βS ~ Normal(0, 0.5)
   βV ~ Normal(0, 0.5)
-  σ ~ Exponential(std(nP))
+  σ ~ Exponential(nP_std)
 
-  # priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  # Priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
   α_ID ~ filldist(Normal(0, τ), n_id)
 
-  # likelihood
+  # Likelihood
   nP̂ = @. α + α_ID[IDidx] + βR * R + βD * D + βH * H + βS * S + βV * V
   nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
+R_nP_model = R_nP_Model(log10.(1 .+ dag_df.nP), dag_df.R, dag_df.D, dag_df.H, dag_df.S, dag_df.V, dag_df.IDidx)
 
-R_nP_model = R_nP(log10.(1 .+ dag_df.nP), dag_df.R, dag_df.D, dag_df.H, dag_df.S, dag_df.V, dag_df.IDidx)
+R_nP_chn = sample(R_nP_model, NUTS(), MCMCThreads(), 3_000, 4)
 
-R_nP_chn = sample(R_nP_model, NUTS(), MCMCThreads(), 3_000, 4);
-
-R_nP_chn_df = DataFrame(R_nP_chn)[!, r"α\b|β"];
+R_nP_chn_df = DataFrame(R_nP_chn)[!, r"α\b|β"]
 precis(R_nP_chn_df)
 
 p = plot_chains_df(R_nP_chn; show_intercept=true)
-save("../manuscript/Figures/plots/R_nP_chn.pdf", p)
+safe_plot_save("R_nP_chn.pdf", p)
 
 ## Total effect of D on nP [among the infected]
 
 adjustmentSets(dag, "D", "P", effect="total") # {H}
 
-@model function D_nP(nP, D, H, IDidx; n_id=length(unique(IDidx)))
-  # population-level priors
+"""
+    D_nP_Total_Model(nP, D, H, IDidx; n_id=length(unique(IDidx)))
+
+A Bayesian model for the total causal effect of diet supplementation on parasite burden.
+
+# Arguments
+- `nP::Vector{Float64}`: Log-transformed parasite count (outcome)
+- `D::Vector{Int}`: Diet supplementation (1=low, 2=high)
+- `H::Vector{Int}`: Habitat (confounder adjustment)
+- `IDidx::Vector{Int}`: Mouse identifier indices
+- `n_id::Int`: Number of unique individuals
+
+# Returns
+- Posterior samples for total diet effect on parasite burden
+
+# Model Structure
+- Adjusts for { H } to satisfy backdoor criterion
+- Estimates total effect D → P
+"""
+@model function D_nP_Total_Model(nP, D, H, IDidx; n_id=length(unique(IDidx)))
+  # Pre-compute statistics for type stability
+  nP_std = std(nP)
+
+  # Population-level priors
   α ~ Normal(0, 2.5)
   βD ~ Normal(0, 0.5)
   βH ~ Normal(0, 0.5)
-  σ ~ Exponential(std(nP))
+  σ ~ Exponential(nP_std)
 
-  # priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  # Priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
   α_ID ~ filldist(Normal(0, τ), n_id)
 
-  # likelihood
+  # Likelihood
   nP̂ = @. α + α_ID[IDidx] + βD * D + βH * H
-  nP ~ MvNormal(nP̂, σ^2)
+  nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
-D_nP_model = D_nP(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.IDidx) # among all mice
-# D_nP_model = D_nP(dag_df_infected.nP, dag_df_infected.D, dag_df_infected.H, dag_df_infected.IDidx) # among the infected; this doesn't converge...
+D_nP_model = D_nP_Total_Model(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.IDidx) # Among all mice
 
-D_nP_chn = sample(D_nP_model, NUTS(), MCMCThreads(), 3_000, 4);
-D_nP_chn_df = DataFrame(D_nP_chn)[!, r"α\b|β"];
+D_nP_chn = sample(D_nP_model, NUTS(), MCMCThreads(), 3_000, 4)
+D_nP_chn_df = DataFrame(D_nP_chn)[!, r"α\b|β"]
 precis(D_nP_chn_df)
 
 # GLMM for the total effect of D on nP among the infected
-
 glmm_D_nP = fit(MixedModel, @formula(lognP ~ D + (1 | ID)), dag_df_infected)
 
-boot = parametricbootstrap(MersenneTwister(1234), 10000, glmm_D_nP);
+boot = parametricbootstrap(MersenneTwister(1234), 10000, glmm_D_nP)
 coefplot(boot)
 ridgeplot(boot)
 
 # Plot
-df = (; x=Bool.(dag_df.D[dag_df.P.==2] .- 1), y=dag_df.nP[dag_df.P.==2])
+df_plot = (; x=Bool.(dag_df.D[dag_df.P.==2] .- 1), y=dag_df.nP[dag_df.P.==2])
 layers = visual(BoxPlot)
-plt = data(df) * mapping(:x, :y, color=:x)
+plt = data(df_plot) * mapping(:x, :y, color=:x)
 p = draw(layers * plt, axis=(xlabel="Diet supplemented", ylabel="H. polygyrus (count)"))
 
+## Direct effect of D on nP
 
-## Direct effet of D on nP
 adjustmentSets(dag, "D", "P", effect="direct") # { H, R, S, V}
 
-@model function D_nP(nP, D, H, R, S, V, IDidx; n_id=length(unique(IDidx)))
-  # population-level priors
+"""
+    D_nP_Direct_Model(nP, D, H, R, S, V, IDidx; n_id=length(unique(IDidx)))
+
+A Bayesian model for the direct causal effect of diet supplementation on parasite burden,
+blocking indirect pathways through mediating variables.
+
+# Arguments
+- `nP::Vector{Float64}`: Log-transformed parasite count (outcome)
+- `D::Vector{Int}`: Diet supplementation (1=low, 2=high)
+- `H::Vector{Int}`: Habitat (confounder adjustment)
+- `R::Vector{Int}`: Reproductive status (mediator adjustment)
+- `S::Vector{Int}`: Sex (mediator adjustment)
+- `V::Vector{Int}`: Vaccination status (mediator adjustment)
+- `IDidx::Vector{Int}`: Mouse identifier indices
+- `n_id::Int`: Number of unique individuals
+
+# Returns
+- Posterior samples for direct diet effect on parasite burden
+
+# Model Structure
+- Adjusts for { H, R, S, V } to block indirect pathways
+- Estimates direct effect D → P (not mediated)
+"""
+@model function D_nP_Direct_Model(nP, D, H, R, S, V, IDidx; n_id=length(unique(IDidx)))
+  # Pre-compute statistics for type stability
+  nP_std = std(nP)
+
+  # Population-level priors
   α ~ Normal(0, 2.5)
   βD ~ Normal(0, 0.5)
   βH ~ Normal(0, 0.5)
   βR ~ Normal(0, 0.5)
   βS ~ Normal(0, 0.5)
   βV ~ Normal(0, 0.5)
+  σ ~ Exponential(nP_std)
 
-  σ ~ Exponential(std(nP))
-
-  # priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
+  # Priors for variance of random intercepts
+  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
   α_ID ~ filldist(Normal(0, τ), n_id)
 
-  # likelihood
+  # Likelihood
   nP̂ = @. α + α_ID[IDidx] + βD * D + βH * H + βR * R + βS * S + βV * V
   nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
-D_nP_model = D_nP(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.R, dag_df.S, dag_df.V, dag_df.IDidx)
+D_nP_direct_model = D_nP_Direct_Model(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.R, dag_df.S, dag_df.V, dag_df.IDidx)
 
-D_nP_chn = sample(D_nP_model, NUTS(), MCMCThreads(), 3_000, 4);
+D_nP_direct_chn = sample(D_nP_direct_model, NUTS(), MCMCThreads(), 3_000, 4)
 
-D_nP_chn_df = DataFrame(D_nP_chn)[!, r"α\b|β"];
-precis(D_nP_chn_df)
+D_nP_direct_chn_df = DataFrame(D_nP_direct_chn)[!, r"α\b|β"]
+precis(D_nP_direct_chn_df)
 
-p = plot_chains_df(D_nP_chn; show_intercept=true, show_traces=false)
-save("../manuscript/Figures/plots/D_nP_chn.pdf", p)
+p = plot_chains_df(D_nP_direct_chn; show_intercept=true, show_traces=false)
+safe_plot_save("D_nP_chn.pdf", p)
 
 ## Total effect of S on E
 
@@ -489,7 +706,7 @@ adjustmentSets(dag, "S", "E", effect="total") # { }
 
 glmm_S_E = fit(MixedModel, @formula(E ~ 1 + S + (1 | ID)), dag_df)
 
-boot = parametricbootstrap(MersenneTwister(1234), 3000, glmm_S_E);
+boot = parametricbootstrap(MersenneTwister(1234), 3000, glmm_S_E)
 coefplot(boot)
 ridgeplot(boot)
 
@@ -516,6 +733,7 @@ S_E_chn = sample(S_E_model, NUTS(), MCMCThreads(), 3000, 4)
 
 S_E_chn_df = DataFrame(S_E_chn)[!, r"α\b|β"];
 precis(S_E_chn_df)
+
 
 ## Direct effect of S on E
 
@@ -611,7 +829,7 @@ S_nP_chn_df = DataFrame(S_nP_chn)[!, r"α\b|β"];
 precis(S_nP_chn_df)
 
 p = plot_chains_df(S_nP_chn; show_intercept=true, show_traces=false)
-save("../manuscript/Figures/plots/S_nP_chn.pdf", p)
+safe_plot_save("S_nP_chn.pdf", p)
 
 
 ## Total effect of H on E
@@ -645,7 +863,7 @@ precis(H_E_chn_df)
 
 # include("./TuringPlots.jl")
 p = plot_chains_df(H_E_chn; show_intercept=true)
-save("../manuscript/Figures/plots/H_E_chn.pdf", p)
+safe_plot_save("H_E_chn.pdf", p)
 p
 
 ## Direct effect of H on E
@@ -702,11 +920,11 @@ DE_H_E_chn_df = DataFrame(DE_H_E_chn)[!, r"α\b|β"];
 precis(DE_H_E_chn_df)
 
 p1 = plot_chains_df(DE_H_E_chn; show_traces=true)
-save("../manuscript/Figures/plots/MultiLevel_DE_H_E_chn_traces.pdf", p1)
+safe_plot_save("MultiLevel_DE_H_E_chn_traces.pdf", p1)
 p1
 
 p2 = plot_chains_df(DE_H_E_chn; show_traces=false)
-save("../manuscript/Figures/plots/MultiLevel_DE_H_E_chn.pdf", p2)
+safe_plot_save("MultiLevel_DE_H_E_chn.pdf", p2)
 p2
 
 # Mixed model
@@ -714,9 +932,9 @@ glmm_DE_H_E = fit(MixedModel, @formula(E ~ 1 + H + D + Ḟ + M + nP + R + S + (1
 
 boot = parametricbootstrap(MersenneTwister(1234), 3000, glmm_DE_H_E);
 glmm_DE_H_E_coefplot = coefplot(boot)
-save("../manuscript/Figures/plots/MultiLevel_DE_H_E_coefplot.pdf", glmm_DE_H_E_coefplot)
+safe_plot_save("MultiLevel_DE_H_E_coefplot.pdf", glmm_DE_H_E_coefplot)
 glmm_DE_H_E_ridgeplot = ridgeplot(boot)
-save("../manuscript/Figures/plots/MultiLevel_DE_H_E_ridgeplot.pdf", glmm_DE_H_E_ridgeplot)
+safe_plot_save("MultiLevel_DE_H_E_ridgeplot.pdf", glmm_DE_H_E_ridgeplot)
 
 ## Total effect of Diet on E
 adjustmentSets(dag, "D", "E", effect="total") # {H}
@@ -748,7 +966,7 @@ D_E_chn_df = DataFrame(D_E_chn)[!, r"β"];
 precis(D_E_chn_df)
 
 p = plot_chains_df(D_E_chn)
-save("../manuscript/Figures/plots/D_E_chn.pdf", p)
+safe_plot_save("D_E_chn.pdf", p)
 p
 
 ## Direct effect of diet D on E
@@ -805,10 +1023,10 @@ DE_D_E_chn_df = DataFrame(DE_D_E_chn)[!, r"α\b|β"];
 precis(DE_D_E_chn_df)
 
 p1 = plot_chains_df(DE_D_E_chn; show_traces=true)
-save("../manuscript/Figures/plots/MultiLevel_DE_D_E_chn_traces.pdf", p1)
+safe_plot_save("MultiLevel_DE_D_E_chn_traces.pdf", p1)
 p1
 p2 = plot_chains_df(DE_D_E_chn; res=(12, 10), show_traces=false)
-save("../manuscript/Figures/plots/MultiLevel_DE_D_E_chn.pdf", p2)
+safe_plot_save("MultiLevel_DE_D_E_chn.pdf", p2)
 p2
 
 ## Direct effet of F on E
@@ -912,7 +1130,7 @@ precis(M_E_df)
 coeftab_plot(M_E_df, pars=[:βW, :βD, :βM, :βF, :βP, :βR, :βS])
 
 p = plot_chains_df(M_E_ch; show_intercept=true)
-save("../manuscript/Figures/plots/M_E_chn.pdf", p)
+safe_plot_save("M_E_chn.pdf", p)
 p
 
 ## Direct effet of H on P
@@ -950,7 +1168,7 @@ H_nP_df_unique = DataFrame(H_nP_ch_unique)[!, r"α\b|β"];
 precis(H_nP_df_unique)
 
 p = plot_chains_df(H_nP_ch_unique; show_intercept=true)
-save("../manuscript/Figures/plots/H_nP_unique_chn.pdf", p)
+safe_plot_save("H_nP_unique_chn.pdf", p)
 p
 
 ## Total effect of D on P
@@ -1004,7 +1222,7 @@ H_nP_df = DataFrame(H_nP_ch)[!, r"α\b|β"];
 precis(H_nP_df)
 
 p = plot_chains_df(H_nP_ch; show_intercept=true)
-save("../manuscript/Figures/plots/H_nP_chn.pdf", p)
+safe_plot_save("H_nP_chn.pdf", p)
 p
 
 ## Direct effect of D on F
