@@ -67,7 +67,7 @@
 \makeatother
 
 % debug warnings
-\overfullrule=1cm
+% \overfullrule=1cm
 
 %%%%%%%%%%%%%%%%% TABLES & FIGURES %%%%%%%%%%%%%%%%
 % captions
@@ -324,7 +324,7 @@ When considering the entire population, including uninfected mice, \textit{H. po
 
 \subsection{Prediction of the effect of population-wide anthelmintic treatment on vaccine responsiveness}
 
-Parametrised SCMs allow predicting how interventions on a set of variables might affect the values of downstream, causally posterior, variables for any individual on the population. Here, we wanted to (i) quantify how effective the vaccine might have been, had the whole population been treated against worms (i.e. all worm burdens held at 0 in the modified SCM), (ii) identify which individuals would have seen the greatest effect of anthelmintic treatment on their individual response to the vaccine, and (iii) identify which of the factors that we measured were the best predictors of the effect of anthelmintic treatment on vaccine responsiveness in those individuals. To answer these counterfactual questions, we used our SCM as parametrised with the observed values reported above, and substituted non-zero parasite counts with zeros to generate synthetic counterfactual outcomes, all other variables remaining intact. Panels C and D of Figure~\ref{fig:DAGtikz} illustrate the structure and equations of the model under the simulated anthelmintic intervention, where all incoming edges to $P$ are blocked and $P$ is set to zero.
+Parametrised SCMs allow predicting how interventions on a set of variables might affect the values of downstream, causally posterior, variables for any individual on the population. We aimed to (i) quantify the potential effectiveness of the vaccine if the entire population had been treated for worms (i.e., if all worm burdens were reduced to 0 in the modified SCM), and (ii) identify which individuals would experience the greatest benefit from anthelmintic treatment in relation to their response to the vaccine. To answer these counterfactual questions, we used our SCM as parametrised with the observed values reported above, and substituted non-zero parasite counts with zeros to generate synthetic counterfactual outcomes, all other variables remaining intact. Panels C and D of Figure~\ref{fig:DAGtikz} illustrate the structure and equations of the model under the simulated anthelmintic intervention, where all incoming edges to $P$ are blocked and $P$ is set to zero.
 
 % \FigPostAnthelminthic
 \begin{figure}[htbp]
@@ -339,16 +339,18 @@ Parametrised SCMs allow predicting how interventions on a set of variables might
 		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/post_anthelminthic_effect_on_E.pdf}
 		\put(-200, 140){\sffamily \textbf{B}} % Adjust coordinates as needed
 	\end{subfigure}
-	\begin{subfigure}[b]{0.45\textwidth}
-		\centering
-		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/S_R_interaction.pdf}
-		\put(-200, 140){\sffamily \textbf{C}} % Adjust coordinates as needed
-	\end{subfigure}
-	\caption{\textbf{Effect of simulated population-wide anthelmintic intervention on vaccine responsiveness.} \textbf{A}, Distribution of vaccine responses before and after the simulated intervention, showing the population-wide shift in responsiveness, with pre-intervention (observed) values in light gray and post-intervention (simulated) values in orange. \textbf{B}, Individual-level changes in vaccine responsiveness plotted against pre-intervention parasite burden, with vertical lines connecting each individual's pre-intervention (blue circles) and post-intervention (orange triangles) responses; orange lines indicate improved vaccine response after intervention. \textbf{C}, Interaction between sex and reproductive status on the predicted change in vaccine responsiveness under simulated anthelmintic intervention, showing mean changes in vaccine response ($E\_diff = E\_post - E\_pre$) for each combination of sex and reproductive status, with error bars representing the standard error of the mean. Positive values indicate an increase in vaccine response after the intervention.}
+	% \begin{subfigure}[b]{0.45\textwidth}
+	% 	\centering
+	% 	\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/S_R_interaction.pdf}
+	% 	\put(-200, 140){\sffamily \textbf{C}} % Adjust coordinates as needed
+	% \end{subfigure}
+	\caption{\textbf{Effect of simulated population-wide anthelmintic intervention on vaccine responsiveness.} \textbf{A}, Distribution of vaccine responses before and after the simulated intervention, showing the population-wide shift in responsiveness, with pre-intervention (observed) values in light gray and post-intervention (simulated) values in orange. \textbf{B}, Individual-level changes in vaccine responsiveness plotted against pre-intervention parasite burden, with vertical lines connecting each individual's pre-intervention (blue circles) and post-intervention (orange triangles) responses; orange lines indicate improved vaccine response after intervention.
+	%\textbf{C}, Interaction between sex and reproductive status on the predicted change in vaccine responsiveness under simulated anthelmintic intervention, showing mean changes in vaccine response ($E\_diff = E\_post - E\_pre$) for each combination of sex and reproductive status, with error bars representing the standard error of the mean. Positive values indicate an increase in vaccine response after the intervention.
+	}
 	\label{fig:counterfactual}
 \end{figure}
 
-We found that, had all mice been treated including those that had not received treatment in our experiment, would have resulted in an overall 15\% increase in vaccine responsiveness, had all mice been treated with anthelmintic drugs (Fig. \ref{fig:counterfactual}A).
+We found that, had all mice been treated with anthelmintic drugs (i.e., including those that had not been treated in our field experiment), the population would have experienced an overall 15\% increase in vaccine responsiveness (Fig. \ref{fig:counterfactual}A).
 The predicted difference in vaccine responsiveness varied between individuals, though not proportionally with observed parasite burdens (Fig. \ref{fig:counterfactual}B). Instead, the strongest predictors of the effect of anthelmintic treatment on vaccine responsiveness were individual reproductive status and sex, such that only non-reproductive individuals, and especially males, were predicted to benefit from anthelmintic treatment for improving vaccine responsiveness (Fig. \ref{fig:counterfactual}C).
 
 \section{Discussion}
