@@ -8,6 +8,17 @@ SCM Identification
 This script implements statistical identification of the Structural Causal Model (SCM)
 for vaccine efficacy analysis in wood mice, using the adjustment sets derived from the
 causal DAG to estimate direct and total causal effects.
+
+Prior Specification:
+This script uses weakly informative priors suitable for standardised outcomes:
+- α ~ Normal(0, 1): Standardised intercept (allows reasonable deviation from 0)
+- Most β ~ Normal(0, 0.5): Small to large effect sizes (95% within ±1 SD)
+- βH ~ Normal(0, 1): Larger habitat effects (lab vs wild can have bigger impact)
+- βP ~ Normal(0, 0.75): Moderate to large parasite effects
+- σ ~ Exponential(1): Residual variance allowing reasonable unexplained variation
+- τ ~ Exponential(1): Random effects variance allowing moderate between-individual variation
+
+These priors provide gentle regularisation while allowing meaningful biological effect sizes.
 =#
 
 ## Import packages
@@ -39,7 +50,9 @@ using MixedModelsMakie
 # using Formatting
 
 # Include modules
-cd("./src/")
+if isdir("./src/")
+    cd("./src/")
+end
 include("TuringUtils.jl")
 include("TuringPlots.jl")
 
@@ -50,7 +63,7 @@ include("DataWrangler.jl")
 
 # All cases
 df = encode_df(df) # Choose between df and df_unique (the latter has no repeated measures)
-df = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 4, df) # More efficient than Query.jl for simple filters
+df = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 4, df)
 df.IDidx = get_idx(:ID, df)[1]
 
 # Restrict to unique cases (no repeated measures)
@@ -61,7 +74,7 @@ df_unique = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_sinc
 dag_df = select(df, :E, :H, :V, :D, :R, :S, :M, :Ḟ, :P, :nP, :ID, :IDidx, :vax_history, :Vidx)
 dag_df.lognP = log10.(1 .+ dag_df.nP)
 
-# Create views for infected and uninfected subsets - more memory efficient
+
 dag_df_unique = select(df_unique, :E, :H, :V, :D, :R, :S, :M, :Ḟ, :P, :nP, :Vidx, :vax_history, :ID)
 filtered_df = dag_df[dag_df.P.==1, :]
 filtered_unique_df = dag_df_unique[dag_df_unique.P.==1, :]
@@ -106,14 +119,14 @@ needed to identify the total causal effect.
   E_mean = mean(E)
   E_std = std(E)
 
-  # Population-level priors
-  α ~ Normal(E_mean, 2.5 * E_std)
-  βVE ~ Normal(0, 0.5)
-  σ ~ Exponential(E_std)
+  # Population-level priors (weakly informative for standardised outcome)
+  α ~ Normal(0, 1)  # Standardised intercept - allows reasonable deviation from 0
+  βVE ~ Normal(0, 0.5)  # Vaccination effect - allows small to large effect sizes
+  σ ~ Exponential(1)  # Residual variance - allows reasonable unexplained variation
   ν ~ LogNormal(2, 1)
 
-  # Priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
+  # Priors for variance of random intercepts (weakly informative)
+  τ ~ Exponential(1)  # Allows moderate between-individual variation
   α_ID ~ filldist(Normal(0, τ), n_id)     # Group-level intercepts
 
   # Likelihood
@@ -121,8 +134,22 @@ needed to identify the total causal effect.
   return E ~ MvNormal(Ê, σ^2 * I)
 end
 
+# Prior predictive checks for V_E_Model
+println("=== PRIOR PREDICTIVE CHECK: V→E Model ===")
 V_E_model = V_E_Model(dag_df.IDidx, dag_df.E, dag_df.V)
 
+# Generate prior predictions
+V_E_priors = sample(V_E_model, Prior(), 1000)
+V_E_prior_predictions = Array(V_E_priors[:Ê])
+
+# Plot and assess
+with_theme(theme_minimal()) do
+  plot_prior_predictive_check(dag_df.E, V_E_prior_predictions;
+    title_suffix="V→E Model", saveplot=true)
+end
+assess_prior_adequacy(dag_df.E, V_E_prior_predictions; model_name="V→E Model")
+
+# Sample from posterior
 V_E_chn = sample(V_E_model, NUTS(), MCMCThreads(), 3000, 4)
 
 V_E_chn_df = DataFrame(V_E_chn)[!, r"α\b|β"]
@@ -166,21 +193,21 @@ vaccine response, adjusting for all mediating variables.
   E_mean = mean(E)
   E_std = std(E)
 
-  # Population-level priors
-  α ~ Normal(E_mean, 2.5 * E_std)  # Overall intercept
-  βVE ~ Normal(0, 0.5)  # Slope of V on E
-  βDE ~ Normal(0, 0.5)  # Slope of D on E
-  βFE ~ Normal(0, 0.5)  # Slope of F on E
-  βHE ~ Normal(0, 0.5)  # Slope of H on E
-  βME ~ Normal(0, 0.5)  # Slope of M on E
-  βPE ~ Normal(0, 0.5)  # Slope of P on E
-  βRE ~ Normal(0, 0.5)  # Slope of R on E
-  βSE ~ Normal(0, 0.5)  # Slope of S on E
-  σ ~ Exponential(E_std)  # Residual SD
-  ν ~ LogNormal(2, 1)  # Residual degrees of freedom
+  # Population-level priors (weakly informative for standardised outcome)
+  α ~ Normal(0, 1)  # Standardised intercept - allows reasonable deviation from 0
+  βVE ~ Normal(0, 0.5)  # Vaccination direct effect - allows small to large effect sizes
+  βDE ~ Normal(0, 0.5)  # Diet effect
+  βFE ~ Normal(0, 0.5)  # Fat effect
+  βHE ~ Normal(0, 1)    # Habitat effect - allow larger effect (lab vs wild)
+  βME ~ Normal(0, 0.5)  # Mass effect
+  βPE ~ Normal(0, 0.75) # Parasite effect - allows moderate to large effect
+  βRE ~ Normal(0, 0.5)  # Reproductive effect
+  βSE ~ Normal(0, 0.5)  # Sex effect
+  σ ~ Exponential(1)    # Residual variance - allows reasonable unexplained variation
+  ν ~ LogNormal(2, 1)   # Residual degrees of freedom
 
-  # Priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
+  # Priors for variance of random intercepts (weakly informative)
+  τ ~ Exponential(1)    # Allows moderate between-individual variation
   α_ID ~ filldist(Normal(0, τ), n_id)     # Group-level intercepts
 
   # Missing F values - proper imputation pattern
@@ -227,7 +254,7 @@ V_E_DE_chn = sample(V_E_DE_model, NUTS(), MCMCThreads(), 3000, 4)
 V_E_DE_chn_df = DataFrame(V_E_DE_chn)[!, r"α\b|β"]
 precis(V_E_DE_chn_df)
 
-# Mixed model for comparison
+## Mixed model for comparison
 glmm_V_E_NDE = fit(MixedModel, @formula(E ~ 1 + V + D + Ḟ + H + M + P + R + S + (1 | ID)), dag_df)
 
 qqnorm(glmm_V_E_NDE; qqline=:fitrobust)
@@ -280,13 +307,13 @@ without proper causal adjustment. Used for comparison with the properly adjusted
   E_mean = mean(E)
   E_std = std(E)
 
-  # Population-level priors
-  α ~ Normal(E_mean, 2.5 * E_std)
-  βPE ~ Normal(0, 0.5)
-  σ ~ Exponential(E_std)
+  # Population-level priors (weakly informative for standardised outcome)
+  α ~ Normal(0, 1)  # Standardised intercept - allows reasonable deviation from 0
+  βPE ~ Normal(0, 0.75)  # Parasite effect - allows moderate to large effect
+  σ ~ Exponential(1)  # Residual variance - allows reasonable unexplained variation
 
-  # Priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
+  # Priors for variance of random intercepts (weakly informative)
+  τ ~ Exponential(1)  # Allows moderate between-individual variation
   α_ID ~ filldist(Normal(0, τ), n_id)     # Group-level intercepts
 
   # Likelihood
@@ -294,8 +321,22 @@ without proper causal adjustment. Used for comparison with the properly adjusted
   return E ~ MvNormal(Ê, σ^2 * I)
 end
 
-naive_P_E_model = Naive_P_E_Model(dag_df_infected.IDidx, dag_df_infected.E, dag_df_infected.lognP)
+# Prior predictive checks for Naive P_E_Model
+println("=== PRIOR PREDICTIVE CHECK: Naive P→E Model ===")
+naive_P_E_model = Naive_P_E_Model(dag_df_infected.IDidx, dag_df_infected.E, dag_df_infected.lognP; n_id=maximum(dag_df_infected.IDidx))
 
+# Generate prior predictions
+naive_P_E_priors = sample(naive_P_E_model, Prior(), 1000)
+naive_P_E_prior_predictions = Array(naive_P_E_priors[:Ê])
+
+# Plot and assess
+with_theme(theme_minimal()) do
+  plot_prior_predictive_check(dag_df_infected.E, naive_P_E_prior_predictions;
+    title_suffix="Naive P→E Model", saveplot=true)
+end
+assess_prior_adequacy(dag_df_infected.E, naive_P_E_prior_predictions; model_name="Naive P→E Model")
+
+# Sample from posterior
 naive_P_E_chn = sample(naive_P_E_model, NUTS(), MCMCThreads(), 3000, 4)
 
 naive_P_E_chn_df = DataFrame(naive_P_E_chn)[!, r"α\b|β"]
@@ -365,19 +406,19 @@ properly adjusted for confounders using the minimal sufficient adjustment set.
   E_mean = mean(E)
   E_std = std(E)
 
-  # Population-level priors
-  α ~ Normal(E_mean, 2.5 * E_std)
-  βPE ~ Normal(0, 0.5)
-  βDE ~ Normal(0, 0.5)
-  βHE ~ Normal(0, 0.5)
-  βRE ~ Normal(0, 0.5)
-  βSE ~ Normal(0, 0.5)
-  βVE ~ Normal(0, 0.5)
-  σ ~ Exponential(E_std)
+  # Population-level priors (weakly informative for standardised outcome)
+  α ~ Normal(0, 1)      # Standardised intercept - allows reasonable deviation from 0
+  βPE ~ Normal(0, 0.75) # Parasite effect - allows moderate to large effect
+  βDE ~ Normal(0, 0.5)  # Diet effect
+  βHE ~ Normal(0, 1)    # Habitat effect - allow larger effect (lab vs wild)
+  βRE ~ Normal(0, 0.5)  # Reproductive effect
+  βSE ~ Normal(0, 0.5)  # Sex effect
+  βVE ~ Normal(0, 0.5)  # Vaccination effect
+  σ ~ Exponential(1)    # Residual variance - allows reasonable unexplained variation
   ν ~ LogNormal(2, 1)
 
-  # Priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
+  # Priors for variance of random intercepts (weakly informative)
+  τ ~ Exponential(1)    # Allows moderate between-individual variation
   α_ID ~ filldist(Normal(0, τ), n_id)     # Group-level intercepts
 
   # Likelihood
@@ -385,10 +426,24 @@ properly adjusted for confounders using the minimal sufficient adjustment set.
   return E ~ MvNormal(Ê, σ^2 * I)
 end
 
+# Prior predictive checks for properly adjusted P_E_Model
+println("=== PRIOR PREDICTIVE CHECK: P→E Model (Properly Adjusted) ===")
 P_E_model = P_E_Model(dag_df_infected.IDidx, dag_df_infected.E, log10.(1 .+ dag_df_infected.nP),
   dag_df_infected.D, dag_df_infected.H, dag_df_infected.R,
-  dag_df_infected.S, dag_df_infected.V)
+  dag_df_infected.S, dag_df_infected.V; n_id=maximum(dag_df_infected.IDidx))
 
+# Generate prior predictions
+P_E_priors = sample(P_E_model, Prior(), 1000)
+P_E_prior_predictions = Array(P_E_priors[:Ê])
+
+# Plot and assess
+with_theme(theme_minimal()) do
+  plot_prior_predictive_check(dag_df_infected.E, P_E_prior_predictions;
+    title_suffix="P→E Model (Adjusted)", saveplot=true)
+end
+assess_prior_adequacy(dag_df_infected.E, P_E_prior_predictions; model_name="P→E Model (Properly Adjusted)")
+
+# Extended prior sampling for inspection
 P_E_priors = sample(P_E_model, Prior(), MCMCThreads(), 3000, 4)
 summarize(P_E_priors)
 
@@ -453,20 +508,20 @@ blocking all indirect pathways through mediating variables.
   E_mean = mean(E)
   E_std = std(E)
 
-  # Population-level priors
-  α ~ Normal(E_mean, 2.5 * E_std)
-  βPE ~ Normal(0, 0.5)
-  βDE ~ Normal(0, 0.5)
-  βFE ~ Normal(0, 0.5)
-  βHE ~ Normal(0, 0.5)
-  βME ~ Normal(0, 0.5)
-  βRE ~ Normal(0, 0.5)
-  βSE ~ Normal(0, 0.5)
-  βVE ~ Normal(0, 0.5)
-  σ ~ Exponential(E_std)
+  # Population-level priors (weakly informative for standardised outcome)
+  α ~ Normal(0, 1)      # Standardised intercept - allows reasonable deviation from 0
+  βPE ~ Normal(0, 0.75) # Parasite direct effect - allows moderate to large effect
+  βDE ~ Normal(0, 0.5)  # Diet effect
+  βFE ~ Normal(0, 0.5)  # Fat effect
+  βHE ~ Normal(0, 1)    # Habitat effect - allow larger effect (lab vs wild)
+  βME ~ Normal(0, 0.5)  # Mass effect
+  βRE ~ Normal(0, 0.5)  # Reproductive effect
+  βSE ~ Normal(0, 0.5)  # Sex effect
+  βVE ~ Normal(0, 0.5)  # Vaccination effect
+  σ ~ Exponential(1)    # Residual variance - allows reasonable unexplained variation
 
-  # Priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
+  # Priors for variance of random intercepts (weakly informative)
+  τ ~ Exponential(1)    # Allows moderate between-individual variation
   α_ID ~ filldist(Normal(0, τ), n_id)     # Group-level intercepts
 
   # Missing F values - optimized imputation
@@ -552,17 +607,17 @@ adjusting for confounding variables.
   # Pre-compute statistics for type stability
   nP_std = std(nP)
 
-  # Population-level priors
-  α ~ Normal(0, 2.5)
-  βR ~ Normal(0, 0.5)
-  βD ~ Normal(0, 0.5)
-  βH ~ Normal(0, 0.5)
-  βS ~ Normal(0, 0.5)
-  βV ~ Normal(0, 0.5)
-  σ ~ Exponential(nP_std)
+  # Population-level priors (weakly informative for log-transformed parasite count)
+  α ~ Normal(0, 2)      # Log-scale intercept - allows reasonable deviation
+  βR ~ Normal(0, 0.75)  # Reproductive effect on parasites - allows moderate to large effect
+  βD ~ Normal(0, 0.5)   # Diet effect
+  βH ~ Normal(0, 1)     # Habitat effect - allow larger effect (lab vs wild)
+  βS ~ Normal(0, 0.5)   # Sex effect
+  βV ~ Normal(0, 0.5)   # Vaccination effect
+  σ ~ Exponential(1.5)  # Residual variance - allows reasonable unexplained variation
 
-  # Priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
+  # Priors for variance of random intercepts (weakly informative)
+  τ ~ Exponential(1)    # Allows moderate between-individual variation
   α_ID ~ filldist(Normal(0, τ), n_id)
 
   # Likelihood
@@ -607,14 +662,14 @@ A Bayesian model for the total causal effect of diet supplementation on parasite
   # Pre-compute statistics for type stability
   nP_std = std(nP)
 
-  # Population-level priors
-  α ~ Normal(0, 2.5)
-  βD ~ Normal(0, 0.5)
-  βH ~ Normal(0, 0.5)
-  σ ~ Exponential(nP_std)
+  # Population-level priors (weakly informative for log-transformed parasite count)
+  α ~ Normal(0, 2)      # Log-scale intercept - allows reasonable deviation
+  βD ~ Normal(0, 0.75)  # Diet total effect - allows moderate to large effect
+  βH ~ Normal(0, 1)     # Habitat effect - allow larger effect (lab vs wild)
+  σ ~ Exponential(1.5)  # Residual variance - allows reasonable unexplained variation
 
-  # Priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # Group-level SDs intercepts
+  # Priors for variance of random intercepts (weakly informative)
+  τ ~ Exponential(1)    # Allows moderate between-individual variation
   α_ID ~ filldist(Normal(0, τ), n_id)
 
   # Likelihood
@@ -713,14 +768,14 @@ ridgeplot(boot)
 # Bayesian model
 
 @model function S_E(IDidx, E, S; n_id=length(unique(IDidx)))
-  # population-level priors
-  α ~ Normal(mean(E), 2.5 * std(E))  # overall intercept
-  βS_ ~ Normal(0, 0.5)  # slope of S on E
-  σ ~ Exponential(std(E))  # residual SD
+  # Population-level priors (weakly informative for standardised outcome)
+  α ~ Normal(0, 1)      # Standardised intercept - allows reasonable deviation from 0
+  βS_ ~ Normal(0, 0.5)  # Sex effect on vaccine response - allows small to large effect sizes
+  σ ~ Exponential(1)    # Residual variance - allows reasonable unexplained variation
 
-  # priors for variance of random intercepts
-  τ ~ truncated(Cauchy(0, 2); lower=0)    # group-level SDs intercepts
-  α_ID ~ filldist(Normal(0, τ), n_id)     # group-level intercepts
+  # Priors for variance of random intercepts (weakly informative)
+  τ ~ Exponential(1)    # Allows moderate between-individual variation
+  α_ID ~ filldist(Normal(0, τ), n_id)     # Group-level intercepts
 
   # likelihood
   Ê = @. α + α_ID[IDidx] + βS_ * S
@@ -861,7 +916,6 @@ H_E_chn = sample(H_E_model, NUTS(), MCMCThreads(), 3000, 4)
 H_E_chn_df = DataFrame(H_E_chn)[!, r"α\b|β"];
 precis(H_E_chn_df)
 
-# include("./TuringPlots.jl")
 p = plot_chains_df(H_E_chn; show_intercept=true)
 safe_plot_save("H_E_chn.pdf", p)
 p
@@ -1126,8 +1180,6 @@ M_E_ch = sample(M_E_model, NUTS(), MCMCThreads(), 3000, 4)
 
 M_E_df = DataFrame(M_E_ch)[!, r"α\b|β"];
 precis(M_E_df)
-
-coeftab_plot(M_E_df, pars=[:βW, :βD, :βM, :βF, :βP, :βR, :βS])
 
 p = plot_chains_df(M_E_ch; show_intercept=true)
 safe_plot_save("M_E_chn.pdf", p)

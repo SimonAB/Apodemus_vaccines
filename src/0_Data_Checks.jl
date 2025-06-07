@@ -45,7 +45,7 @@ For parasite count variables, it applies a log10(1+x) transformation.
 - Uses LaTeX formatting for axis labels where appropriate
 """
 function data_check(df::DataFrame, variable_choice::String)
-    # More efficient filtering with proper missing value handling
+
     df = filter(row -> !ismissing(row[variable_choice]) && row[variable_choice] != 0, df)
 
     ## Some quick plots

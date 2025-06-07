@@ -29,7 +29,9 @@ using Colors
 CairoMakie.activate!(; type="svg")
 using MixedModelsMakie
 
-# cd("./src/")
+if isdir("./src/")
+    cd("./src/")
+end
 include("TuringUtils.jl")
 include("TuringPlots.jl")
 

@@ -15,12 +15,11 @@ using HypothesisTests
 using GLM, MixedModels
 using RCall
 @rlibrary dagitty # we use the original dagitty from R
-# using Dagitty
-# plotting & diagnostics
-# using StatsPlots
 
-## import data
-cd("./src/")
+## Import data
+if isdir("./src/")
+    cd("./src/")
+end
 include("DataWrangler.jl")
 # Data preparation - use efficient filtering with missing value handling
 df = encode_df(df) # Choose between df and df_unique (the latter has no repeated measures)

@@ -39,9 +39,12 @@ using MixedModelsMakie
 using Colors
 
 # Include modules
-cd("./src/")
+if isdir("./src/")
+    cd("./src/")
+end
 include("TuringUtils.jl")
 include("TuringPlots.jl")
+include("PlottingUtils.jl")
 
 # Import data
 include("DataWrangler.jl")
@@ -50,7 +53,7 @@ include("DataWrangler.jl")
 
 # All cases - use more efficient filtering
 df = encode_df(df) # Choose between df and df_unique (the latter has no repeated measures)
-df = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 4, df) # More efficient than Query.jl for simple filters
+df = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 4, df)
 df.IDidx = get_idx(:ID, df)[1]
 
 # Set up intervention: post-intervention P, nP = 0 (no infection)
@@ -83,7 +86,7 @@ dag_df_infected.IDidx_infected = [id_mapping[id] for id in dag_df_infected.ID]
 # Original DAG - includes P→E pathway
 dag = dagitty("dag{ D -> E; D -> F; D -> M; D -> P; D -> R; F -> E; F -> M; H -> E; H -> F; H -> M; H -> P; H -> R; M -> E; P -> E; P -> F; P -> M; R -> E; R -> F; R -> M; R -> P; S -> E; S -> F; S -> M; S -> P; S -> R; V -> E; V -> F; V -> M; V -> P; V -> R; }")
 
-# Post-intervention DAG - P→E pathway removed
+# Post-intervention DAG - {Pa} -> P -> E pathway removed
 dag_m = dagitty("dag{ D -> E; D -> F; D -> M; D -> R; F -> E; F -> M; H -> E; H -> F; H -> M; H -> R; M -> E; P -> E; P -> F; P -> M; R -> E; R -> F; R -> M; S -> E; S -> F; S -> M; S -> R; V -> E; V -> F; V -> M; V -> R; }")
 
 ## Preliminary analysis: Effect of P on E
@@ -100,7 +103,6 @@ glmm_P_E_counterfactual = fit(MixedModel, @formula(E ~ 1 + post_nP + (1 | ID)), 
 qqnorm(glmm_P_E_factual; qqline=:fitrobust)
 boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_P_E_factual)
 coefplot(boot)
-ridgeplot(boot)
 
 ## Bayesian generative models for counterfactual inference
 
@@ -158,14 +160,14 @@ This model implements the structural causal model framework by:
     E_mean = mean(E)
     E_std = std(E)
 
-    # Population-level priors (weakly informative)
-    α ~ Normal(E_mean, 2.5 * E_std)  # Overall intercept
+    # Population-level priors (weakly informative for standardised outcome)
+    α ~ Normal(0, 1)  # Overall intercept - allows reasonable deviation from 0
 
-    # Structural coefficients for all variables
-    βV ~ Normal(0, 0.5)   # Vaccination effect
+    # Structural coefficients - weakly informative priors for standardised predictors/outcome
+    βV ~ Normal(0, 0.5)   # Vaccination effect - allows small to large effect sizes
     βD ~ Normal(0, 0.5)   # Diet effect
     βḞ ~ Normal(0, 0.5)   # Fat effect
-    βH ~ Normal(0, 0.5)   # Habitat effect
+    βH ~ Normal(0, 1)     # Habitat effect - allow larger effect (lab vs wild)
     βM ~ Normal(0, 0.5)   # Mass effect
     βR ~ Normal(0, 0.5)   # Reproductive status effect
     βS ~ Normal(0, 0.5)   # Sex effect
@@ -175,15 +177,15 @@ This model implements the structural causal model framework by:
         # Post-intervention: P has no causal effect on E (pathway severed)
         βP ~ Normal(0, 0.001)  # Essentially constrained to 0
     else
-        # Pre-intervention: P can causally influence E
-        βP ~ Normal(0, 0.5)
+        # Pre-intervention: P can causally influence E - allow moderate to large effect
+        βP ~ Normal(0, 0.75)
     end
 
-    # Residual variance
-    σ ~ Exponential(E_std)
+    # Residual variance - weakly informative for standardised outcome
+    σ ~ Exponential(1)  # Allows reasonable residual variation
 
-    # Random effects for individual-level variation
-    τ ~ truncated(Cauchy(0, 2); lower=0)  # Individual-level SD
+    # Random effects - weakly informative
+    τ ~ Exponential(1)  # Individual-level SD - allows moderate between-individual variation
     α_ID ~ filldist(Normal(0, τ), n_id)   # Individual random intercepts
 
     # Handle missing fat scores with imputation
@@ -256,24 +258,24 @@ to maintain the identity of individuals across worlds.
     E_mean = mean(E_factual)
     E_std = std(E_factual)
 
-    # Shared population-level parameters
-    α ~ Normal(E_mean, 2.5 * E_std)
+    # Shared population-level parameters (weakly informative)
+    α ~ Normal(0, 1)  # Standardised outcome
 
-    # Structural coefficients (shared across worlds)
+    # Structural coefficients (shared across worlds) - weakly informative priors
     βV ~ Normal(0, 0.5)
     βD ~ Normal(0, 0.5)
     βḞ ~ Normal(0, 0.5)
-    βH ~ Normal(0, 0.5)
+    βH ~ Normal(0, 1)     # Allow larger habitat effect
     βM ~ Normal(0, 0.5)
-    βP ~ Normal(0, 0.5)  # Parasite effect in factual world
+    βP ~ Normal(0, 0.75)  # Allow moderate to large parasite effect in factual world
     βR ~ Normal(0, 0.5)
     βS ~ Normal(0, 0.5)
 
-    # Shared residual variance
-    σ ~ Exponential(E_std)
+    # Shared residual variance - weakly informative
+    σ ~ Exponential(1)
 
-    # Shared random effects (key for maintaining individual identity)
-    τ ~ truncated(Cauchy(0, 2); lower=0)
+    # Shared random effects - weakly informative
+    τ ~ Exponential(1)
     α_ID ~ filldist(Normal(0, τ), n_id)  # Same random intercepts in both worlds
 
     # Fat score imputation (shared parameters)
@@ -316,11 +318,18 @@ to maintain the identity of individuals across worlds.
     end
 end
 
-## Model fitting
+## Prior predictive checks
 
-# Fit the pre-intervention model
-println("Fitting pre-intervention model...")
-pre_intervention_model = Counterfactual_E_Model(
+# PPC functions moved to TuringUtils.jl for reusability
+
+# Prior rationale: Weakly informative priors for standardised outcome (E)
+
+# Generate prior predictive checks using improved approach
+println("=== PRIOR PREDICTIVE CHECKS FOR INTERVENTION MODELS ===")
+
+# Factual model (with parasites)
+println("Checking priors for factual model...")
+factual_model = Counterfactual_E_Model(
     dag_df_infected.IDidx_infected, dag_df_infected.E, dag_df_infected.V,
     dag_df_infected.D, dag_df_infected.Ḟ, dag_df_infected.H,
     dag_df_infected.M, dag_df_infected.P, dag_df_infected.R,
@@ -328,11 +337,12 @@ pre_intervention_model = Counterfactual_E_Model(
     dag_df_infected.post_nP; n_id=n_infected_ids, intervention=false
 )
 
-pre_intervention_chain = sample(pre_intervention_model, NUTS(), MCMCThreads(), 3000, 4)
+factual_prior_samples = sample(factual_model, Prior(), 1000)
+factual_prior_E = vec(Array(factual_prior_samples)[:, end])  # Extract E predictions
 
-# Fit the post-intervention model
-println("Fitting post-intervention model...")
-post_intervention_model = Counterfactual_E_Model(
+# Counterfactual model (without parasites)
+println("Checking priors for counterfactual model...")
+counterfactual_model = Counterfactual_E_Model(
     dag_df_infected.IDidx_infected, dag_df_infected.E, dag_df_infected.V,
     dag_df_infected.D, dag_df_infected.Ḟ, dag_df_infected.H,
     dag_df_infected.M, dag_df_infected.post_P, dag_df_infected.R,
@@ -340,7 +350,31 @@ post_intervention_model = Counterfactual_E_Model(
     dag_df_infected.post_nP; n_id=n_infected_ids, intervention=true
 )
 
-post_intervention_chain = sample(post_intervention_model, NUTS(), MCMCThreads(), 3000, 4)
+counterfactual_prior_samples = sample(counterfactual_model, Prior(), 1000)
+counterfactual_prior_E = vec(Array(counterfactual_prior_samples)[:, end])  # Extract E predictions
+
+# Create plots and assessments using TuringPlots functions
+with_theme(theme_minimal()) do
+    plot_prior_predictive_check(dag_df_infected.E, factual_prior_E;
+        title_suffix="Factual Model", saveplot=true)
+
+    plot_prior_predictive_check(dag_df_infected.E, counterfactual_prior_E;
+        title_suffix="Counterfactual Model", saveplot=true)
+end
+
+# Assess prior adequacy
+assess_prior_adequacy(dag_df_infected.E, factual_prior_E; model_name="Factual (With Parasites)")
+assess_prior_adequacy(dag_df_infected.E, counterfactual_prior_E; model_name="Counterfactual (Without Parasites)")
+
+## Model fitting
+
+# Fit the pre-intervention model (reuse the factual_model from PPC)
+println("\nFitting pre-intervention model...")
+pre_intervention_chain = sample(factual_model, NUTS(), MCMCThreads(), 3000, 4)
+
+# Fit the post-intervention model (reuse the counterfactual_model from PPC)
+println("Fitting post-intervention model...")
+post_intervention_chain = sample(counterfactual_model, NUTS(), MCMCThreads(), 3000, 4)
 
 ## Generate counterfactual predictions
 
@@ -369,7 +403,7 @@ function generate_counterfactuals(pre_chain, df_infected; n_samples::Int=1000)
     E_counterfactual = Matrix{Float64}(undef, n_obs, n_samples)
 
     # Sample from posterior
-    sample_indices = rand(1:n_chain_samples, n_samples)  # More efficient than sample()
+    sample_indices = rand(1:n_chain_samples, n_samples)
 
     # Pre-compute unique infected count to avoid repeated computation
     n_unique_infected = length(unique(df_infected.ID))
@@ -415,7 +449,7 @@ function generate_counterfactuals(pre_chain, df_infected; n_samples::Int=1000)
 
             # Factual prediction (with parasites)
             μ_factual = base_μ + βP * P_vec[i]
-            E_factual[i, s] = μ_factual + σ * randn()  # More efficient than rand(Normal())
+            E_factual[i, s] = μ_factual + σ * randn()
 
             # Counterfactual prediction (without parasites: P = 0)
             E_counterfactual[i, s] = base_μ + σ * randn()
@@ -438,11 +472,49 @@ dag_df_infected.E_diff_counterfactual = dag_df_infected.E_counterfactual_mean .-
 dag_df_infected.E_factual_sd = vec(std(E_factual, dims=2))
 dag_df_infected.E_counterfactual_sd = vec(std(E_counterfactual, dims=2))
 
+# Calculate Cohen's d effect size for standardised assessment
+dag_df_infected.E_cohens_d = begin
+    # Pooled standard deviation for Cohen's d calculation
+    pooled_sd = sqrt.((dag_df_infected.E_factual_sd .^ 2 .+ dag_df_infected.E_counterfactual_sd .^ 2) ./ 2)
+    # Avoid division by very small numbers
+    safe_pooled_sd = max.(pooled_sd, 0.1)  # Minimum threshold for stability
+    dag_df_infected.E_diff_counterfactual ./ safe_pooled_sd
+end
+
+# Define clinical significance categories based on Cohen's d thresholds
+dag_df_infected.E_clinical_significance = begin
+    abs_cohens_d = abs.(dag_df_infected.E_cohens_d)
+    ifelse.(abs_cohens_d .< 0.2, "Negligible",
+        ifelse.(abs_cohens_d .< 0.5, "Small",
+            ifelse.(abs_cohens_d .< 0.8, "Moderate", "Large")))
+end
+
+# Clinical significance with direction
+dag_df_infected.E_clinical_direction = begin
+    cohens_d = dag_df_infected.E_cohens_d
+    abs_cohens_d = abs.(cohens_d)
+    direction = ifelse.(cohens_d .>= 0, "Beneficial", "Detrimental")
+    magnitude = ifelse.(abs_cohens_d .< 0.2, "Negligible",
+        ifelse.(abs_cohens_d .< 0.5, "Small",
+            ifelse.(abs_cohens_d .< 0.8, "Moderate", "Large")))
+    magnitude .* " " .* direction
+end
+
 println("Summary of counterfactual effects:")
 println("Mean counterfactual effect (E_counterfactual - E_factual): ",
-    mean(dag_df_infected.E_diff_counterfactual))
+    round(mean(dag_df_infected.E_diff_counterfactual), digits=3))
 println("SD of counterfactual effects: ",
-    std(dag_df_infected.E_diff_counterfactual))
+    round(std(dag_df_infected.E_diff_counterfactual), digits=3))
+println("Mean Cohen's d: ", round(mean(dag_df_infected.E_cohens_d), digits=3))
+println("SD Cohen's d: ", round(std(dag_df_infected.E_cohens_d), digits=3))
+
+# Clinical significance summary
+println("\nClinical significance distribution:")
+for category in ["Negligible", "Small", "Moderate", "Large"]
+    count = sum(dag_df_infected.E_clinical_significance .== category)
+    percentage = round(100 * count / nrow(dag_df_infected), digits=1)
+    println("$category: $count mice ($percentage%)")
+end
 
 # Summary diagnostics
 precis(DataFrame(pre_intervention_chain)[!, r"α\b|β"])
@@ -477,382 +549,44 @@ glmm_V_E_direct_counterfactual = fit(MixedModel, @formula(E_counterfactual_mean 
 qqnorm(glmm_V_E_direct_counterfactual; qqline=:fitrobust)
 boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_V_E_direct_counterfactual)
 coefplot(boot)
-ridgeplot(boot)
 
-## Visualisation functions
-
-"""
-    plot_E_factual_counterfactual(df; saveplot=false)
-
-Create a visualisation comparing factual and counterfactual vaccine response distributions.
-
-# Arguments
-- `df::DataFrame`: DataFrame containing the data with columns:
-    - E_factual_mean: Factual vaccine response (with parasites)
-    - E_counterfactual_mean: Counterfactual vaccine response (without parasites)
-- `saveplot::Bool=false`: If true, saves the plot as a PDF
-
-# Details
-- Plots histograms of factual and counterfactual vaccine responses from generative models
-- Factual data shown in light blue-grey (with parasites)
-- Counterfactual data shown in orange (without parasites)
-- Includes a legend in the top-left corner
-- Axis labels are bold and sized at 16pt
-
-# Returns
-- `Figure`: A CairoMakie figure containing the distribution comparison plot
-"""
-function plot_E_factual_counterfactual(df; saveplot::Bool=false)
-    fig = Figure()
-    ax = Axis(fig[1, 1])
-
-    # Define custom colour (#c0c7db) - more efficient color definition
-    light_blue_grey = RGB(0.7529f0, 0.7804f0, 0.8588f0)  # Use Float32 for efficiency
-
-    # Plot histograms of factual and counterfactual responses
-    hist!(ax, df.E_factual_mean, color=light_blue_grey, label="Factual (with parasites)")
-    hist!(ax, df.E_counterfactual_mean, color=:orange, label="Counterfactual (without parasites)")
-    axislegend(ax, position=:lt)
-
-    # Configure axis labels and styling
-    ax.xlabel = "Vaccine response"
-    ax.ylabel = "Population count"
-    ax.xlabelsize = 16
-    ax.ylabelsize = 16
-    ax.xlabelfont = :bold
-    ax.ylabelfont = :bold
-
-    # Save plot if requested
-    if saveplot
-        safe_plot_save("E_factual_counterfactual.pdf", fig)
-    end
-    fig
-end
-
-"""
-    plot_counterfactual_effects(df; saveplot=false)
-
-Create a visualisation of the counterfactual effect of parasite elimination on vaccine response for each mouse.
-Optimized version with better performance for large datasets.
-
-# Arguments
-- `df::DataFrame`: DataFrame containing the data with columns:
-    - IDidx: Mouse identifier
-    - nP: Observed parasite count
-    - E_factual_mean: Factual vaccine response (with parasites)
-    - E_counterfactual_mean: Counterfactual vaccine response (without parasites)
-    - S: Sex (1=male, 2=female)
-- `saveplot::Bool=false`: If true, saves the plot as a PDF
-
-# Details
-- Plots factual and counterfactual vaccine responses from generative models for each mouse
-- Uses vertical lines to connect factual and counterfactual points
-- Orange lines indicate increased vaccine response under parasite elimination
-- Black lines indicate decreased or unchanged vaccine response
-- Factual points shown as circles (with parasites)
-- Counterfactual points shown as triangles (without parasites)
-- Sex-specific colours for point outlines
-
-# Returns
-- `Figure`: A CairoMakie figure containing the counterfactual effect plot
-"""
-function plot_counterfactual_effects(df; saveplot::Bool=false)
-    fig = Figure()
-    ax = Axis(fig[1, 1])
-
-    # Define colours - use symbols for efficiency
-    male_color = :steelblue
-    female_color = :crimson
-    light_blue_grey = RGB(0.7529f0, 0.7804f0, 0.8588f0)  # Float32 for efficiency
-
-    # Get unique mice once for efficiency
-    unique_mice = unique(df.IDidx)
-
-    # Pre-allocate vectors for batch plotting
-    factual_x = Float64[]
-    factual_y = Float64[]
-    counterfactual_x = Float64[]
-    counterfactual_y = Float64[]
-    line_segments = Pair{Point2f,Point2f}[]
-
-    for mouse in unique_mice
-        mouse_mask = df.IDidx .== mouse
-        mouse_data = view(df, mouse_mask, :)  # Use view for efficiency
-
-        # Determine sex colour for the outline - assumes sex is constant for a mouse
-        sex_outline_color = mouse_data.S[1] == 1 ? male_color : female_color
-
-        for i in 1:length(mouse_data.nP)
-            x_val = mouse_data.nP[i]
-            factual_val = mouse_data.E_factual_mean[i]
-            counterfactual_val = mouse_data.E_counterfactual_mean[i]
-
-            # Store data for batch plotting
-            push!(factual_x, x_val)
-            push!(factual_y, factual_val)
-            push!(counterfactual_x, x_val)
-            push!(counterfactual_y, counterfactual_val)
-
-            # Draw vertical lines connecting factual and counterfactual points
-            line_color = factual_val < counterfactual_val ? :orange : :black
-            lines!(ax, [x_val, x_val], [factual_val, counterfactual_val],
-                color=line_color, linewidth=3, alpha=0.5)
-        end
-
-        # Plot factual and counterfactual points with sex-based outlines
-        mouse_indices = findall(mouse_mask)
-        scatter!(ax, mouse_data.nP, mouse_data.E_factual_mean,
-            color=light_blue_grey, strokecolor=sex_outline_color, strokewidth=2,
-            label="Factual (with parasites)", markersize=16, alpha=0.7)
-        scatter!(ax, mouse_data.nP, mouse_data.E_counterfactual_mean,
-            color=:orange, strokecolor=sex_outline_color, strokewidth=2,
-            label="Counterfactual (without parasites)", marker=:utriangle,
-            markersize=16, alpha=0.7)
-    end
-
-    # Configure axis labels and styling
-    ax.xlabel = "Observed Parasite Count"
-    ax.ylabel = "Vaccine response"
-    ax.xlabelsize = 16
-    ax.ylabelsize = 16
-    ax.xlabelfont = :bold
-    ax.ylabelfont = :bold
-
-    # Add legend with sex-specific elements
-    pre_male = MarkerElement(color=light_blue_grey, marker=:circle, markersize=16,
-        strokecolor=male_color, strokewidth=2)
-    pre_female = MarkerElement(color=light_blue_grey, marker=:circle, markersize=16,
-        strokecolor=female_color, strokewidth=2)
-    post_male = MarkerElement(color=:orange, marker=:utriangle, markersize=16,
-        strokecolor=male_color, strokewidth=2)
-    post_female = MarkerElement(color=:orange, marker=:utriangle, markersize=16,
-        strokecolor=female_color, strokewidth=2)
-
-    axislegend(ax,
-        [pre_male, pre_female, post_male, post_female],
-        ["Factual (Male)", "Factual (Female)", "Counterfactual (Male)", "Counterfactual (Female)"],
-        position=:rt)
-
-    # Save plot if requested
-    if saveplot
-        safe_plot_save("counterfactual_effects_on_E.pdf", fig)
-    end
-
-    fig
-end
-
-## Generate plots
+## Generate enhanced plots with clinical significance
 
 with_theme(theme_minimal()) do
     plot_E_factual_counterfactual(dag_df_infected, saveplot=true)
 end
 
 with_theme(theme_minimal()) do
-    plot_counterfactual_effects(dag_df_infected, saveplot=true)
+    plot_counterfactual_effects_with_significance(dag_df_infected, saveplot=true)
 end
-
-## Interaction analysis: Sex × Reproductive status
-
-# Fit model with interaction term
-glmm_E_diff_interaction = fit(MixedModel, @formula(E_diff_counterfactual ~ -1 + D + R + S + V + M + Ḟ + S & R + (1 | ID)), dag_df_infected)
-
-"""
-    plot_S_R_interaction(df; saveplot=false)
-
-Create an interaction plot visualising the effect of Sex (S) and Reproductive status (R)
-on the counterfactual effect of parasite elimination.
-Optimized version with better performance.
-
-# Arguments
-- `df::DataFrame`: DataFrame containing the data
-- `saveplot::Bool=false`: If true, saves the plot as a PDF
-
-# Returns
-- `Figure`: A CairoMakie figure containing the interaction plot
-"""
-function plot_S_R_interaction(df; saveplot::Bool=false)
-    fig = Figure()
-    ax = Axis(fig[1, 1])
-
-    # Get unique values of Sex (S) and Reproductive status (R)
-    S_values = sort(unique(df.S))  # Sort for consistency
-    R_values = sort(unique(df.R))
-
-    # Pre-allocate arrays with specific types for better performance
-    n_S, n_R = length(S_values), length(R_values)
-    means = Matrix{Float64}(undef, n_S, n_R)
-    sems = Matrix{Float64}(undef, n_S, n_R)
-
-    # Calculate means and standard errors for each combination
-    for (i, s) in enumerate(S_values), (j, r) in enumerate(R_values)
-        mask = (df.S .== s) .& (df.R .== r)
-        values = view(df.E_diff_counterfactual, mask)  # Use view for efficiency
-        n_vals = length(values)
-
-        if n_vals > 0
-            means[i, j] = mean(values)
-            sems[i, j] = std(values) / sqrt(n_vals)
-        else
-            means[i, j] = NaN
-            sems[i, j] = NaN
-        end
-    end
-
-    # Define colours
-    male_color = :steelblue
-    female_color = :crimson
-
-    # Plot lines and error bars for each Sex
-    for (i, s) in enumerate(S_values)
-        sex_color = s == 1 ? male_color : female_color
-        sex_label = s == 1 ? "Male" : "Female"
-
-        # Filter out NaN values
-        valid_indices = .!isnan.(means[i, :])
-        if any(valid_indices)
-            valid_R = R_values[valid_indices]
-            valid_means = means[i, valid_indices]
-            valid_sems = sems[i, valid_indices]
-
-            lines!(ax, valid_R, valid_means, label=sex_label, linewidth=2, color=sex_color)
-            errorbars!(ax, valid_R, valid_means, valid_sems, color=sex_color, linewidth=1)
-            scatter!(ax, valid_R, valid_means, marker=:circle, markersize=14, color=sex_color)
-        end
-    end
-
-    # Configure axes
-    ax.xticks = (R_values, ["Non-reproductive", "Reproductive"])
-    ax.xreversed = true
-    ax.xlabel = "Reproductive status"
-    ax.ylabel = "Counterfactual effect of parasite elimination"
-    ax.xlabelsize = 16
-    ax.ylabelsize = 16
-    ax.xlabelfont = :bold
-    ax.ylabelfont = :bold
-
-    axislegend(ax, position=:rt)
-
-    if saveplot
-        safe_plot_save("S_R_interaction.pdf", fig)
-    end
-    fig
-end
-
-"""
-    plot_S_R_interaction_factual_counterfactual(df; saveplot=false)
-
-Create an interaction plot showing factual vs counterfactual vaccine responses
-by Sex and Reproductive status. Optimized version with better performance.
-
-# Arguments
-- `df::DataFrame`: DataFrame containing the data
-- `saveplot::Bool=false`: If true, saves the plot as a PDF
-
-# Returns
-- `Figure`: A CairoMakie figure containing the interaction plot
-"""
-function plot_S_R_interaction_factual_counterfactual(df; saveplot::Bool=false)
-    fig = Figure()
-    ax = Axis(fig[1, 1])
-
-    S_values = sort(unique(df.S))
-    R_values = sort(unique(df.R))
-
-    # Pre-allocate arrays with specific types
-    n_S, n_R = length(S_values), length(R_values)
-    means_factual = Matrix{Float64}(undef, n_S, n_R)
-    means_counterfactual = Matrix{Float64}(undef, n_S, n_R)
-    sems_factual = Matrix{Float64}(undef, n_S, n_R)
-    sems_counterfactual = Matrix{Float64}(undef, n_S, n_R)
-
-    # Calculate means and standard errors
-    for (i, s) in enumerate(S_values), (j, r) in enumerate(R_values)
-        mask = (df.S .== s) .& (df.R .== r)
-
-        # Factual
-        values_factual = view(df.E_factual_mean, mask)
-        n_vals = length(values_factual)
-        if n_vals > 0
-            means_factual[i, j] = mean(values_factual)
-            sems_factual[i, j] = std(values_factual) / sqrt(n_vals)
-        else
-            means_factual[i, j] = NaN
-            sems_factual[i, j] = NaN
-        end
-
-        # Counterfactual
-        values_counterfactual = view(df.E_counterfactual_mean, mask)
-        if n_vals > 0
-            means_counterfactual[i, j] = mean(values_counterfactual)
-            sems_counterfactual[i, j] = std(values_counterfactual) / sqrt(n_vals)
-        else
-            means_counterfactual[i, j] = NaN
-            sems_counterfactual[i, j] = NaN
-        end
-    end
-
-    # Define colours
-    male_color = :steelblue
-    female_color = :crimson
-
-    # Plot for each Sex and condition
-    for (i, s) in enumerate(S_values)
-        sex_color = s == 1 ? male_color : female_color
-        sex_label = s == 1 ? "Male" : "Female"
-
-        # Filter out NaN values
-        valid_indices = .!isnan.(means_factual[i, :])
-        if any(valid_indices)
-            valid_R = R_values[valid_indices]
-
-            # Factual (solid lines)
-            valid_means_f = means_factual[i, valid_indices]
-            valid_sems_f = sems_factual[i, valid_indices]
-            lines!(ax, valid_R, valid_means_f, label="$(sex_label) (Factual)",
-                linewidth=2, color=sex_color, linestyle=:solid)
-            errorbars!(ax, valid_R, valid_means_f, valid_sems_f,
-                color=sex_color, linewidth=1)
-            scatter!(ax, valid_R, valid_means_f, marker=:circle, markersize=14, color=sex_color)
-
-            # Counterfactual (dashed lines)
-            valid_means_c = means_counterfactual[i, valid_indices]
-            valid_sems_c = sems_counterfactual[i, valid_indices]
-            lines!(ax, valid_R, valid_means_c, label="$(sex_label) (Counterfactual)",
-                linewidth=2, color=sex_color, linestyle=:dash)
-            errorbars!(ax, valid_R, valid_means_c, valid_sems_c,
-                color=sex_color, linewidth=1)
-            scatter!(ax, valid_R, valid_means_c, marker=:utriangle, markersize=14, color=sex_color)
-        end
-    end
-
-    # Configure axes
-    ax.xticks = (R_values, ["Non-reproductive", "Reproductive"])
-    ax.xreversed = true
-    ax.xlabel = "Reproductive status"
-    ax.ylabel = "Standardised vaccine response (E)"
-    ax.xlabelsize = 16
-    ax.ylabelsize = 16
-    ax.xlabelfont = :bold
-    ax.ylabelfont = :bold
-
-    axislegend(ax, position=:rt)
-
-    if saveplot
-        safe_plot_save("S_R_interaction_factual_counterfactual.pdf", fig)
-    end
-    fig
-end
-
-## Generate interaction plots
 
 with_theme(theme_minimal()) do
-    plot_S_R_interaction(dag_df_infected, saveplot=true)
+    plot_clinical_significance_summary(dag_df_infected, saveplot=true)
+end
+
+## Interaction analysis with Cohen's d
+
+# Fit model using Cohen's d as outcome
+glmm_cohens_d_interaction = fit(MixedModel, @formula(E_cohens_d ~ -1 + D + R + S + V + M + Ḟ + S & R + (1 | ID)), dag_df_infected)
+
+# Generate Cohen's d interaction plots
+with_theme(theme_minimal()) do
+    plot_S_R_interaction_cohens_d(dag_df_infected, saveplot=true)
 end
 
 with_theme(theme_minimal()) do
     plot_S_R_interaction_factual_counterfactual(dag_df_infected, saveplot=true)
 end
 
-# Ridge plot for interaction model comparison
-boot = parametricbootstrap(MersenneTwister(1234), 10_000, glmm_E_diff_interaction)
-ridgeplot(boot)
+# Generate detailed Sex × Reproductive status interaction plots
+with_theme(theme_minimal()) do
+    plot_sex_reproductive_interaction_detailed(dag_df_infected, saveplot=true)
+end
+
+with_theme(theme_minimal()) do
+    plot_sex_reproductive_heatmap(dag_df_infected, saveplot=true)
+end
+
+# Diagnostics for Cohen's d interaction model
+boot_cohens_d = parametricbootstrap(MersenneTwister(1234), 10_000, glmm_cohens_d_interaction)
+coefplot(boot_cohens_d)

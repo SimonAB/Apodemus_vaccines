@@ -8,7 +8,14 @@ TuringUtils:
 This script contains utility functions for the Turing models.
 =#
 
+# Required imports for Turing utilities
 using PrettyTables
+using DataFrames
+using Statistics: mean, std
+using StatsBase: fit, Histogram, quantile
+using Distributions: Normal, Exponential, MvNormal, TDist, Gamma, NegativeBinomial, Cauchy, Poisson
+using LinearAlgebra: I
+using Turing: @model, filldist, truncated, arraydist
 
 """
 NegativeBinomial2(μ, ϕ)
@@ -78,7 +85,7 @@ Adapted from https://github.com/TuringLang/TuringGLM.jl
 """
 function get_idx(t, data::D) where {D}
     col = Symbol(t)
-    idx = Tables.getcolumn(data, col)
+    idx = data[!, col]  # Direct DataFrame column access
     return convert_str_to_indices(idx)
 end
 
@@ -90,7 +97,7 @@ Adapted from https://github.com/TuringLang/TuringGLM.jl
 """
 function get_var(t, data::D) where {D}
     col = Symbol(t)
-    return Tables.getcolumn(data, col)
+    return data[!, col]  # Direct DataFrame column access
 end
 
 
@@ -165,39 +172,56 @@ end;
 # Models
 #
 """
-- α∼Normal(0,2.5) – This means a normal distribution centered on 0 with a standard deviation of 2.5. That prior should with ease cover all possible values of α. Remember that the normal distribution has support over all the real number line ∈(−∞,+∞).
-- β∼Student-t(0,1,3) – The predictors all have a prior distribution of a Student-t distribution centered on 0 with variance 1 and degrees of freedom ν=3. That wide-tailed t distribution will cover all possible values for our coefficients. Remember the Student-t also has support over all the real number line ∈(−∞,+∞). Also the filldist() is a nice Turing's function which takes any univariate or multivariate distribution and returns another distribution that repeats the input distribution.
+Simplified Poisson regression model for count data.
 
-Turing's arraydist() function wraps an array of distributions returning a new distribution sampling from the individual distributions. And the LazyArrays' LazyArray() constructor wrap a lazy object that wraps a computation producing an array to an array. Last, but not least, the macro @~ creates a broadcast and is a nice short hand for the familiar dot . broadcasting operator in Julia. This is an efficient way to tell Turing that our y vector is distributed lazily as a NegativeBinomial2 broadcasted to α added to the product of the data matrix X and β coefficient vector. Note that NegativeBinomial2 does not apply exponentiation so we had to include the exp.() broadcasted function to all the linear predictors.
+# Arguments
+- X: Predictor matrix
+- y: Count response vector
+- predictors: Number of predictors (default: size(X, 2))
 
-See: https://storopoli.github.io/Bayesian-Julia/pages/09_count_reg/#using_poisson_likelihood
+# Model
+- α∼Normal(0,2.5): Intercept with wide prior
+- β∼Student-t(0,1,3): Coefficients with wide-tailed priors
+- y ~ Poisson(exp(linear_predictor)): Log-linear Poisson model
 """
 @model function poissonreg(X, y; predictors=size(X, 2))
-    #priors
-    α ~ Normal(0, 2.5)
+    # Priors
+    α ~ Normal(0.0, 2.5)
     β ~ filldist(TDist(3), predictors)
 
-    #likelihood
-    y ~ arraydist(LazyArray(@~ LogPoisson.(α .+ X * β)))
+    # Likelihood with vectorized computation
+    λ = exp.(α .+ X * β)
+    for i in eachindex(y)
+        y[i] ~ Poisson(λ[i])
+    end
 end;
 
 """
-- α∼Normal(0,2.5) – This means a normal distribution centered on 0 with a standard deviation of 2.5. That prior should with ease cover all possible values of α. Remember that the normal distribution has support over all the real number line ∈(−∞,+∞).
-- β∼Student-t(0,1,3) – The predictors all have a prior distribution of a Student-t distribution centered on 0 with variance 1 and degrees of freedom ν=3. That wide-tailed t distribution will cover all possible values for our coefficients. Remember the Student-t also has support over all the real number line ∈(−∞,+∞). Also the filldist() is a nice Turing's function which takes any univariate or multivariate distribution and returns another distribution that repeats the input distribution.
-- ϕ∼Exponential(1) – overdispersion parameter of the negative binomial distribution.
+Simplified Negative Binomial regression model for overdispersed count data.
 
-Turing's arraydist() function wraps an array of distributions returning a new distribution sampling from the individual distributions. And the LazyArrays' LazyArray() constructor wrap a lazy object that wraps a computation producing an array to an array. Last, but not least, the macro @~ creates a broadcast and is a nice short hand for the familiar dot . broadcasting operator in Julia. This is an efficient way to tell Turing that our y vector is distributed lazily as a NegativeBinomial2 broadcasted to α added to the product of the data matrix X and β coefficient vector. Note that NegativeBinomial2 does not apply exponentiation so we had to include the exp.() broadcasted function to all the linear predictors.
-See: https://storopoli.github.io/Bayesian-Julia/pages/09_count_reg/#using_poisson_likelihood
+# Arguments
+- X: Predictor matrix
+- y: Count response vector
+- predictors: Number of predictors (default: size(X, 2))
+
+# Model
+- α∼Normal(0,2.5): Intercept with wide prior
+- β∼Student-t(0,1,3): Coefficients with wide-tailed priors
+- ϕ∼Exponential(1): Overdispersion parameter
+- y ~ NegativeBinomial2(exp(linear_predictor), ϕ): Overdispersed count model
 """
 @model function negbinreg(X, y; predictors=size(X, 2))
-    #priors
-    α ~ Normal(0, 2.5)
+    # Priors
+    α ~ Normal(0.0, 2.5)
     β ~ filldist(TDist(3), predictors)
     ϕ⁻ ~ Gamma(0.01, 0.01)
     ϕ = 1 / ϕ⁻
 
-    #likelihood
-    y ~ arraydist(LazyArray(@~ NegativeBinomial2.(exp.(α .+ X * β), ϕ)))
+    # Likelihood with vectorized computation
+    μ = exp.(α .+ X * β)
+    for i in eachindex(y)
+        y[i] ~ NegativeBinomial2(μ[i], ϕ)
+    end
 end;
 
 ## Precis from https://github.com/StatisticalRethinkingJulia/StatisticalRethinking.jl/blob/39d05869fb3772e83d3313e84cb30549e9ebdb94/src/precis.jl
@@ -250,4 +274,86 @@ function precis(df::DataFrame; io=stdout, digits=3, depth=Inf, alpha=0.1)
     end
 
     pretty_table(io, d, vlines=[0, 1, 7])
+end
+
+## Prior Predictive Checks
+
+"""
+    generate_prior_predictions_standardised(model_function, data_args...;
+                                           n_samples=1000, intervention=false)
+
+Generate predictions from the prior distribution for prior predictive checks,
+optimised for standardised outcomes.
+
+# Arguments
+- `model_function::Function`: The Turing model function to sample from
+- `data_args...`: Arguments to pass to the model function
+- `n_samples::Int`: Number of prior samples to generate
+- `intervention::Bool`: Whether to use intervention priors (βP ≈ 0)
+
+# Returns
+- `Matrix{Float64}`: Prior predictions for outcome (n_obs × n_samples)
+
+# Prior Specification
+Uses the improved informative priors suitable for standardised outcomes:
+- α ~ Normal(0, 0.5): Standardised intercept
+- Most β ~ Normal(0, 0.15): Small-moderate effects
+- βH ~ Normal(0, 0.3): Larger habitat effects
+- σ ~ Exponential(0.8): Conservative residual variance
+- τ ~ Exponential(0.3): Conservative random effects
+"""
+function generate_prior_predictions_standardised(model_function, data_args...;
+    n_samples::Int=1000, intervention::Bool=false)
+    # Create the model
+    model = model_function(data_args...)
+
+    # Sample from prior
+    prior_samples = sample(model, Prior(), n_samples)
+
+    return prior_samples
+end
+
+
+
+"""
+    assess_prior_adequacy(observed_data, prior_predictions; model_name="Model")
+
+Assess whether priors are reasonable by comparing ranges and providing feedback.
+
+# Arguments
+- `observed_data::Vector{Float64}`: Observed values
+- `prior_predictions`: Prior predictions (any format)
+- `model_name::String`: Name of the model for reporting
+
+# Returns
+- Prints assessment to console with recommendations
+"""
+function assess_prior_adequacy(observed_data, prior_predictions; model_name::String="Model")
+    # Handle different input formats
+    if isa(prior_predictions, AbstractMatrix)
+        prior_vec = vec(prior_predictions)
+    else
+        prior_vec = collect(prior_predictions)
+    end
+
+    # Calculate ranges
+    observed_range = maximum(observed_data) - minimum(observed_data)
+    prior_range = maximum(prior_vec) - minimum(prior_vec)
+    range_ratio = prior_range / observed_range
+
+    println("\n=== PRIOR ASSESSMENT: $model_name ===")
+    println("Observed: mean = $(round(mean(observed_data), digits=3)), std = $(round(std(observed_data), digits=3))")
+    println("Prior predictions: mean = $(round(mean(prior_vec), digits=3)), std = $(round(std(prior_vec), digits=3))")
+    println("Range - Observed: [$(round(minimum(observed_data), digits=2)), $(round(maximum(observed_data), digits=2))]")
+    println("Range - Prior: [$(round(minimum(prior_vec), digits=2)), $(round(maximum(prior_vec), digits=2))]")
+
+    if range_ratio > 10
+        println("⚠️  WARNING: Prior predictions have a much wider range than observed data ($(round(range_ratio, digits=1))x wider)")
+        println("   Consider using more informative priors")
+    elseif range_ratio < 0.5
+        println("⚠️  WARNING: Prior predictions have a narrower range than observed data ($(round(range_ratio, digits=1))x narrower)")
+        println("   Consider using less informative priors")
+    else
+        println("✅ Prior prediction range seems reasonable relative to observed data ($(round(range_ratio, digits=1))x ratio)")
+    end
 end

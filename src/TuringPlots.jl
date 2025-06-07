@@ -11,8 +11,12 @@ This script will plot the chains from a Turing model using CairoMakie.
 using DataFrames
 using AlgebraOfGraphics, CairoMakie
 using AlgebraOfGraphics: density
+using Statistics: mean
 
 CairoMakie.activate!(; type="svg")
+
+# Export functions
+export plot_chains_df, plot_chains, plot_prior_predictive_check, safe_plot_save
 
 # Plot chains
 
@@ -167,6 +171,67 @@ function plot_chains(chns; mask=r"α\b|β", res=(10, 1.2 * length(filter(contain
         draw!(fig[1, 2], plt; axis=(ylabel="Density",))
     end
     return fig
+end
+
+"""
+    plot_prior_predictive_check(observed_data, prior_predictions;
+                               title_suffix="", saveplot=false)
+
+Create a prior predictive check plot comparing prior predictions with observed data.
+
+# Arguments
+- `observed_data::Vector{Float64}`: Observed values to compare against
+- `prior_predictions::AbstractVector`: Prior predictions (flattened or sampled)
+- `title_suffix::String`: Suffix for plot title (e.g., "V→E Model")
+- `saveplot::Bool`: Whether to save the plot
+
+# Returns
+- `Figure`: A CairoMakie figure showing the prior predictive check
+"""
+function plot_prior_predictive_check(observed_data, prior_predictions;
+    title_suffix::String="", saveplot::Bool=false)
+
+    # Handle different input formats
+    if isa(prior_predictions, AbstractMatrix)
+        prior_vec = vec(prior_predictions)
+    else
+        prior_vec = collect(prior_predictions)
+    end
+
+    fig = Figure()
+    ax = Axis(fig[1, 1])
+
+    # Plot histograms with transparency
+    hist!(ax, prior_vec, bins=50, color=(:lightblue, 0.6),
+        normalization=:probability, label="Prior Predictions")
+    hist!(ax, observed_data, bins=30, color=(:red, 0.8),
+        normalization=:probability, label="Observed Data")
+
+    # Add vertical lines for means
+    vlines!(ax, [mean(prior_vec)], color=:blue, linewidth=3,
+        linestyle=:dash, label="Prior Mean")
+    vlines!(ax, [mean(observed_data)], color=:red, linewidth=3,
+        linestyle=:dash, label="Observed Mean")
+
+    # Formatting
+    ax.xlabel = "Standardised Response"
+    ax.ylabel = "Probability"
+    ax.title = "Prior Predictive Check" * (isempty(title_suffix) ? "" : " - $title_suffix")
+    ax.xlabelsize = 14
+    ax.ylabelsize = 14
+    ax.titlesize = 16
+    ax.xlabelfont = :bold
+    ax.ylabelfont = :bold
+    ax.titlefont = :bold
+
+    axislegend(ax, position=:rt)
+
+    if saveplot
+        filename = "prior_predictive_check" * (isempty(title_suffix) ? "" : "_$(lowercase(replace(title_suffix, "→" => "_")))") * ".pdf"
+        safe_plot_save(filename, fig)
+    end
+
+    fig
 end
 
 """
