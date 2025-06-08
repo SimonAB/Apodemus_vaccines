@@ -75,24 +75,22 @@
     \begin{tikzpicture}
       \node[inner sep = 0, font=\sffamily] (panel B) at (4.3,2.2) {\textbf{B} $\mathbb{C}_{VE}$:};
       \node [mybox, right =of E] (box){%
-        \begin{minipage}[!t]{0.42\textwidth}
+        \begin{minipage}[!t]{\textwidth}
           \footnotesize
-          \raggedright
-          \[
-            \openup -0.5ex % affecting the line spacing in the environment
-            \begin{split}
-              V & \coloneq \mathcal{U}_V \\
-              H & \coloneq \mathcal{U}_H \\
-              S & \coloneq \mathcal{U}_S \\
-              R & \coloneq \beta_{DR}D + \beta_{HR}H + \beta_{VR}V + \beta_{SR}S + \mathcal{U}_R \\
-              P & \coloneq \beta_{TP}V + \beta_{DP}D + \beta_{HP}H + \beta_{RP}R + \beta_{SP}S + \mathcal{U}_P \\
-              F & \coloneq \beta_{TF}V + \beta_{DF}D + \beta_{HF}H + \beta_{SF}S + \beta_{RF}R + \beta_{PF}P + \mathcal{U}_F \\
-              M & \coloneq \beta_{VM}V + \beta_{HM}H + \beta_{SM}S + \beta_{RM}R + \beta_{PM}P + \beta_{FM}F \\
-                & \quad + \beta_{DM}D + \mathcal{U}_M \\
-              E & \coloneq \beta_{VE}V + \beta_{HE}H + \beta_{FE}F + \beta_{DE}D + \beta_{ME}M + \beta_{RE}R \\
-                & \quad + \beta_{PE}P + \beta_{SE}S + \mathcal{U}_E
-            \end{split}
-          \]
+          \openup -0.5ex
+          \begin{equation} \label{eq:SCM}
+            \begin{aligned}
+          V &\coloneq \mathcal{U}_V \\
+          H &\coloneq \mathcal{U}_H \\
+          D &\coloneq \mathcal{U}_D \\
+          S &\coloneq \mathcal{U}_S \\
+          R &\coloneq f(V, H, D, S, \mathcal{U}_R) \\
+          P &\coloneq g(V, H, D, S, R, \mathcal{U}_P) \\
+          F &\coloneq h(V, H, D, S, P, R, \mathcal{U}_F) \\
+          M &\coloneq i(V, H, D, S, P, R, F, \mathcal{U}_M) \\
+          E &\coloneq j(V, H, D, S, P, R, M, F, \mathcal{U}_E) \\
+          \end{aligned}
+          \end{equation}
         \end{minipage}
       };
     \end{tikzpicture}
@@ -120,7 +118,7 @@
       \draw [-stealth] (D) edge (E);
       \draw [-stealth] (D) edge (F);
       \draw [-stealth] (D) edge (M);
-      \draw [-stealth, dashed, gray] (D) edge (P);
+      % \draw [-stealth, dashed, gray] (D) edge (P);
       \draw [-stealth] (D) edge (R);
 
       % Edges from F
@@ -131,21 +129,21 @@
       \draw [-stealth] (M) edge (E);
 
       % Edges from P
-      \draw [-stealth] (P) edge (E);
-      \draw [-stealth] (P) .. controls (1, 2.4) .. (F);
-      \draw [-stealth] (P) .. controls (0.7, 2.6) .. (M);
+      \draw [-stealth, dashed, gray] (P) edge (E);
+      \draw [-stealth, dashed, gray] (P) .. controls (1, 2.4) .. (F);
+      \draw [-stealth, dashed, gray] (P) .. controls (0.7, 2.6) .. (M);
 
       % Edges from R
       \draw [-stealth] (R) edge (E);
       \draw [-stealth] (R) .. controls (0.7, 2.2) .. (F);
       \draw [-stealth] (R) edge (M);
-      \draw [-stealth, dashed, gray] (R) edge (P);
+      % \draw [-stealth, dashed, gray] (R) edge (P);
 
       % Edges from S
       \draw [-stealth] (S) edge (E);
       \draw [-stealth] (S) edge (F);
       \draw [-stealth] (S) edge (M);
-      \draw [-stealth, dashed, gray] (S) edge (P);
+      % \draw [-stealth, dashed, gray] (S) edge (P);
       \draw [-stealth] (S) edge (R);
 
       % Edges from V
@@ -153,13 +151,13 @@
       \draw [-stealth] (V) edge (F);
       \draw [-stealth] (V) edge (M);
       \draw [-stealth] (V) edge (R);
-      \draw [-stealth, dashed, gray] (V) edge (P);
+      % \draw [-stealth, dashed, gray] (V) edge (P);
 
       % Edges from H
       \draw [-stealth] (H) .. controls (0, 0.4) .. (E);
       \draw [-stealth] (H) edge (F);
       \draw [-stealth] (H) edge (M);
-      \draw [-stealth, dashed, gray] (H) edge (P);
+      % \draw [-stealth, dashed, gray] (H) edge (P);
       \draw [-stealth] (H) edge (R);
     \end{tikzpicture}
 \end{subfigure}%
@@ -169,23 +167,22 @@
     \begin{tikzpicture}
       \node[inner sep = 5, font=\sffamily] (panel D) at (4.3,2.3) {\textbf{D} $\mathbb{C}'_{VE}$ ($do(P=0)$):};
       \node [mybox, right =of E] (box){%
-        \begin{minipage}[!t]{0.42\textwidth}
-          \scriptsize
-          \[
-            \openup -0.5ex % affecting the line spacing in the environment
-            \begin{split}
-              P & := 0 \\
-              V & \coloneq \mathcal{U}_V \\
-              H & \coloneq \mathcal{U}_H \\
-              S & \coloneq \mathcal{U}_S \\
-              R & \coloneq \beta_{DR}D + \beta_{HR}H + \beta_{VR}V + \beta_{SR}S + \mathcal{U}_R \\
-              F & \coloneq \beta_{TF}V + \beta_{DF}D + \beta_{HF}H + \beta_{SF}S + \beta_{RF}R + \beta_{PF}P + \mathcal{U}_F \\
-              M & \coloneq \beta_{VM}V + \beta_{HM}H + \beta_{SM}S + \beta_{RM}R + \beta_{PM}P + \beta_{FM}F \\
-                & \quad + \beta_{DM}D + \mathcal{U}_M \\
-              E & \coloneq \beta_{VE}V + \beta_{HE}H + \beta_{FE}F + \beta_{DE}D + \beta_{ME}M + \beta_{RE}R + \\
-                & \quad \beta_{PE}P + \beta_{SE}S + \mathcal{U}_E
-            \end{split}
-          \]
+        \begin{minipage}[!t]{\textwidth}
+          \footnotesize
+          \openup -0.5ex
+          \begin{equation} \label{eq:SCMcounterfactual}
+            \begin{aligned}
+          P & = 0 \\
+          V & \coloneq \mathcal{U}_V \\
+          H & \coloneq \mathcal{U}_H \\
+          D & \coloneq \mathcal{U}_D \\
+          S & \coloneq \mathcal{U}_S \\
+          R & \coloneq f(V, H, D, S, \mathcal{U}_R) \\
+          F & \coloneq h(V, H, D, S, P, R, \mathcal{U}_F) \\
+          M & \coloneq i(V, H, D, S, P, R, F, \mathcal{U}_M) \\
+          E & \coloneq j(V, H, D, S, P, R, M, F, \mathcal{U}_E) \\
+          \end{aligned}
+          \end{equation}
         \end{minipage}
       };
     \end{tikzpicture}
