@@ -44,7 +44,7 @@ Create a visualisation comparing factual and counterfactual vaccine response dis
 - `Figure`: A CairoMakie figure containing the distribution comparison plot
 """
 function plot_E_factual_counterfactual(df; saveplot::Bool=false)
-    fig = Figure()
+    fig = Figure(size=(647, 400))
     ax = Axis(fig[1, 1])
 
     # Define custom colour (#c0c7db) - more efficient color definition
@@ -98,7 +98,7 @@ Optimized version with better performance for large datasets.
 - `Figure`: A CairoMakie figure containing the counterfactual effect plot
 """
 function plot_counterfactual_effects(df; saveplot::Bool=false)
-    fig = Figure()
+    fig = Figure(size=(647, 400))
     ax = Axis(fig[1, 1])
 
     # Define colours - use symbols for efficiency
@@ -205,7 +205,7 @@ Uses Cohen's d thresholds to indicate practical significance of improvements.
 - `Figure`: Enhanced counterfactual effect plot with clinical significance
 """
 function plot_counterfactual_effects_with_significance(df; saveplot::Bool=false)
-    fig = Figure(size=(1000, 600))
+    fig = Figure(size=(647, 400))
     ax = Axis(fig[1, 1])
 
     # Define colours
@@ -279,13 +279,20 @@ function plot_counterfactual_effects_with_significance(df; saveplot::Bool=false)
     small_line = LineElement(color=:gold, linewidth=4)
     negligible_line = LineElement(color=:lightgrey, linewidth=4)
 
-    # Create legend with two columns
-    Legend(fig[1, 2],
-        [[pre_male, pre_female, post_male, post_female],
-            [large_line, moderate_line, small_line, negligible_line]],
-        [["Factual (Male)", "Factual (Female)", "Counterfactual (Male)", "Counterfactual (Female)"],
-            ["Large effect (d ≥ 0.8)", "Moderate effect (0.5 ≤ d < 0.8)", "Small effect (0.2 ≤ d < 0.5)", "Negligible effect (d < 0.2)"]],
-        ["Mouse & Condition", "Effect Size (Cohen's d)"])
+    # Create legend positioned in top right of main axis
+    # Create legend for Mouse & Condition in top right
+    axislegend(ax,
+        [pre_male, pre_female, post_male, post_female],
+        ["Factual (Male)", "Factual (Female)", "Counterfactual (Male)", "Counterfactual (Female)"],
+        "Mouse & Condition",
+        position=:rt, labelsize=12)
+
+    # Create legend for Effect Size in bottom right
+    axislegend(ax,
+        [large_line, moderate_line, small_line, negligible_line],
+        ["Large effect (d ≥ 0.8)", "Moderate effect (0.5 ≤ d < 0.8)", "Small effect (0.2 ≤ d < 0.5)", "Negligible effect (d < 0.2)"],
+        "Effect Size (Cohen's d)",
+        position=:rb, labelsize=12)
 
     if saveplot
         safe_plot_save("counterfactual_effects_clinical_significance.pdf", fig)
@@ -307,7 +314,7 @@ Provides standardised, interpretable effect size measures.
 - `Figure`: Interaction plot showing Cohen's d effect sizes
 """
 function plot_S_R_interaction_cohens_d(df; saveplot::Bool=false)
-    fig = Figure()
+    fig = Figure(size=(647, 400))
     ax = Axis(fig[1, 1])
 
     # Get unique values
@@ -395,7 +402,7 @@ Create a summary plot showing the distribution of clinical significance categori
 - `Figure`: Bar plot of clinical significance distribution
 """
 function plot_clinical_significance_summary(df; saveplot::Bool=false)
-    fig = Figure()
+    fig = Figure(size=(647, 400))
     ax = Axis(fig[1, 1])
 
     # Calculate counts and percentages
@@ -445,7 +452,7 @@ by Sex and Reproductive status.
 - `Figure`: Interaction plot comparing factual vs counterfactual responses
 """
 function plot_S_R_interaction_factual_counterfactual(df; saveplot::Bool=false)
-    fig = Figure()
+    fig = Figure(size=(647, 400))
     ax = Axis(fig[1, 1])
 
     S_values = sort(unique(df.S))
@@ -549,7 +556,7 @@ for Cohen's d effect sizes with enhanced visual distinction.
 - `Figure`: Detailed interaction plot with four distinct groups
 """
 function plot_sex_reproductive_interaction_detailed(df; saveplot::Bool=false)
-    fig = Figure(size=(800, 600))
+    fig = Figure(size=(647, 400))
     ax = Axis(fig[1, 1])
 
     # Define the four combinations
@@ -669,7 +676,7 @@ Create a heatmap showing Cohen's d effect sizes for all Sex × Reproductive stat
 - `Figure`: Heatmap visualization of the interaction
 """
 function plot_sex_reproductive_heatmap(df; saveplot::Bool=false)
-    fig = Figure(size=(600, 400))
+    fig = Figure(size=(647, 400))
     ax = Axis(fig[1, 1])
 
     # Get unique values
