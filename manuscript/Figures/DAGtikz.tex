@@ -78,17 +78,17 @@
         \begin{minipage}[!t]{\textwidth}
           \footnotesize
           \openup -0.5ex
-          \begin{equation} \label{eq:SCM}
+          \begin{equation} \label{eq:SCM_fig}
             \begin{aligned}
           V &\coloneq \mathcal{U}_V \\
           H &\coloneq \mathcal{U}_H \\
           D &\coloneq \mathcal{U}_D \\
           S &\coloneq \mathcal{U}_S \\
-          R &\coloneq f(V, H, D, S, \mathcal{U}_R) \\
-          P &\coloneq g(V, H, D, S, R, \mathcal{U}_P) \\
-          F &\coloneq h(V, H, D, S, P, R, \mathcal{U}_F) \\
-          M &\coloneq i(V, H, D, S, P, R, F, \mathcal{U}_M) \\
-          E &\coloneq j(V, H, D, S, P, R, M, F, \mathcal{U}_E) \\
+          R &\coloneq f_R(V, H, D, S, \mathcal{U}_R) \\
+          P &\coloneq f_P(V, H, D, S, R, \mathcal{U}_P) \\
+          F &\coloneq f_F(V, H, D, S, P, R, \mathcal{U}_F) \\
+          M &\coloneq f_M(V, H, D, S, P, R, F, \mathcal{U}_M) \\
+          E &\coloneq f_E(V, H, D, S, P, R, M, F, \mathcal{U}_E) \\
           \end{aligned}
           \end{equation}
         \end{minipage}
@@ -170,17 +170,17 @@
         \begin{minipage}[!t]{\textwidth}
           \footnotesize
           \openup -0.5ex
-          \begin{equation} \label{eq:SCMcounterfactual}
+          \begin{equation} \label{eq:SCMcounterfactual_fig}
             \begin{aligned}
           P & = 0 \\
           V & \coloneq \mathcal{U}_V \\
           H & \coloneq \mathcal{U}_H \\
           D & \coloneq \mathcal{U}_D \\
           S & \coloneq \mathcal{U}_S \\
-          R & \coloneq f(V, H, D, S, \mathcal{U}_R) \\
-          F & \coloneq h(V, H, D, S, P, R, \mathcal{U}_F) \\
-          M & \coloneq i(V, H, D, S, P, R, F, \mathcal{U}_M) \\
-          E & \coloneq j(V, H, D, S, P, R, M, F, \mathcal{U}_E) \\
+          R & \coloneq f_R(V, H, D, S, \mathcal{U}_R) \\
+          F & \coloneq f_F^{P=0}(V, H, D, S, R, \mathcal{U}_F) \\
+          M & \coloneq f_M^{P=0}(V, H, D, S, R, F, \mathcal{U}_M) \\
+          E & \coloneq f_E^{P=0}(V, H, D, S, R, M, F, \mathcal{U}_E) \\
           \end{aligned}
           \end{equation}
         \end{minipage}
