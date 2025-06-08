@@ -376,22 +376,13 @@ pre_intervention_chain = sample(factual_model, NUTS(), MCMCThreads(), 3000, 4)
 println("Fitting post-intervention model...")
 post_intervention_chain = sample(counterfactual_model, NUTS(), MCMCThreads(), 3000, 4)
 
-## Generate counterfactual predictions
+## Generate counterfactuals using posterior predictive approach (RECOMMENDED METHOD)
 
 """
     generate_counterfactuals(pre_chain, df_infected; n_samples=1000)
 
 Generate counterfactual vaccine responses under the intervention do(P=0).
-Optimized version for better performance and type stability.
-
-# Arguments
-- `pre_chain::MCMCChains.Chains`: Posterior samples from pre-intervention model
-- `df_infected::DataFrame`: Data for infected mice
-- `n_samples::Int`: Number of posterior samples to use
-
-# Returns
-- `E_factual::Matrix{Float64}`: Factual vaccine responses (n_obs × n_samples)
-- `E_counterfactual::Matrix{Float64}`: Counterfactual vaccine responses (n_obs × n_samples)
+Alternative approach using posterior predictive sampling.
 """
 function generate_counterfactuals(pre_chain, df_infected; n_samples::Int=1000)
     n_obs = nrow(df_infected)
@@ -404,9 +395,6 @@ function generate_counterfactuals(pre_chain, df_infected; n_samples::Int=1000)
 
     # Sample from posterior
     sample_indices = rand(1:n_chain_samples, n_samples)
-
-    # Pre-compute unique infected count to avoid repeated computation
-    n_unique_infected = length(unique(df_infected.ID))
 
     # Extract data vectors once for efficiency
     V_vec = df_infected.V
@@ -432,15 +420,15 @@ function generate_counterfactuals(pre_chain, df_infected; n_samples::Int=1000)
         βS::Float64 = chain_samples.βS[idx]
         σ::Float64 = chain_samples.σ[idx]
 
-        # Extract random effects - pre-allocate for efficiency
+        # Extract random effects
+        n_unique_infected = length(unique(df_infected.ID))
         α_ID = Vector{Float64}(undef, n_unique_infected)
         for i in 1:n_unique_infected
             α_ID[i] = chain_samples[idx, Symbol("α_ID[$i]")]
         end
 
-        # Vectorized computation where possible
+        # Generate predictions
         for i in 1:n_obs
-            # Handle missing fat scores efficiently
             f_val::Float64 = ismissing(Ḟ_vec[i]) ? 0.0 : Ḟ_vec[i]
 
             # Pre-compute common terms
@@ -459,11 +447,11 @@ function generate_counterfactuals(pre_chain, df_infected; n_samples::Int=1000)
     return E_factual, E_counterfactual
 end
 
-# Generate counterfactual predictions
-println("Generating counterfactual predictions...")
+# Generate counterfactuals using posterior predictive approach
+println("Generating counterfactuals using posterior predictive approach...")
 E_factual, E_counterfactual = generate_counterfactuals(pre_intervention_chain, dag_df_infected)
 
-# Add predictions to dataframe - using views for efficiency where possible
+# Add predictions to dataframe - using this as our main approach
 dag_df_infected.E_factual_mean = vec(mean(E_factual, dims=2))
 dag_df_infected.E_counterfactual_mean = vec(mean(E_counterfactual, dims=2))
 dag_df_infected.E_diff_counterfactual = dag_df_infected.E_counterfactual_mean .- dag_df_infected.E_factual_mean
@@ -481,7 +469,11 @@ dag_df_infected.E_cohens_d = begin
     dag_df_infected.E_diff_counterfactual ./ safe_pooled_sd
 end
 
-# Define clinical significance categories based on Cohen's d thresholds
+println("Counterfactual Results:")
+println("Mean counterfactual effect: ", round(mean(dag_df_infected.E_diff_counterfactual), digits=3))
+println("Mean Cohen's d: ", round(mean(dag_df_infected.E_cohens_d), digits=3))
+
+# Clinical significance analysis
 dag_df_infected.E_clinical_significance = begin
     abs_cohens_d = abs.(dag_df_infected.E_cohens_d)
     ifelse.(abs_cohens_d .< 0.2, "Negligible",
@@ -489,7 +481,6 @@ dag_df_infected.E_clinical_significance = begin
             ifelse.(abs_cohens_d .< 0.8, "Moderate", "Large")))
 end
 
-# Clinical significance with direction
 dag_df_infected.E_clinical_direction = begin
     cohens_d = dag_df_infected.E_cohens_d
     abs_cohens_d = abs.(cohens_d)
@@ -535,7 +526,6 @@ glmm_V_E_total_counterfactual = fit(MixedModel, @formula(E_counterfactual_mean ~
 qqnorm(glmm_V_E_total_counterfactual; qqline=:fitrobust)
 boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_V_E_total_counterfactual)
 coefplot(boot)
-ridgeplot(boot)
 
 # Check adjustment sets for direct effects
 adjustmentSets(dag, "V", "E", effect="direct") # { D, F, H, M, P, R, S }
@@ -590,3 +580,245 @@ end
 # Diagnostics for Cohen's d interaction model
 boot_cohens_d = parametricbootstrap(MersenneTwister(1234), 10_000, glmm_cohens_d_interaction)
 coefplot(boot_cohens_d)
+
+## Function definitions for percentage calculations
+
+"""
+    calculate_counterfactual_percentage_change(df_infected; method="relative_to_baseline")
+
+Calculate percentage change in vaccine response (E) under counterfactual parasite elimination.
+
+# Arguments
+- `df_infected::DataFrame`: DataFrame with counterfactual predictions
+- `method::String`: Calculation method
+  - "relative_to_baseline": % change relative to absolute baseline E values
+  - "relative_to_population": % change relative to population mean
+  - "relative_to_original_scale": % change in back-transformed OD scale
+  - "cohen_d_to_percent": Convert Cohen's d to percentage using pooled SD
+
+# Returns
+- `Vector{Float64}`: Percentage changes for each observation
+- Also prints summary statistics
+
+# Details
+Different methods handle the standardised nature of E differently:
+- Method 1: Treats standardised E as if it were raw values (most direct)
+- Method 2: Calculates change relative to population centre
+- Method 3: Back-transforms to original OD scale for meaningful percentages
+- Method 4: Uses Cohen's d effect size converted to percentage improvement
+"""
+function calculate_counterfactual_percentage_change(df_infected; method::String="relative_to_baseline")
+
+    if method == "relative_to_baseline"
+        # Method 1: Direct percentage change in standardised units
+        # Use absolute values to avoid issues with negative standardised scores
+        baseline_E = abs.(df_infected.E_factual_mean)
+        change_E = df_infected.E_counterfactual_mean .- df_infected.E_factual_mean
+
+        # Avoid division by very small numbers
+        safe_baseline = max.(baseline_E, 0.1)
+        percent_change = (change_E ./ safe_baseline) .* 100
+
+        println("Method 1 - Relative to baseline (standardised units):")
+
+    elseif method == "relative_to_population"
+        # Method 2: Change relative to population mean
+        pop_mean_E = mean(df_infected.E_factual_mean)
+        change_E = df_infected.E_counterfactual_mean .- df_infected.E_factual_mean
+        percent_change = (change_E ./ abs(pop_mean_E)) .* 100
+
+        println("Method 2 - Relative to population mean:")
+
+    elseif method == "relative_to_original_scale"
+        # Method 3: Back-transform to original OD scale
+        # Need original OD data to reverse the standardisation
+        if !hasproperty(df_infected, :OD)
+            error("Original OD data not available for back-transformation")
+        end
+
+        # Approximate back-transformation (this is rough since we used log-transformation)
+        # Better would be to store the original transformation parameters
+        original_logOD_mean = mean(log10.(1 .+ df_infected.OD))
+        original_logOD_std = std(log10.(1 .+ df_infected.OD))
+
+        # Back-transform standardised E to log OD scale
+        factual_logOD = df_infected.E_factual_mean .* original_logOD_std .+ original_logOD_mean
+        counterfactual_logOD = df_infected.E_counterfactual_mean .* original_logOD_std .+ original_logOD_mean
+
+        # Convert to OD scale
+        factual_OD = 10 .^ factual_logOD .- 1
+        counterfactual_OD = 10 .^ counterfactual_logOD .- 1
+
+        # Calculate percentage change in original OD units
+        safe_factual_OD = max.(factual_OD, 0.01)  # Avoid division by zero
+        percent_change = ((counterfactual_OD .- factual_OD) ./ safe_factual_OD) .* 100
+
+        println("Method 3 - Back-transformed to original OD scale:")
+
+    elseif method == "cohen_d_to_percent"
+        # Method 4: Convert Cohen's d to percentage using effect size interpretation
+        # Cohen's d represents standardised effect size
+        # Convert to percentage improvement using pooled standard deviation
+
+        pooled_sd = sqrt.((df_infected.E_factual_sd .^ 2 .+ df_infected.E_counterfactual_sd .^ 2) ./ 2)
+        safe_pooled_sd = max.(pooled_sd, 0.1)
+
+        # Percentage change = (Cohen's d × pooled SD) / |baseline| × 100
+        baseline_E = abs.(df_infected.E_factual_mean)
+        safe_baseline = max.(baseline_E, 0.1)
+
+        percent_change = (df_infected.E_cohens_d .* safe_pooled_sd ./ safe_baseline) .* 100
+
+        println("Method 4 - Cohen's d converted to percentage:")
+
+    else
+        error("Unknown method: $method. Choose from: relative_to_baseline, relative_to_population, relative_to_original_scale, cohen_d_to_percent")
+    end
+
+    # Summary statistics
+    println("Mean percentage change: $(round(mean(percent_change), digits=2))%")
+    println("Median percentage change: $(round(median(percent_change), digits=2))%")
+    println("Standard deviation: $(round(std(percent_change), digits=2))%")
+    println("Range: $(round(minimum(percent_change), digits=2))% to $(round(maximum(percent_change), digits=2))%")
+
+    # Count beneficial vs detrimental changes
+    beneficial = sum(percent_change .> 0)
+    detrimental = sum(percent_change .< 0)
+    println("Beneficial changes: $beneficial mice ($(round(100*beneficial/length(percent_change), digits=1))%)")
+    println("Detrimental changes: $detrimental mice ($(round(100*detrimental/length(percent_change), digits=1))%)")
+
+    return percent_change
+end
+
+"""
+    calculate_vaccination_effect_percentage(df_infected)
+
+Calculate percentage improvement in vaccination effect under counterfactual intervention.
+This focuses on how much better vaccines work when parasites are eliminated.
+
+# Arguments
+- `df_infected::DataFrame`: DataFrame with counterfactual predictions
+
+# Returns
+- Named tuple with vaccination effect improvements
+
+# Details
+Compares vaccination coefficients between factual and counterfactual scenarios.
+Uses the same mixed model approach as the main analysis.
+"""
+function calculate_vaccination_effect_percentage(df_infected)
+    println("=== VACCINATION EFFECT PERCENTAGE IMPROVEMENT ===")
+
+    # Fit models to get vaccination coefficients
+    factual_model = fit(MixedModel, @formula(E_factual_mean ~ V + (1 | ID)), df_infected)
+    counterfactual_model = fit(MixedModel, @formula(E_counterfactual_mean ~ V + (1 | ID)), df_infected)
+
+    # Extract vaccination coefficients
+    β_factual = coef(factual_model)[2]  # V coefficient
+    β_counterfactual = coef(counterfactual_model)[2]  # V coefficient
+
+    # Calculate percentage improvement in vaccination effect
+    vaccination_improvement = ((β_counterfactual - β_factual) / abs(β_factual)) * 100
+
+    println("Factual vaccination effect (β_V): $(round(β_factual, digits=3))")
+    println("Counterfactual vaccination effect (β_V): $(round(β_counterfactual, digits=3))")
+    println("Vaccination effect improvement: $(round(vaccination_improvement, digits=1))%")
+
+    # Also calculate absolute improvement
+    absolute_improvement = β_counterfactual - β_factual
+    println("Absolute improvement: $(round(absolute_improvement, digits=3)) standardised units")
+
+    return (
+        factual_effect=β_factual,
+        counterfactual_effect=β_counterfactual,
+        percentage_improvement=vaccination_improvement,
+        absolute_improvement=absolute_improvement
+    )
+end
+
+## Calculate percentage improvements using different methods
+
+println("\n" * "="^60)
+println("PERCENTAGE IMPROVEMENT CALCULATIONS")
+println("="^60)
+
+# Method 1: Vaccination effect improvement (recommended for policy/clinical interpretation)
+vaccination_results = calculate_vaccination_effect_percentage(dag_df_infected)
+
+println("\n" * "-"^50)
+
+# Method 2: Individual-level percentage changes (multiple approaches)
+# Try different methods to see which gives most interpretable results
+
+println("Individual-level percentage changes:")
+println()
+
+# Method 2a: Relative to baseline (most direct)
+percent_changes_baseline = calculate_counterfactual_percentage_change(dag_df_infected; method="relative_to_baseline")
+dag_df_infected.percent_change_baseline = percent_changes_baseline
+
+println("\n" * "-"^30)
+
+# Method 2b: Relative to population mean
+percent_changes_population = calculate_counterfactual_percentage_change(dag_df_infected; method="relative_to_population")
+dag_df_infected.percent_change_population = percent_changes_population
+
+println("\n" * "-"^30)
+
+# Method 2c: Cohen's d to percentage
+percent_changes_cohens = calculate_counterfactual_percentage_change(dag_df_infected; method="cohen_d_to_percent")
+dag_df_infected.percent_change_cohens = percent_changes_cohens
+
+# Debug: Check if Cohen's d values are all the same
+println("DEBUG: Cohen's d values (first 10): ", dag_df_infected.E_cohens_d[1:min(10, nrow(dag_df_infected))])
+println("DEBUG: Are all Cohen's d values equal? ", all(dag_df_infected.E_cohens_d .≈ dag_df_infected.E_cohens_d[1]))
+println("DEBUG: Cohen's d mean: ", mean(dag_df_infected.E_cohens_d))
+println("DEBUG: Cohen's d std: ", std(dag_df_infected.E_cohens_d))
+
+println("\n" * "-"^30)
+
+# Method 2d: Back-transformed to original scale (if OD data available)
+if hasproperty(dag_df_infected, :OD)
+    println("Attempting back-transformation to original OD scale...")
+    try
+        percent_changes_original = calculate_counterfactual_percentage_change(dag_df_infected; method="relative_to_original_scale")
+        dag_df_infected.percent_change_original = percent_changes_original
+    catch e
+        println("Back-transformation failed: $e")
+    end
+else
+    println("Original OD data not available for back-transformation")
+end
+
+println("\n" * "="^60)
+println("SUMMARY RECOMMENDATIONS")
+println("="^60)
+
+println("For policy/clinical interpretation, use vaccination effect improvement:")
+println("- Vaccine efficacy improves by $(round(vaccination_results.percentage_improvement, digits=1))% when parasites are eliminated")
+println()
+println("For individual-level analysis, Cohen's d method is most standardised:")
+println("- Mean individual improvement: $(round(mean(percent_changes_cohens), digits=1))%")
+println("- This represents the practical significance of parasite elimination for each mouse")
+
+# Create summary table of individual-level improvement methods
+println("\n" * "="^60)
+println("INDIVIDUAL-LEVEL PERCENTAGE IMPROVEMENT METHODS")
+println("="^60)
+
+# Collect individual-level data for cleaner processing
+individual_data = [percent_changes_baseline, percent_changes_population]
+methods = ["Relative to own baseline", "Relative to population mean"]
+
+# Calculate means and standard deviations for individual-level methods
+means = mean.(individual_data)
+stds = std.(individual_data)
+
+summary_table = DataFrame(
+    Method=methods,
+    Mean_SD=["$(round(means[i], digits=1)) ± $(round(stds[i], digits=1))" for i in 1:length(means)],
+    Median=round.(median.(individual_data), digits=1),
+    Range=["$(round(minimum(data), digits=1)) to $(round(maximum(data), digits=1))" for data in individual_data]
+);
+
+println(summary_table)

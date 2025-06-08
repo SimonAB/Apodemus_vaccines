@@ -285,7 +285,7 @@ function plot_counterfactual_effects_with_significance(df; saveplot::Bool=false)
             [large_line, moderate_line, small_line, negligible_line]],
         [["Factual (Male)", "Factual (Female)", "Counterfactual (Male)", "Counterfactual (Female)"],
             ["Large effect (d ≥ 0.8)", "Moderate effect (0.5 ≤ d < 0.8)", "Small effect (0.2 ≤ d < 0.5)", "Negligible effect (d < 0.2)"]],
-        ["Mouse & Condition", "Clinical Significance"])
+        ["Mouse & Condition", "Effect Size (Cohen's d)"])
 
     if saveplot
         safe_plot_save("counterfactual_effects_clinical_significance.pdf", fig)

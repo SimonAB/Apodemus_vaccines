@@ -1,6 +1,6 @@
-# Data exploration
+## Data exploration
 
-# %% Load libraries
+# Load libraries
 
 using DataFrames
 using CSV
@@ -8,7 +8,7 @@ using StatsPlots
 using LaTeXStrings
 println("JULIA_NUM_THREADS: ", Threads.nthreads())
 
-# %% Load data
+# Load data
 
 datadir = "data"
 datafile = "joint_dataset_4analysis_checked.csv"
