@@ -49,6 +49,16 @@ include("PlottingUtils.jl")
 # Import data
 include("DataWrangler.jl")
 
+## Configuration constants
+
+# Set default plotting behaviour - change to false to disable plot saving
+const SAVE_PLOTS = false
+
+# Performance configuration following Turing.jl best practices
+# For models with many parameters (>20), consider AutoZygote() or AutoReverseDiff()
+# For models with few parameters (<20), AutoForwardDiff() is typically fastest
+const AD_BACKEND = nothing  # Use default (AutoForwardDiff) for our model size
+
 ## Data preparation
 
 # All cases - use more efficient filtering
@@ -110,55 +120,42 @@ coefplot(boot)
     Counterfactual_E_Model(IDidx, E, V, D, Ḟ, H, M, P, R, S, nP, post_P, post_nP;
                           n_id=length(unique(IDidx)), intervention=false)
 
-A Bayesian generative model for vaccine response (E) that enables counterfactual
-inference under parasite elimination interventions.
+Bayesian structural causal model for vaccine response enabling counterfactual inference under parasite elimination.
 
-This model implements the structural causal model framework by:
+This model implements the structural causal framework by:
 1. Pre-intervention: Models E as function of all relevant causes including P
 2. Post-intervention: Models E under do(P=0) by removing P→E pathway
 3. Counterfactual queries: Enables comparison between factual and counterfactual worlds
 
 # Arguments
-- `IDidx::Vector{Int}`: Mouse identifier indices
-- `E::Vector{Float64}`: Standardised vaccine response (outcome)
-- `V::Vector{Int}`: Vaccination status (1=adjuvant, 2=vaccine)
-- `D::Vector{Int}`: Diet supplementation (1=low, 2=high)
-- `Ḟ::Vector{Union{Missing,Float64}}`: Standardised fat scores (with missingness)
-- `H::Vector{Int}`: Habitat (1=lab, 2=wild)
-- `M::Vector{Float64}`: Standardised mass
-- `P::Vector{Int}`: Parasite infection status (1=uninfected, 2=infected)
-- `R::Vector{Int}`: Reproductive status (1=non-reproductive, 2=reproductive)
-- `S::Vector{Int}`: Sex (1=male, 2=female)
-- `nP::Vector{Float64}`: Parasite count (continuous)
-- `post_P::Vector{Int}`: Post-intervention parasite status (always 0)
-- `post_nP::Vector{Float64}`: Post-intervention parasite count (always 0)
-- `n_id::Int`: Number of unique individuals
-- `intervention::Bool`: Whether to model post-intervention structure
-
-# Returns
-- Samples from the posterior distribution of structural parameters
-- Enables counterfactual queries via intervention programme transformations
+- `IDidx`: Mouse identifier indices
+- `E`: Standardised vaccine response (outcome)
+- `V`: Vaccination status (1=adjuvant, 2=vaccine)
+- `D`: Diet supplementation (1=low, 2=high)
+- `Ḟ`: Standardised fat scores (with missingness)
+- `H`: Habitat (1=lab, 2=wild)
+- `M`: Standardised mass
+- `P`: Parasite infection status (1=uninfected, 2=infected)
+- `R`: Reproductive status (1=non-reproductive, 2=reproductive)
+- `S`: Sex (1=male, 2=female)
+- `intervention`: Whether to model post-intervention structure (P pathway removed)
 
 # Model Structure
-# Pre-intervention (original DAG):
-- E ~ f(V, D, Ḟ, H, M, P, R, S, α_ID, ε_E)
-- All pathways including P → E are active
+- Factual: E ~ f(V, D, Ḟ, H, M, P, R, S, α_ID) + ε
+- Counterfactual: E ~ f(V, D, Ḟ, H, M, R, S, α_ID) + ε [P pathway severed]
 
-# Post-intervention (manipulated DAG dag_m):
-- E ~ f(V, D, Ḟ, H, M, R, S, α_ID, ε_E) [P pathway severed]
-- P is set to 0 exogenously, breaking its causal influence on E
-
-# Causal Assumptions
+# Assumptions
 - Modularity: Each structural equation can be modified independently
 - No unmeasured confounding given DAG structure
-- SUTVA within individuals (but structured confounding via random effects)
+- Individual-level confounding handled via random effects
 """
 @model function Counterfactual_E_Model(IDidx, E, V, D, Ḟ, H, M, P, R, S, nP, post_P, post_nP;
     n_id=length(unique(IDidx)), intervention=false)
 
-    # Pre-compute statistics for type stability
-    E_mean = mean(E)
-    E_std = std(E)
+    # Pre-compute statistics for type stability and performance
+    N::Int = length(E)
+    E_mean::Float64 = mean(E)
+    E_std::Float64 = std(E)
 
     # Population-level priors (weakly informative for standardised outcome)
     α ~ Normal(0, 1)  # Overall intercept - allows reasonable deviation from 0
@@ -184,79 +181,88 @@ This model implements the structural causal model framework by:
     # Residual variance - weakly informative for standardised outcome
     σ ~ Exponential(1)  # Allows reasonable residual variation
 
-    # Random effects - weakly informative
+    # Random effects - weakly informative, using filldist for performance
     τ ~ Exponential(1)  # Individual-level SD - allows moderate between-individual variation
     α_ID ~ filldist(Normal(0, τ), n_id)   # Individual random intercepts
 
-    # Handle missing fat scores with imputation
-    N_missing = sum(ismissing.(Ḟ))
+    # Pre-compute missing data information for efficiency
+    missing_mask = ismissing.(Ḟ)
+    N_missing::Int = sum(missing_mask)
+
     if N_missing > 0
+        missing_indices = findall(missing_mask)
         F_impute ~ filldist(Normal(0, 1), N_missing)
         ν_F ~ Normal(0, 0.5)  # Imputation mean
-        σ_F ~ Exponential(1)   # Imputation SD
-    end
+        σ_F ~ Exponential(1)  # Imputation SD
 
-    # Likelihood for each observation
-    i_missing = 1
-    for i in eachindex(E)
-        # Handle missing fat scores
-        if ismissing(Ḟ[i])
-            if N_missing > 0
-                # Use the pre-sampled imputed value, applying transformation
-                f_val = ν_F + σ_F * F_impute[i_missing]
-                i_missing += 1
-            else
-                f_val = 0.0  # Fallback
-            end
-        else
-            if N_missing > 0
+        # Handle missing fat values by imputation
+        f_vals = map(i -> missing_mask[i] ? (i in missing_indices ? ν_F + σ_F * F_impute[findfirst(==(i), missing_indices)] : zero(eltype(α))) : Ḟ[i], 1:N)
+
+        # Add likelihood for observed fat values
+        for i in 1:N
+            if !missing_mask[i]
                 Ḟ[i] ~ Normal(ν_F, σ_F)
             end
-            f_val = Ḟ[i]
         end
 
-        # Structural equation for E
-        if intervention
-            # Post-intervention: use post_P (which should be 0) and remove P effect
-            μ_E = α + α_ID[IDidx[i]] + βV * V[i] + βD * D[i] + βḞ * f_val +
-                  βH * H[i] + βM * M[i] + βR * R[i] + βS * S[i]
-            # Note: βP * post_P[i] would be ≈ 0 anyway since post_P[i] = 0
-        else
-            # Pre-intervention: use observed P and include P effect
-            μ_E = α + α_ID[IDidx[i]] + βV * V[i] + βD * D[i] + βḞ * f_val +
-                  βH * H[i] + βM * M[i] + βP * P[i] + βR * R[i] + βS * S[i]
-        end
+        # Compute base effects for all individuals
+        base_effects = @. α + βV * V + βD * D + βḞ * f_vals + βH * H + βM * M + βR * R + βS * S
 
-        E[i] ~ Normal(μ_E, σ)
+        # Main likelihood loop
+        for i in 1:N
+            μ_E = base_effects[i] + α_ID[IDidx[i]]
+
+            # Add parasite effect only in factual (pre-intervention) scenario
+            if !intervention
+                μ_E += βP * P[i]
+            end
+
+            E[i] ~ Normal(μ_E, σ)
+        end
+    else
+        # No missing data case
+        f_vals = [ismissing(f) ? zero(eltype(α)) : f for f in Ḟ]
+        base_effects = @. α + βV * V + βD * D + βḞ * f_vals + βH * H + βM * M + βR * R + βS * S
+
+        for i in 1:N
+            μ_E = base_effects[i] + α_ID[IDidx[i]]
+
+            # Add parasite effect only in factual (pre-intervention) scenario
+            if !intervention
+                μ_E += βP * P[i]
+            end
+
+            E[i] ~ Normal(μ_E, σ)
+        end
     end
 end
+
 
 """
     Twin_World_E_Model(IDidx, E_factual, E_counterfactual, V, D, Ḟ, H, M, P, R, S,
                        post_P, post_nP; n_id=length(unique(IDidx)))
 
-A joint generative model for both factual and counterfactual vaccine responses,
-implementing the "twin world" approach to counterfactual inference.
+Joint model for factual and counterfactual vaccine responses using the "twin world" approach.
 
-This model jointly samples both the observed world (with parasites) and the
+This model simultaneously samples both the observed world (with parasites) and
 counterfactual world (without parasites), sharing individual-level random effects
-to maintain the identity of individuals across worlds.
+to maintain individual identity across worlds.
 
 # Arguments
-- `E_factual::Vector{Float64}`: Observed vaccine response
-- `E_counterfactual::Vector{Float64}`: Counterfactual vaccine response (under do(P=0))
+- `E_factual`: Observed vaccine response
+- `E_counterfactual`: Counterfactual vaccine response (under do(P=0))
 - Other arguments as in `Counterfactual_E_Model`
 
 # Returns
-- Joint posterior over factual and counterfactual parameters
-- Enables direct estimation of individual treatment effects
+Joint posterior enabling direct estimation of individual treatment effects.
 """
 @model function Twin_World_E_Model(IDidx, E_factual, E_counterfactual, V, D, Ḟ, H, M, P, R, S,
     post_P, post_nP; n_id=length(unique(IDidx)))
 
-    # Pre-compute statistics for type stability
-    E_mean = mean(E_factual)
-    E_std = std(E_factual)
+    # Pre-compute statistics for type stability and performance
+    N::Int = length(E_factual)
+    E_mean::Float64 = mean(E_factual)
+    E_std::Float64 = std(E_factual)
 
     # Shared population-level parameters (weakly informative)
     α ~ Normal(0, 1)  # Standardised outcome
@@ -274,57 +280,66 @@ to maintain the identity of individuals across worlds.
     # Shared residual variance - weakly informative
     σ ~ Exponential(1)
 
-    # Shared random effects - weakly informative
+    # Shared random effects - weakly informative, using filldist for performance
     τ ~ Exponential(1)
     α_ID ~ filldist(Normal(0, τ), n_id)  # Same random intercepts in both worlds
 
-    # Fat score imputation (shared parameters)
-    N_missing = sum(ismissing.(Ḟ))
+    # Pre-compute missing data information for efficiency
+    missing_mask = ismissing.(Ḟ)
+    N_missing::Int = sum(missing_mask)
+
     if N_missing > 0
+        missing_indices = findall(missing_mask)
         F_impute ~ filldist(Normal(0, 1), N_missing)
         ν_F ~ Normal(0, 0.5)
         σ_F ~ Exponential(1)
-    end
 
-    # Likelihood for both factual and counterfactual observations
-    i_missing = 1
-    for i in eachindex(E_factual)
-        # Handle missing fat scores
-        if ismissing(Ḟ[i])
-            if N_missing > 0
-                # Use the pre-sampled imputed value, applying transformation
-                f_val = ν_F + σ_F * F_impute[i_missing]
-                i_missing += 1
-            else
-                f_val = 0.0
-            end
-        else
-            if N_missing > 0
+        # Handle missing fat values by imputation
+        f_vals = map(i -> missing_mask[i] ? (i in missing_indices ? ν_F + σ_F * F_impute[findfirst(==(i), missing_indices)] : zero(eltype(α))) : Ḟ[i], 1:N)
+
+        # Add likelihood for observed fat values
+        for i in 1:N
+            if !missing_mask[i]
                 Ḟ[i] ~ Normal(ν_F, σ_F)
             end
-            f_val = Ḟ[i]
         end
 
-        # Factual world (with parasites)
-        μ_E_factual = α + α_ID[IDidx[i]] + βV * V[i] + βD * D[i] + βḞ * f_val +
-                      βH * H[i] + βM * M[i] + βP * P[i] + βR * R[i] + βS * S[i]
-        E_factual[i] ~ Normal(μ_E_factual, σ)
+        # Compute base effects for all individuals
+        base_effects = @. α + βV * V + βD * D + βḞ * f_vals + βH * H + βM * M + βR * R + βS * S
 
-        # Counterfactual world (without parasites: P = 0)
-        μ_E_counterfactual = α + α_ID[IDidx[i]] + βV * V[i] + βD * D[i] + βḞ * f_val +
-                             βH * H[i] + βM * M[i] + βR * R[i] + βS * S[i]
-        # Note: no βP term - this implements do(P=0)
-        E_counterfactual[i] ~ Normal(μ_E_counterfactual, σ)
+        # Likelihood for both factual and counterfactual observations
+        for i in 1:N
+            μ_base = base_effects[i] + α_ID[IDidx[i]]
+
+            # Factual world (with parasites)
+            μ_E_factual = μ_base + βP * P[i]
+            E_factual[i] ~ Normal(μ_E_factual, σ)
+
+            # Counterfactual world (without parasites)
+            E_counterfactual[i] ~ Normal(μ_base, σ)
+        end
+    else
+        # No missing data case
+        f_vals = [ismissing(f) ? zero(eltype(α)) : f for f in Ḟ]
+        base_effects = @. α + βV * V + βD * D + βḞ * f_vals + βH * H + βM * M + βR * R + βS * S
+
+        for i in 1:N
+            μ_base = base_effects[i] + α_ID[IDidx[i]]
+
+            # Factual world (with parasites)
+            μ_E_factual = μ_base + βP * P[i]
+            E_factual[i] ~ Normal(μ_E_factual, σ)
+
+            # Counterfactual world (without parasites)
+            E_counterfactual[i] ~ Normal(μ_base, σ)
+        end
     end
 end
 
+
 ## Prior predictive checks
 
-# PPC functions moved to TuringUtils.jl for reusability
-
-# Prior rationale: Weakly informative priors for standardised outcome (E)
-
-# Generate prior predictive checks using improved approach
+# Generate prior predictive checks to assess model priors
 println("=== PRIOR PREDICTIVE CHECKS FOR INTERVENTION MODELS ===")
 
 # Factual model (with parasites)
@@ -356,10 +371,10 @@ counterfactual_prior_E = vec(Array(counterfactual_prior_samples)[:, end])  # Ext
 # Create plots and assessments using TuringPlots functions
 with_theme(theme_minimal()) do
     plot_prior_predictive_check(dag_df_infected.E, factual_prior_E;
-        title_suffix="Factual Model", saveplot=true)
+        title_suffix="Factual Model", saveplot=SAVE_PLOTS)
 
     plot_prior_predictive_check(dag_df_infected.E, counterfactual_prior_E;
-        title_suffix="Counterfactual Model", saveplot=true)
+        title_suffix="Counterfactual Model", saveplot=SAVE_PLOTS)
 end
 
 # Assess prior adequacy
@@ -370,19 +385,38 @@ assess_prior_adequacy(dag_df_infected.E, counterfactual_prior_E; model_name="Cou
 
 # Fit the pre-intervention model (reuse the factual_model from PPC)
 println("\nFitting pre-intervention model...")
-pre_intervention_chain = sample(factual_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+    pre_intervention_chain = sample(factual_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+    pre_intervention_chain = sample(factual_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 # Fit the post-intervention model (reuse the counterfactual_model from PPC)
 println("Fitting post-intervention model...")
-post_intervention_chain = sample(counterfactual_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+    post_intervention_chain = sample(counterfactual_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+    post_intervention_chain = sample(counterfactual_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 ## Generate counterfactuals using posterior predictive approach (RECOMMENDED METHOD)
 
 """
     generate_counterfactuals(pre_chain, df_infected; n_samples=1000)
 
-Generate counterfactual vaccine responses under the intervention do(P=0).
-Alternative approach using posterior predictive sampling.
+Generate counterfactual vaccine responses under parasite elimination intervention do(P=0).
+
+Uses posterior predictive sampling to generate both factual (with parasites) and
+counterfactual (without parasites) vaccine responses for each individual.
+
+# Arguments
+- `pre_chain`: MCMC chain from fitted factual model
+- `df_infected`: DataFrame with infected mouse data
+- `n_samples`: Number of posterior samples to draw
+
+# Returns
+- `E_factual`: Matrix of factual vaccine responses (n_obs × n_samples)
+- `E_counterfactual`: Matrix of counterfactual vaccine responses (n_obs × n_samples)
 """
 function generate_counterfactuals(pre_chain, df_infected; n_samples::Int=1000)
     n_obs = nrow(df_infected)
@@ -512,100 +546,25 @@ precis(DataFrame(pre_intervention_chain)[!, r"α\b|β"])
 println("\nPre-intervention model diagnostics:")
 plot_chains_df(pre_intervention_chain; show_traces=false)
 
-## Causal effect analysis using generative model predictions
-
-# Check adjustment sets for vaccination effect
-adjustmentSets(dag, "V", "E", effect="total") # { }
-adjustmentSets(dag_m, "V", "E", effect="total") # { }
-
-# Total effect of V on E (factual vs counterfactual)
-glmm_V_E_total_factual = fit(MixedModel, @formula(E_factual_mean ~ V + (1 | ID)), dag_df_infected)
-glmm_V_E_total_counterfactual = fit(MixedModel, @formula(E_counterfactual_mean ~ V + (1 | ID)), dag_df_infected)
-
-# Diagnostics for vaccination effect model
-qqnorm(glmm_V_E_total_counterfactual; qqline=:fitrobust)
-boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_V_E_total_counterfactual)
-coefplot(boot)
-
-# Check adjustment sets for direct effects
-adjustmentSets(dag, "V", "E", effect="direct") # { D, F, H, M, P, R, S }
-adjustmentSets(dag_m, "V", "E", effect="direct") # { D, F, H, M, P, R, S }
-
-# Direct effect of V on E (factual vs counterfactual)
-glmm_V_E_direct_factual = fit(MixedModel, @formula(E_factual_mean ~ V + D + Ḟ + H + M + P + R + S + (1 | ID)), dag_df_infected)
-glmm_V_E_direct_counterfactual = fit(MixedModel, @formula(E_counterfactual_mean ~ V + D + Ḟ + H + M + R + S + (1 | ID)), dag_df_infected)
-
-# Diagnostics for direct vaccination effect model
-qqnorm(glmm_V_E_direct_counterfactual; qqline=:fitrobust)
-boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_V_E_direct_counterfactual)
-coefplot(boot)
-
-## Generate enhanced plots with clinical significance
-
-with_theme(theme_minimal()) do
-    plot_E_factual_counterfactual(dag_df_infected, saveplot=true)
-end
-
-with_theme(theme_minimal()) do
-    plot_counterfactual_effects_with_significance(dag_df_infected, saveplot=true)
-end
-
-with_theme(theme_minimal()) do
-    plot_clinical_significance_summary(dag_df_infected, saveplot=true)
-end
-
-## Interaction analysis with Cohen's d
-
-# Fit model using Cohen's d as outcome
-glmm_cohens_d_interaction = fit(MixedModel, @formula(E_cohens_d ~ -1 + D + R + S + V + M + Ḟ + S & R + (1 | ID)), dag_df_infected)
-
-# Generate Cohen's d interaction plots
-with_theme(theme_minimal()) do
-    plot_S_R_interaction_cohens_d(dag_df_infected, saveplot=true)
-end
-
-with_theme(theme_minimal()) do
-    plot_S_R_interaction_factual_counterfactual(dag_df_infected, saveplot=true)
-end
-
-# Generate detailed Sex × Reproductive status interaction plots
-with_theme(theme_minimal()) do
-    plot_sex_reproductive_interaction_detailed(dag_df_infected, saveplot=true)
-end
-
-with_theme(theme_minimal()) do
-    plot_sex_reproductive_heatmap(dag_df_infected, saveplot=true)
-end
-
-# Diagnostics for Cohen's d interaction model
-boot_cohens_d = parametricbootstrap(MersenneTwister(1234), 10_000, glmm_cohens_d_interaction)
-coefplot(boot_cohens_d)
-
-## Function definitions for percentage calculations
+## Analysis helper functions
 
 """
     calculate_counterfactual_percentage_change(df_infected; method="relative_to_baseline")
 
-Calculate percentage change in vaccine response (E) under counterfactual parasite elimination.
+Calculate percentage change in vaccine response under counterfactual parasite elimination.
 
 # Arguments
-- `df_infected::DataFrame`: DataFrame with counterfactual predictions
-- `method::String`: Calculation method
-  - "relative_to_baseline": % change relative to absolute baseline E values
-  - "relative_to_population": % change relative to population mean
-  - "relative_to_original_scale": % change in back-transformed OD scale
-  - "cohen_d_to_percent": Convert Cohen's d to percentage using pooled SD
+- `df_infected`: DataFrame with counterfactual predictions
+- `method`: Calculation method. Options:
+  - `"relative_to_baseline"`: Change relative to individual baseline values
+  - `"relative_to_population"`: Change relative to population mean
+  - `"relative_to_original_scale"`: Change in back-transformed OD scale
+  - `"cohen_d_to_percent"`: Convert Cohen's d to percentage using pooled SD
 
 # Returns
-- `Vector{Float64}`: Percentage changes for each observation
-- Also prints summary statistics
+Vector of percentage changes for each observation (also prints summary statistics).
 
-# Details
-Different methods handle the standardised nature of E differently:
-- Method 1: Treats standardised E as if it were raw values (most direct)
-- Method 2: Calculates change relative to population centre
-- Method 3: Back-transforms to original OD scale for meaningful percentages
-- Method 4: Uses Cohen's d effect size converted to percentage improvement
+Different methods handle the standardised nature of the vaccine response differently.
 """
 function calculate_counterfactual_percentage_change(df_infected; method::String="relative_to_baseline")
 
@@ -693,18 +652,16 @@ end
 """
     calculate_vaccination_effect_percentage(df_infected)
 
-Calculate percentage improvement in vaccination effect under counterfactual intervention.
-This focuses on how much better vaccines work when parasites are eliminated.
+Calculate percentage improvement in vaccination effect under parasite elimination.
+
+Compares vaccination coefficients between factual and counterfactual scenarios
+to determine how much better vaccines work when parasites are eliminated.
 
 # Arguments
-- `df_infected::DataFrame`: DataFrame with counterfactual predictions
+- `df_infected`: DataFrame with counterfactual predictions
 
 # Returns
-- Named tuple with vaccination effect improvements
-
-# Details
-Compares vaccination coefficients between factual and counterfactual scenarios.
-Uses the same mixed model approach as the main analysis.
+Named tuple with vaccination effect coefficients and improvement statistics.
 """
 function calculate_vaccination_effect_percentage(df_infected)
     println("=== VACCINATION EFFECT PERCENTAGE IMPROVEMENT ===")
@@ -735,6 +692,77 @@ function calculate_vaccination_effect_percentage(df_infected)
         absolute_improvement=absolute_improvement
     )
 end
+
+## Causal effect analysis using generative model predictions
+
+# Check adjustment sets for vaccination effect
+adjustmentSets(dag, "V", "E", effect="total") # { }
+adjustmentSets(dag_m, "V", "E", effect="total") # { }
+
+# Total effect of V on E (factual vs counterfactual)
+glmm_V_E_total_factual = fit(MixedModel, @formula(E_factual_mean ~ V + (1 | ID)), dag_df_infected)
+glmm_V_E_total_counterfactual = fit(MixedModel, @formula(E_counterfactual_mean ~ V + (1 | ID)), dag_df_infected)
+
+# Diagnostics for vaccination effect model
+qqnorm(glmm_V_E_total_counterfactual; qqline=:fitrobust)
+boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_V_E_total_counterfactual)
+coefplot(boot)
+
+# Check adjustment sets for direct effects
+adjustmentSets(dag, "V", "E", effect="direct") # { D, F, H, M, P, R, S }
+adjustmentSets(dag_m, "V", "E", effect="direct") # { D, F, H, M, P, R, S }
+
+# Direct effect of V on E (factual vs counterfactual)
+glmm_V_E_direct_factual = fit(MixedModel, @formula(E_factual_mean ~ V + D + Ḟ + H + M + P + R + S + (1 | ID)), dag_df_infected)
+glmm_V_E_direct_counterfactual = fit(MixedModel, @formula(E_counterfactual_mean ~ V + D + Ḟ + H + M + R + S + (1 | ID)), dag_df_infected)
+
+# Diagnostics for direct vaccination effect model
+qqnorm(glmm_V_E_direct_counterfactual; qqline=:fitrobust)
+boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_V_E_direct_counterfactual)
+coefplot(boot)
+
+## Generate enhanced plots with clinical significance
+
+with_theme(theme_minimal()) do
+    plot_E_factual_counterfactual(dag_df_infected, saveplot=SAVE_PLOTS)
+end
+
+with_theme(theme_minimal()) do
+    plot_counterfactual_effects_with_significance(dag_df_infected, saveplot=SAVE_PLOTS)
+end
+
+with_theme(theme_minimal()) do
+    plot_clinical_significance_summary(dag_df_infected, saveplot=SAVE_PLOTS)
+end
+
+## Interaction analysis with Cohen's d
+
+# Fit model using Cohen's d as outcome
+glmm_cohens_d_interaction = fit(MixedModel, @formula(E_cohens_d ~ -1 + D + R + S + V + M + Ḟ + S & R + (1 | ID)), dag_df_infected)
+
+# Generate Cohen's d interaction plots
+with_theme(theme_minimal()) do
+    plot_S_R_interaction_cohens_d(dag_df_infected, saveplot=SAVE_PLOTS)
+end
+
+with_theme(theme_minimal()) do
+    plot_S_R_interaction_factual_counterfactual(dag_df_infected, saveplot=SAVE_PLOTS)
+end
+
+# Generate detailed Sex × Reproductive status interaction plots
+with_theme(theme_minimal()) do
+    plot_sex_reproductive_interaction_detailed(dag_df_infected, saveplot=SAVE_PLOTS)
+end
+
+with_theme(theme_minimal()) do
+    plot_sex_reproductive_heatmap(dag_df_infected, saveplot=SAVE_PLOTS)
+end
+
+# Diagnostics for Cohen's d interaction model
+boot_cohens_d = parametricbootstrap(MersenneTwister(1234), 10_000, glmm_cohens_d_interaction)
+coefplot(boot_cohens_d)
+
+
 
 ## Calculate percentage improvements using different methods
 
