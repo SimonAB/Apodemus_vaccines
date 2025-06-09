@@ -1,23 +1,24 @@
 #=
-MultiLevel Models
+Multilevel Models
 - Julia version: 1.11
 - Author: Simon A Babayan
 =#
 
 #=
-This script will fit a multilevel model to the data and generate the figures for the manuscript.
+This script fits multilevel models to vaccine response data and generates manuscript figures.
+It includes both classical mixed-effects models and Bayesian hierarchical models with
+vaccination history × habitat interactions.
 =#
 
 ## Import packages
 
 print("Running on ", Threads.nthreads(), " threads.")
-# installkernel("Julia", "--project=@. --threads=auto")
 using CategoricalArrays, LazyArrays
 using DataFrames, CSV
 using Random
 using Statistics, Distributions
 using StatsBase, HypothesisTests
-using MLDataUtils: shuffleobs, splitobs, rescale! # Functionality for splitting and normalizing the data.
+using MLDataUtils: shuffleobs, splitobs, rescale!
 using LinearAlgebra
 using MixedModels
 using Turing
@@ -25,7 +26,6 @@ using AlgebraOfGraphics, CairoMakie
 using MCMCChains
 using Colors
 
-# GLMakie.activate!()
 CairoMakie.activate!(; type="svg")
 using MixedModelsMakie
 
@@ -37,26 +37,23 @@ include("TuringPlots.jl")
 
 ## Import data
 include("DataWrangler.jl")
-# All cases - use more efficient filtering with missing value handling
-df = encode_df(df) # df includes repeated measures
+
+# Data preparation with missing value handling
+df = encode_df(df) # Includes repeated measures
 df = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 1, df)
 
-# Unique cases - use efficient filtering with missing value handling
-df_unique = encode_df(df_unique) # df_unique no repeated measures
+df_unique = encode_df(df_unique) # No repeated measures
 df_unique = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 4, df_unique)
 
-levels!(df.vax_history, ["A", "D", "AD", "DA", "DD"]);
-levels(df[!, :vax_history])
-
-# levels!(CategoricalArray(convert(Vector{String}, df.vax_history)), ["A", "D", "AD", "DA", "DD"])
+# Set vaccination history factor levels
+levels!(df.vax_history, ["A", "D", "AD", "DA", "DD"])
 df = sort(df, :vax_history)
-
-df.IDidx = get_idx(:ID, df)[1];
+df.IDidx = get_idx(:ID, df)[1]
 
 countmap(df.vax_history)
 
 ## Check distribution of transformed E
-seroconv = standardize(ZScoreTransform, df.E[df[!, :logOD].>0], dims=1);
+seroconv = standardize(ZScoreTransform, df.E[df[!, :logOD].>0], dims=1)
 
 f = Figure()
 hist(f[1, 1], seroconv, bins=10, normalization=:pdf)
@@ -65,81 +62,143 @@ f
 
 ExactOneSampleKSTest(seroconv, Normal())
 
+## Habitat-specific vaccine response comparisons
 
-## Difference between boosted, non-boosted, and control mice in lab vs wild
+"""
+    calculate_group_difference(data, condition1, condition2, variable)
 
-# Wild Boosted vs Lab Boosted
-Δm = mean(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)]) - mean(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)]) |> x -> round(x; digits=2);
-Δstd_error = sqrt((std(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)])) + (std(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)]))) |> x -> round(x; digits=2);
-println("Wild boosted vs. Lab boosted OD: $Δm ± $Δstd_error")
+Calculate mean difference and standard error between two groups.
 
-# Wild Non-Boosted vs Lab Non-Boosted
-Δm = mean(df.E[(df.vax_history.!="DD").&(df.islab.==1).&(df.isvax.==1)]) - mean(df.E[(df.vax_history.!="DD").&(df.islab.==0).&(df.isvax.==1)]) |> x -> round(x; digits=2);
-Δstd_error = sqrt((std(df.E[(df.vax_history.!="DD").&(df.islab.==1).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.!="DD").&(df.islab.==1).&(df.isvax.==1)])) + (std(df.E[(df.vax_history.!="DD").&(df.islab.==0).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.!="DD").&(df.islab.==0).&(df.isvax.==1)]))) |> x -> round(x; digits=2);
-println("Wild non-boosted vs. Lab non-boosted OD: $Δm ± $Δstd_error")
+# Arguments
+- `data`: DataFrame containing the data
+- `condition1`: Boolean mask for first group
+- `condition2`: Boolean mask for second group
+- `variable`: Column name for the response variable
 
-# Wild vaccinated vs Lab vaccinated
-Δm = mean(df.E[(df.islab.==1).&(df.isvax.==1)]) - mean(df.E[(df.islab.==0).&(df.isvax.==1)]) |> x -> round(x; digits=2);
-Δstd_error = sqrt((std(df.E[(df.islab.==1).&(df.isvax.==1)])^2 / length(df.E[(df.islab.==1).&(df.isvax.==1)])) + (std(df.E[(df.islab.==0).&(df.isvax.==1)])^2 / length(df.E[(df.islab.==0).&(df.isvax.==1)]))) |> x -> round(x; digits=2);
-println("Wild vaccinated vs. Lab vaccinated OD: $Δm ± $Δstd_error")
+# Returns
+- Tuple of (mean_difference, standard_error)
+"""
+function calculate_group_difference(data, condition1, condition2, variable)
+    mean1 = mean(data[condition1, variable])
+    mean2 = mean(data[condition2, variable])
+    std1 = std(data[condition1, variable])
+    std2 = std(data[condition2, variable])
+    n1 = sum(condition1)
+    n2 = sum(condition2)
 
-# Lab Non-Boosted vs Lab Boosted
-Δm = mean(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)]) - mean(df.E[(df.vax_history.=="DA").&(df.islab.==1).&(df.isvax.==1)]) |> x -> round(x; digits=2);
-Δstd_error = sqrt((std(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.=="DD").&(df.islab.==1).&(df.isvax.==1)])) + (std(df.E[(df.vax_history.=="DA").&(df.islab.==1).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.=="DA").&(df.islab.==1).&(df.isvax.==1)]))) |> x -> round(x; digits=2);
-println("Lab boosted vs. Lab non-boosted OD: $Δm ± $Δstd_error")
+    mean_diff = mean1 - mean2
+    se = sqrt((std1^2 / n1) + (std2^2 / n2))
 
-# Wild Non-Boosted vs Wild Boosted
-Δm = mean(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)]) - mean(df.E[(df.vax_history.=="DA").&(df.islab.==0).&(df.isvax.==1)]) |> x -> round(x; digits=2);
-Δstd_error = sqrt((std(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.=="DD").&(df.islab.==0).&(df.isvax.==1)])) + (std(df.E[(df.vax_history.=="DA").&(df.islab.==0).&(df.isvax.==1)])^2 / length(df.E[(df.vax_history.=="DA").&(df.islab.==0).&(df.isvax.==1)]))) |> x -> round(x; digits=2);
-println("Wild boosted vs. Wild non-boosted OD: $Δm ± $Δstd_error")
+    return round(mean_diff; digits=2), round(se; digits=2)
+end
 
+# Define comparison groups
+boosted_lab = (df.vax_history .== "DD") .& (df.islab .== 1) .& (df.isvax .== 1)
+boosted_wild = (df.vax_history .== "DD") .& (df.islab .== 0) .& (df.isvax .== 1)
+nonboosted_lab = (df.vax_history .!= "DD") .& (df.islab .== 1) .& (df.isvax .== 1)
+nonboosted_wild = (df.vax_history .!= "DD") .& (df.islab .== 0) .& (df.isvax .== 1)
+vaccinated_lab = (df.islab .== 1) .& (df.isvax .== 1)
+vaccinated_wild = (df.islab .== 0) .& (df.isvax .== 1)
+da_lab = (df.vax_history .== "DA") .& (df.islab .== 1) .& (df.isvax .== 1)
+da_wild = (df.vax_history .== "DA") .& (df.islab .== 0) .& (df.isvax .== 1)
 
-# Percentage drop in OD in wild vs lab (original value - new value) / original value * 100%
-Δpc = (mean(df.OD[(df.islab.==1).&(df.isvax.==1)]) - mean(df.OD[(df.islab.==0).&(df.isvax.==1)])) / mean(df.OD[(df.islab.==1).&(df.isvax.==1)]) * 100 |> x -> round(x; digits=1); # 47%
-Δpc_std_error = sqrt((std(df.OD[(df.islab.==1).&(df.isvax.==1)])^2 / length(df.OD[(df.islab.==1).&(df.isvax.==1)])) + (std(df.OD[(df.islab.==0).&(df.isvax.==1)])^2 / length(df.OD[(df.islab.==0).&(df.isvax.==1)]))) |> x -> round(x; digits=1);
-println("Percentage drop in OD in wild vs lab: $Δpc ± $Δpc_std_error")
+# Calculate group comparisons
+Δm, Δse = calculate_group_difference(df, boosted_wild, boosted_lab, :E)
+println("Wild boosted vs. Lab boosted OD: $Δm ± $Δse")
 
-## Is there a significant interaction between vaccine responses and habitat? (GLMM specification)
+Δm, Δse = calculate_group_difference(df, nonboosted_wild, nonboosted_lab, :E)
+println("Wild non-boosted vs. Lab non-boosted OD: $Δm ± $Δse")
 
+Δm, Δse = calculate_group_difference(df, vaccinated_wild, vaccinated_lab, :E)
+println("Wild vaccinated vs. Lab vaccinated OD: $Δm ± $Δse")
+
+Δm, Δse = calculate_group_difference(df, boosted_lab, da_lab, :E)
+println("Lab boosted vs. Lab non-boosted OD: $Δm ± $Δse")
+
+Δm, Δse = calculate_group_difference(df, boosted_wild, da_wild, :E)
+println("Wild boosted vs. Wild non-boosted OD: $Δm ± $Δse")
+
+# Percentage change in original OD scale
+Δm_od, Δse_od = calculate_group_difference(df, vaccinated_wild, vaccinated_lab, :OD)
+lab_mean = mean(df[vaccinated_lab, :OD])
+Δpc = round((Δm_od / lab_mean) * 100; digits=1)
+Δpc_se = round((Δse_od / lab_mean) * 100; digits=1)
+println("Percentage drop in OD in wild vs lab: $Δpc ± $Δpc_se")
+
+## Multilevel model selection for vaccination × habitat interactions
+
+# Define candidate model formulae
 vi_form_1 = @formula(E ~ (1 | ID) + vax_history + H + D + vax_history & H + H & D)
 vi_form_2 = @formula(E ~ (1 | ID) + vax_history + H + D + vax_history & H)
 vi_form_3 = @formula(E ~ (1 | ID) + vax_history + H + D + H & D)
 vi_form_4 = @formula(E ~ (1 | ID) + vax_history + H + D)
 
-# Linear mixed model
+# Fit candidate models
 mm1 = fit(MixedModel, vi_form_1, df)
 mm2 = fit(MixedModel, vi_form_2, df)
-
-
-# LRT: mm1 vs mm2
-MixedModels.likelihoodratiotest(mm1, mm2)
 mm3 = fit(MixedModel, vi_form_3, df)
-
-# LRT: mm1 vs mm3
-MixedModels.likelihoodratiotest(mm1, mm3)
 mm4 = fit(MixedModel, vi_form_4, df)
 
-# LRT: mm2 vs mm4
+# Model comparison using likelihood ratio tests
+println("Model selection via likelihood ratio tests:")
+println("Full vs. vaccination×habitat only:")
+MixedModels.likelihoodratiotest(mm1, mm2)
+
+println("Full vs. habitat×diet only:")
+MixedModels.likelihoodratiotest(mm1, mm3)
+
+println("Vaccination×habitat vs. main effects only:")
 MixedModels.likelihoodratiotest(mm2, mm4)
 
-# Final model (mm2)
+# Selected model (vaccination × habitat interaction)
 mm = fit(MixedModel, vi_form_2, df)
 
-
+# Model diagnostics
 qqnorm(mm; qqline=:fitrobust)
-boot = parametricbootstrap(MersenneTwister(42), 3000, mm);
+boot = parametricbootstrap(MersenneTwister(42), 3000, mm)
 coefplot(mm)
 coefplot(boot)
 ridgeplot(boot)
 
-## Bayesian model
+"""
+    varying_intercept(IDidx, Vidx, H, D, E)
+
+Bayesian hierarchical model for vaccine response with vaccination history × habitat interactions.
+
+This model estimates the effect of vaccination history on immune response while accounting
+for habitat differences and their interaction. Individual-level random intercepts capture
+between-mouse variation not explained by measured covariates.
+
+# Arguments
+- `IDidx::Vector{Int}`: Individual mouse identifiers (indexed)
+- `Vidx::Vector{Int}`: Vaccination history identifiers (indexed)
+- `H::Vector{Int}`: Habitat (1=lab, 2=wild)
+- `D::Vector{Int}`: Diet supplementation (1=low, 2=high)
+- `E::Vector{Float64}`: Standardised vaccine response (outcome)
+
+# Model Structure
+- Population effects: vaccination history, habitat, diet
+- Interaction: vaccination history × habitat
+- Random effects: individual mouse intercepts
+- Residual variation: normally distributed
+
+# Prior Specification
+Uses weakly informative priors scaled to the standardised outcome:
+- Intercept: Normal(Ē, 2.5×SD) allowing reasonable deviations
+- Effects: Normal(Ē, 2) for vaccination, Normal(0, 2) for others
+- Random effects: Cauchy(0, 2) for moderate individual variation
+- Residual: Exponential(SD) for positive variance
+
+# Returns
+Posterior samples for all model parameters enabling uncertainty quantification.
+"""
 @model function varying_intercept(IDidx, Vidx, H, D, E)
 
     n_id = length(unique(IDidx))
     n_vax = length(unique(Vidx))
     Ē = mean(E)
 
-    #priors for fixed effects
+    # Population-level priors
     α ~ Normal(Ē, 2.5 * std(E))           # population-level intercept
     βv ~ filldist(Normal(Ē, 2), n_vax)    # population-level slopes relative to adjuvant control
     βh ~ Normal(0, 2)                     # population-level slopes
@@ -147,28 +206,28 @@ ridgeplot(boot)
     βvh ~ filldist(Normal(Ē, 2), n_vax)   # interaction term between Vidx and H
     σ ~ Exponential(std(E))               # residual SD
 
-    #priors for variance of random intercepts
+    # Random effects priors
     τ ~ truncated(Cauchy(0, 2); lower=0)  # group-level SDs intercepts
     α_ID ~ filldist(Normal(0, τ), n_id)   # group-level intercepts
 
-    #likelihood
+    # Likelihood
     Ê = @. α + α_ID[IDidx] + βv[Vidx] + βh * H + βd * D + βvh[Vidx] * H
     E ~ MvNormal(Ê, σ^2 * I)
 
 end
 
-vi_model = varying_intercept(df.IDidx, df.Vidx, df.H, df.D, df.E);
+vi_model = varying_intercept(df.IDidx, df.Vidx, df.H, df.D, df.E)
 
-vi_chn = sample(vi_model, NUTS(), MCMCThreads(), 3000, 4);
+vi_chn = sample(vi_model, NUTS(), MCMCThreads(), 3000, 4)
 
 p = plot_chains_df(vi_chn)
 safe_plot_save("IgG1_varint.pdf", p)
 p
 
-vi_chn_df = DataFrame(vi_chn)[!, r"α\b|β"];
+vi_chn_df = DataFrame(vi_chn)[!, r"α\b|β"]
 precis(vi_chn_df)
 
-## Draw figures
+## Generate manuscript figures
 
 set_aog_theme!()
 
