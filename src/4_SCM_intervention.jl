@@ -401,6 +401,7 @@ end
 
 ## Generate counterfactuals using posterior predictive approach (RECOMMENDED METHOD)
 
+
 """
     generate_counterfactuals(pre_chain, df_infected; n_samples=1000)
 
@@ -545,6 +546,257 @@ end
 precis(DataFrame(pre_intervention_chain)[!, r"α\b|β"])
 println("\nPre-intervention model diagnostics:")
 plot_chains_df(pre_intervention_chain; show_traces=false)
+
+
+## Main effects interpretation for Sex and Reproductive Status
+
+"""
+    interpret_main_effects(chain, df_infected; saveplot=false)
+
+Interpret the main effects of Sex (S) and Reproductive Status (R) from the Bayesian model.
+
+This function extracts posterior samples for βS and βR, calculates summary statistics,
+provides interpretations based on effect sizes, and creates visualizations.
+
+# Arguments
+- `chain`: MCMC chain from the fitted Bayesian model
+- `df_infected`: DataFrame with infected mouse data for group-specific analysis
+- `saveplot`: Whether to save plots
+
+# Returns
+Named tuple with effect estimates and interpretations for both S and R.
+"""
+function interpret_main_effects(chain, df_infected; saveplot::Bool=false)
+    println("=== MAIN EFFECTS INTERPRETATION: SEX AND REPRODUCTIVE STATUS ===")
+
+    # Extract parameter samples
+    chain_df = DataFrame(chain)
+    βS_samples = chain_df.βS
+    βR_samples = chain_df.βR
+
+    # Sex effect analysis
+    println("\n--- SEX EFFECT (βS) ---")
+    println("Coding: 1=Male, 2=Female")
+
+    βS_mean = mean(βS_samples)
+    βS_sd = std(βS_samples)
+    βS_ci_lower, βS_ci_upper = quantile(βS_samples, [0.025, 0.975])
+
+    println("Sex effect (βS):")
+    println("Mean: $(round(βS_mean, digits=4))")
+    println("SD: $(round(βS_sd, digits=4))")
+    println("95% CI: [$(round(βS_ci_lower, digits=4)), $(round(βS_ci_upper, digits=4))]")
+
+    # Probability assessments for sex
+    prob_female_advantage = mean(βS_samples .> 0)
+    prob_male_advantage = mean(βS_samples .< 0)
+    prob_substantial_sex = mean(abs.(βS_samples) .> 0.1)
+    prob_large_sex = mean(abs.(βS_samples) .> 0.2)
+
+    println("\nProbability assessments (Sex):")
+    println("P(βS > 0) [Female advantage]: $(round(prob_female_advantage, digits=3))")
+    println("P(βS < 0) [Male advantage]: $(round(prob_male_advantage, digits=3))")
+    println("P(|βS| > 0.1) [Substantial effect]: $(round(prob_substantial_sex, digits=3))")
+    println("P(|βS| > 0.2) [Large effect]: $(round(prob_large_sex, digits=3))")
+
+    # Effect size interpretation for sex
+    if abs(βS_mean) < 0.1
+        sex_interpretation = "negligible"
+    elseif abs(βS_mean) < 0.2
+        sex_interpretation = "small"
+    elseif abs(βS_mean) < 0.3
+        sex_interpretation = "moderate"
+    else
+        sex_interpretation = "large"
+    end
+
+    sex_direction = βS_mean > 0 ? "Female advantage" : "Male advantage"
+    println("\nSex effect interpretation: $(sex_interpretation) effect")
+    println("Direction: $(sex_direction)")
+
+    # Reproductive Status effect analysis
+    println("\n--- REPRODUCTIVE STATUS EFFECT (βR) ---")
+    println("Coding: 1=Non-reproductive, 2=Reproductive")
+
+    βR_mean = mean(βR_samples)
+    βR_sd = std(βR_samples)
+    βR_ci_lower, βR_ci_upper = quantile(βR_samples, [0.025, 0.975])
+
+    println("Reproductive Status effect (βR):")
+    println("Mean: $(round(βR_mean, digits=4))")
+    println("SD: $(round(βR_sd, digits=4))")
+    println("95% CI: [$(round(βR_ci_lower, digits=4)), $(round(βR_ci_upper, digits=4))]")
+
+    # Probability assessments for reproductive status
+    prob_repro_advantage = mean(βR_samples .> 0)
+    prob_nonrepro_advantage = mean(βR_samples .< 0)
+    prob_substantial_repro = mean(abs.(βR_samples) .> 0.1)
+    prob_large_repro = mean(abs.(βR_samples) .> 0.2)
+
+    println("\nProbability assessments (Reproductive Status):")
+    println("P(βR > 0) [Reproductive advantage]: $(round(prob_repro_advantage, digits=3))")
+    println("P(βR < 0) [Non-reproductive advantage]: $(round(prob_nonrepro_advantage, digits=3))")
+    println("P(|βR| > 0.1) [Substantial effect]: $(round(prob_substantial_repro, digits=3))")
+    println("P(|βR| > 0.2) [Large effect]: $(round(prob_large_repro, digits=3))")
+
+    # Effect size interpretation for reproductive status
+    if abs(βR_mean) < 0.1
+        repro_interpretation = "negligible"
+    elseif abs(βR_mean) < 0.2
+        repro_interpretation = "small"
+    elseif abs(βR_mean) < 0.3
+        repro_interpretation = "moderate"
+    else
+        repro_interpretation = "large"
+    end
+
+    repro_direction = βR_mean > 0 ? "Reproductive advantage" : "Non-reproductive advantage"
+    println("\nReproductive Status effect interpretation: $(repro_interpretation) effect")
+    println("Direction: $(repro_direction)")
+
+    # Group-specific analysis (based on observed data)
+    println("\n--- GROUP-SPECIFIC COUNTERFACTUAL EFFECTS ---")
+
+    # Create group summaries
+    group_summary = combine(
+        groupby(df_infected, [:S, :R]),
+        :E_diff_counterfactual => mean => :mean_effect,
+        :E_diff_counterfactual => std => :sd_effect,
+        :E_cohens_d => mean => :mean_cohens_d,
+        nrow => :count
+    )
+
+    for row in eachrow(group_summary)
+        sex_label = row.S == 1 ? "Male" : "Female"
+        repro_label = row.R == 1 ? "Non-reproductive" : "Reproductive"
+
+        println("$sex_label, $repro_label (n=$(row.count)):")
+        println("  Mean counterfactual effect: $(round(row.mean_effect, digits=3)) ± $(round(row.sd_effect, digits=3))")
+        println("  Mean Cohen's d: $(round(row.mean_cohens_d, digits=3))")
+    end
+
+    # Create visualization
+    if saveplot
+        create_main_effects_plot(βS_samples, βR_samples, df_infected)
+    end
+
+    return (
+        sex_effect=(
+            mean=βS_mean,
+            sd=βS_sd,
+            ci_lower=βS_ci_lower,
+            ci_upper=βS_ci_upper,
+            prob_female_advantage=prob_female_advantage,
+            prob_substantial=prob_substantial_sex,
+            interpretation=sex_interpretation,
+            direction=sex_direction
+        ),
+        repro_effect=(
+            mean=βR_mean,
+            sd=βR_sd,
+            ci_lower=βR_ci_lower,
+            ci_upper=βR_ci_upper,
+            prob_repro_advantage=prob_repro_advantage,
+            prob_substantial=prob_substantial_repro,
+            interpretation=repro_interpretation,
+            direction=repro_direction
+        ),
+        group_summary=group_summary
+    )
+end
+
+"""
+    create_main_effects_plot(βS_samples, βR_samples, df_infected)
+
+Create visualization for main effects of Sex and Reproductive Status.
+"""
+function create_main_effects_plot(βS_samples, βR_samples, df_infected)
+    fig = Figure(size=(1200, 800))
+
+    # Panel 1: Posterior distributions
+    ax1 = Axis(fig[1, 1],
+        title="Posterior Distributions of Main Effects",
+        xlabel="Effect Size (Standardised Units)",
+        ylabel="Density"
+    )
+
+    # Plot posterior densities
+    hist!(ax1, βS_samples, bins=50, alpha=0.6, color=:blue, normalization=:pdf, label="Sex (βS)")
+    hist!(ax1, βR_samples, bins=50, alpha=0.6, color=:red, normalization=:pdf, label="Reproductive Status (βR)")
+
+    # Add vertical lines at means
+    vlines!(ax1, [mean(βS_samples)], color=:blue, linewidth=2, linestyle=:dash)
+    vlines!(ax1, [mean(βR_samples)], color=:red, linewidth=2, linestyle=:dash)
+    vlines!(ax1, [0], color=:black, linewidth=1, linestyle=:dot, alpha=0.5)
+
+    axislegend(ax1, position=(:right, :top))
+
+    # Panel 2: Effect size comparison
+    ax2 = Axis(fig[1, 2],
+        title="Effect Size Comparison",
+        xlabel="Parameter",
+        ylabel="Effect Size"
+    )
+
+    # Extract means and CIs
+    means = [mean(βS_samples), mean(βR_samples)]
+    cis_lower = [quantile(βS_samples, 0.025), quantile(βR_samples, 0.025)]
+    cis_upper = [quantile(βS_samples, 0.975), quantile(βR_samples, 0.975)]
+
+    x_pos = [1, 2]
+    scatter!(ax2, x_pos, means, markersize=15, color=[:blue, :red])
+    errorbars!(ax2, x_pos, means, means .- cis_lower, cis_upper .- means,
+        color=[:blue, :red], linewidth=2)
+
+    hlines!(ax2, [0], color=:black, linestyle=:dash, alpha=0.7)
+    ax2.xticks = (x_pos, ["Sex (βS)", "Repro Status (βR)"])
+
+    # Panel 3: Group-specific effects
+    ax3 = Axis(fig[2, 1:2],
+        title="Group-Specific Counterfactual Effects",
+        xlabel="Group",
+        ylabel="Mean Counterfactual Effect"
+    )
+
+    # Prepare group data
+    groups = ["Male\nNon-repro", "Male\nRepro", "Female\nNon-repro", "Female\nRepro"]
+    group_means = Float64[]
+    group_sds = Float64[]
+
+    for (s, r) in [(1, 1), (1, 2), (2, 1), (2, 2)]
+        group_data = df_infected[(df_infected.S.==s).&(df_infected.R.==r), :E_diff_counterfactual]
+        if length(group_data) > 0
+            push!(group_means, mean(group_data))
+            push!(group_sds, std(group_data))
+        else
+            push!(group_means, 0.0)
+            push!(group_sds, 0.0)
+        end
+    end
+
+    colors = [:blue, :blue, :red, :red]
+    alphas = [0.6, 1.0, 0.6, 1.0]  # Distinguish repro vs non-repro
+
+    barplot!(ax3, 1:4, group_means, color=colors, alpha=alphas)
+    errorbars!(ax3, 1:4, group_means, group_sds, color=:black, linewidth=1)
+
+    ax3.xticks = (1:4, groups)
+    hlines!(ax3, [0], color=:black, linestyle=:dash)
+
+    # Add legend for colors
+    Legend(fig[2, 3],
+        [PolyElement(polycolor=:blue), PolyElement(polycolor=:red)],
+        ["Male", "Female"],
+        "Sex")
+
+    save("../manuscript/Figures/plots/main_effects_interpretation.svg", fig)
+
+    return fig
+end
+
+
+## Interpret main effects of Sex and Reproductive Status
+main_effects_results = interpret_main_effects(pre_intervention_chain, dag_df_infected; saveplot=SAVE_PLOTS)
 
 ## Analysis helper functions
 
@@ -693,6 +945,7 @@ function calculate_vaccination_effect_percentage(df_infected)
     )
 end
 
+
 ## Causal effect analysis using generative model predictions
 
 # Check adjustment sets for vaccination effect
@@ -722,7 +975,7 @@ boot = parametricbootstrap(MersenneTwister(42), 3000, glmm_V_E_direct_counterfac
 coefplot(boot)
 
 ## Generate enhanced plots with clinical significance
-
+SAVE_PLOTS = true
 with_theme(theme_minimal()) do
     plot_E_factual_counterfactual(dag_df_infected, saveplot=SAVE_PLOTS)
 end

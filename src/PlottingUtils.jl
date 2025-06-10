@@ -634,7 +634,7 @@ function plot_sex_reproductive_interaction_detailed(df; saveplot::Bool=false)
     ax.ylabelsize = 16
     ax.xlabelfont = :bold
     ax.ylabelfont = :bold
-    ax.title = "Parasite Elimination Effect by Sex and Reproductive Status"
+    # ax.title = "Parasite Elimination Effect by Sex and Reproductive Status"
 
     # Set explicit axis limits to show data properly while allowing space for labels
     xlims!(ax, 0.5, 4.4)

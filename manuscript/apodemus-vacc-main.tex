@@ -186,7 +186,7 @@ labelsep=colon]{caption}
 % Make the title.
 \maketitle
 
-\listoftodos
+% \listoftodos
 
 \newpage
 
@@ -345,10 +345,16 @@ We aimed to (i) quantify the population-wide improvement in vaccine efficacy und
 		\centering
 		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/S_R_interaction_factual_counterfactual.pdf}
 		\put(-210, 130){\sffamily \textbf{C}} % Adjust coordinates as needed
+	\end{subfigure}%
+	\begin{subfigure}[b]{0.5\textwidth}
+		\centering
+		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/sex_reproductive_interaction_detailed.pdf}
+		\put(-210, 130){\sffamily \textbf{D}}
 	\end{subfigure}
 	\caption{\textbf{Effect of simulated population-wide anthelmintic intervention on vaccine responsiveness.} \textbf{A}, Population-wide vaccine response distributions under observed vs. parasite-free conditions. Density plots comparing vaccine responsiveness in the factual world (observed, with parasites; light grey) versus the counterfactual world (parasite elimination scenario; orange). The rightward shift demonstrates population-level improvement in vaccine efficacy when parasite burdens are eliminated.
 		\textbf{B}, Individual-level vaccine response changes following parasite elimination. Each mouse's predicted vaccine responsiveness in factual (circles) versus counterfactual (triangles) scenarios in males (blue outlines) and females (red outlines), plotted against initial parasite burden. Connected lines show individual-level changes, with effect size (Cohen's d) indicated by the colour of the line.
-		\textbf{C}, Sex and reproductive status effects on vaccine response improvement under parasite elimination. Mean predicted change in vaccine responsiveness ($E_{counterfactual} - E_{factual}$) following hypothetical complete parasite elimination, stratified by sex and reproductive status. Positive values indicate enhanced vaccine response when parasites are absent compared to the observed (parasite-present) condition. Error bars represent standard errors. This counterfactual analysis quantifies how much vaccine efficacy could potentially improve if anthelmintic interventions successfully eliminated parasite burdens prior to vaccination.
+		\textbf{C}, Sex and reproductive status effects on vaccine response improvement under parasite elimination. Mean predicted change in vaccine responsiveness ($E_{counterfactual} - E_{factual}$) following hypothetical complete parasite elimination, stratified by sex and reproductive status. Positive values indicate enhanced vaccine response when parasites are absent compared to the observed (parasite-present) condition. Error bars represent standard errors.
+		\textbf{D}, Cohen's d values for each individual, stratified by sex and reproductive status, showing the distribution of individual responses within each demographic group and highlighting the heterogeneity in treatment benefits across different mouse phenotypes.
 	}
 	\label{fig:counterfactual}
 \end{figure}
@@ -417,7 +423,7 @@ Vaccine responsiveness was measured as the concentration of anti-diphtheria IgG1
 
 \subsection{Data processing and analyses}
 
-ELISA optical densities of diphtheria (DT)-specific antibodies ($E$) were $\log_{10}(1 + x)$-transformed to improve normality, while body weight ($M$) and fat scores ($F$) were standardised (Z-score transformed) to facilitate prior specification and improve computational stability. All other variables were treated as binary. All data processing was performed in Julia v1.11~\cite{Bezanson2017} using packages CSV.jl~\cite{CSV2022} and DataFrames.jl~\cite{DataFrames2022}. All code is available at \url{https://github.com/SimonAB/Apodemus_vaccines}\todo{Make the repo public; in the meanwhile, you can find the code in the \texttt{src} directory.}
+ELISA optical densities of diphtheria (DT)-specific antibodies ($E$) were $\log_{10}(1 + x)$-transformed to improve normality, while body weight ($M$) and fat scores ($F$) were standardised (Z-score transformed) to facilitate prior specification and improve computational stability. All other variables were treated as binary. All data processing was performed in Julia v1.11~\cite{Bezanson2017} using packages CSV.jl~\cite{CSV2022} and DataFrames.jl~\cite{DataFrames2022}. Delailed quantitative methods are available in the supplementary methods section ``\nameref{supdata:BayesianImplementation}''. All code is available at \url{https://github.com/SimonAB/Apodemus_vaccines}\todo{GitHub repo will be made public; in the meanwhile, you can find the code in the \texttt{src} directory.}
 
 \subsubsection{Generalised linear mixed models of the effects of experimental interventions}\label{sec:GLMM}
 
@@ -555,7 +561,7 @@ Contributed reagents/materials/analysis tools: ABP, SAB \\ All the authors revie
 
 	Structural causal model construction followed established protocols~\cite{Pearl2009b}. Initial DAG construction was based on biological knowledge and experimental design, with treatments (vaccine, diet, habitat) having no parents due to randomisation. The causal structure was refined through iterative testing of conditional independence statements implied by the graph.
 
-	The validity of the structural causal model was assessed by testing 13 conditional independence statements implied by the DAG using generalised linear mixed models. Each independence statement was tested at the $\alpha = 0.1$ significance level to provide conservative validation:
+	The validity of the structural causal model was assessed by testing 13 conditional independence statements implied by the DAG using generalised linear mixed models. Each independence statement was tested at the $\alpha = 0.05$ significance level to provide conservative validation:
 
 	\begin{enumerate}
 		\item $D \upmodels S$ (Diet independent of Sex)
@@ -570,7 +576,7 @@ Contributed reagents/materials/analysis tools: ABP, SAB \\ All the authors revie
 		\item $P \upmodels V \mid D, R, S, H$ (Parasites independent of Vaccination given full adjustment set)
 	\end{enumerate}
 
-	All conditional independence statements were supported by the data ($P > 0.1$ in all tests), confirming the validity of the proposed causal structure.
+	All conditional independence statements were supported by the data ($P > 0.05$ in all tests), confirming the validity of the proposed causal structure.
 
 	\subsection{Bayesian Statistical Implementation}\label{supdata:BayesianImplementation}
 
@@ -578,11 +584,19 @@ Contributed reagents/materials/analysis tools: ABP, SAB \\ All the authors revie
 
 	All Bayesian models used weakly informative priors to minimise the effects of data imbalance and provide robust uncertainty quantification. For standardised continuous outcomes, we used Normal(0, 1) priors for population-level intercepts and Normal(0, 0.5) priors for most regression coefficients, allowing for small to moderate effect sizes while regularising against implausibly large effects. Habitat effects received Normal(0, 1) priors to accommodate potentially larger differences between laboratory and wild conditions. The parasite effect in the factual model used Normal(0, 0.75), allowing for moderate to large immunosuppressive effects based on prior literature. Residual and random effect standard deviations followed Exponential(1) priors, providing gentle regularisation while allowing reasonable variation.
 
-	\subsubsection{Computational Methods}\label{supdata:Computation}
+	\paragraph{Missing Data Handling.}\label{supdata:MissingDataHandling} Missing fat scores (n=22 mice, 67 total missing values) were handled through Bayesian causal imputation within the structural equations, leveraging the explicit causal structure to ensure valid inference under missingness. This approach offers several advantages over conventional missing data methods (listwise deletion, mean imputation, or multiple imputation) by respecting the causal dependencies and properly propagating uncertainty.
 
-	All models were implemented in Julia v1.11~\cite{Bezanson2017} using Turing.jl~\cite{ge2018t} for Bayesian inference. Models were fit using Hamiltonian Monte Carlo with the No U-Turn Sampler implementation, with automatic differentiation via ReverseDiff.jl for efficient gradient computation. We ran 4 chains for 3,000 iterations each after 1,000 warmup iterations, yielding 12,000 posterior samples. Models were run on multi-core systems with parallel chain execution.
+	Under the assumption that data were missing completely at random (MCAR), missing fat scores were modelled as latent variables drawn from their conditional distribution given observed parent variables in the causal graph. Specifically, for each missing observation $i$, we implemented:
 
-	Convergence was assessed using $\hat{R} < 1.01$ for all parameters, effective sample sizes > 400, and visual inspection of trace plots. Effective sample sizes exceeded 1,000 for all parameters of interest in the final models.
+	\begin{align}
+	\dot{F}_{missing,i} &\sim \text{Normal}(\nu_F + \sigma_F \cdot \mathcal{U}_i, \sigma_F) \\
+	\mathcal{U}_i &\sim \text{Normal}(0,1) \\
+	\nu_F, \sigma_F &\sim \text{data-informed priors}
+	\end{align}
+
+	where $\nu_F \sim \text{Normal}(0, 0.5)$ and $\sigma_F \sim \text{Exponential}(1)$ were estimated jointly with all other model parameters. For observed fat scores, the likelihood contribution was $\dot{F}_{observed,i} \sim \text{Normal}(\nu_F, \sigma_F)$, ensuring that imputation parameters were informed by the observed data distribution whilst maintaining uncertainty about missing values.
+
+	This approach preserved individual-level heterogeneity by allowing each mouse's imputed fat score to vary according to the full posterior distribution, rather than being fixed at a point estimate. The imputed values were then integrated into all downstream structural equations, ensuring that uncertainty in the missing fat scores propagated appropriately through the causal model to final effect estimates. Importantly, this method maintained the causal consistency required for valid counterfactual inference under the intervention scenarios, as the same imputation model was applied in both factual (observed) and counterfactual (parasite elimination) worlds while preserving individual identity through shared random effects.
 
 	\subsubsection{Model Validation}\label{supdata:ModelValidation}
 
@@ -598,7 +612,7 @@ Contributed reagents/materials/analysis tools: ABP, SAB \\ All the authors revie
 
 	\subsubsection{Bayesian Generative Models for Counterfactual Inference}\label{supdata:GenerativeModels}
 
-	We implemented two complementary approaches for counterfactual inference: separate factual and counterfactual models, and a joint "twin world" model. Both approaches used the same structural equations but differed in their treatment of the parasite effect pathway.
+	We implemented two complementary approaches for counterfactual inference: separate factual and counterfactual models, and a joint ``twin world'' model. Both approaches used the same structural equations but differed in their treatment of the parasite effect pathway.
 
 	\paragraph{Model Specification.} The factual model included all causal pathways (Model~\ref{eq:SCM}):
 	$$E_{factual} \sim \text{Normal}(\alpha + \alpha_{ID} + \beta_V V + \beta_D D + \beta_{\dot{F}} \dot{F} + \beta_H H + \beta_M M + \beta_P P + \beta_R R + \beta_S S, \sigma)$$
@@ -608,11 +622,31 @@ Contributed reagents/materials/analysis tools: ABP, SAB \\ All the authors revie
 
 	where $\alpha_{ID}$ represents individual-level random intercepts, allowing for consistent individual differences across factual and counterfactual worlds.
 
-	\paragraph{Counterfactual Prediction Generation.} For each posterior sample, we generated predicted vaccine responses under both factual (observed parasite status) and counterfactual (parasite elimination) scenarios. This approach preserves parameter uncertainty and individual-level random effects, providing realistic uncertainty bounds for counterfactual predictions. Individual treatment effects were calculated as the difference between counterfactual and factual predictions for each mouse.
+	\paragraph{Counterfactual Prediction Generation.} \label{supdata:CounterfactualPredictionGeneration} Counterfactual inference for the anthelmintic intervention $do(P=0)$ was implemented using posterior predictive sampling to generate both factual (with parasites) and counterfactual (without parasites) vaccine responses for each individual. This approach leverages the full posterior distribution of parameters whilst maintaining individual heterogeneity and accounting for all sources of uncertainty.
 
-	\paragraph{Effect Size Calculation and Clinical Significance.} We calculated Cohen's d effect sizes for individual treatment effects using the pooled standard deviation approach: $d = \frac{E_{counterfactual} - E_{factual}}{\sqrt{(\sigma_{counterfactual}^2 + \sigma_{factual}^2)/2}}$. Effect sizes were categorised as negligible ($|d| < 0.2$), small ($0.2 \leq |d| < 0.5$), moderate ($0.5 \leq |d| < 0.8$), or large ($|d| \geq 0.8$) following standard conventions.
+	For each of the 1,000 posterior samples drawn from the fitted MCMC chains, we generated individual-level predictions under two scenarios. In the factual scenario, predictions incorporated the full structural equation including the observed parasite effect:
+	$$E_{factual,i,s} = \alpha^{(s)} + \alpha_{ID}^{(s)} + \beta_V^{(s)} V_i + \beta_D^{(s)} D_i + \beta_{\dot{F}}^{(s)} \dot{F}_i + \beta_H^{(s)} H_i + \beta_M^{(s)} M_i + \beta_P^{(s)} P_i + \beta_R^{(s)} R_i + \beta_S^{(s)} S_i + \epsilon_{i,s}$$
 
-	\paragraph{Missing Data Handling.} Missing fat scores (n=22 mice, 67 total missing values) were handled through Bayesian imputation within the generative model. Missing values were modelled as draws from the conditional distribution given observed parent variables in the causal graph: $\dot{F}_{missing} \sim \text{Normal}(\nu_F + \sigma_F \cdot \mathcal{U}, \sigma_F)$ where $\mathcal{U} \sim \text{Normal}(0,1)$ and $\nu_F$, $\sigma_F$ were estimated from the data.
+	In the counterfactual scenario under the intervention $do(P=0)$, the parasite effect was removed whilst preserving all other causal pathways:
+	$$E_{counterfactual,i,s} = \alpha^{(s)} + \alpha_{ID}^{(s)} + \beta_V^{(s)} V_i + \beta_D^{(s)} D_i + \beta_{\dot{F}}^{(s)} \dot{F}_i + \beta_H^{(s)} H_i + \beta_M^{(s)} M_i + \beta_R^{(s)} R_i + \beta_S^{(s)} S_i + \epsilon_{i,s}$$
+
+	where superscript $(s)$ denotes parameter values from the $s$-th posterior sample, and $\epsilon_{i,s} \sim \text{Normal}(0, \sigma^{(s)})$ represents individual-level residual variation sampled independently for each prediction.
+
+	This twin-world approach maintained individual identity across scenarios through consistent random intercepts $\alpha_{ID}^{(s)}$, ensuring that individuals with naturally higher or lower vaccine responsiveness retained these characteristics in both factual and counterfactual worlds. Missing fat scores were handled consistently across scenarios using the same Bayesian imputation model, with imputed values drawn from the posterior predictive distribution for each sample (see section ``\nameref{supdata:MissingDataHandling}'').
+
+	Individual treatment effects were quantified as $\Delta E_{i,s} = E_{counterfactual,i,s} - E_{factual,i,s}$ for each mouse $i$ and posterior sample $s$. The distribution of these differences across posterior samples provided full uncertainty quantification for individual-level causal effects, accounting for parameter uncertainty, model uncertainty, and residual variation.
+
+	Population-level summaries were computed by averaging across individuals and posterior samples, whilst individual-level heterogeneity was assessed through the distribution of mean treatment effects $\bar{\Delta E_i} = \frac{1}{S}\sum_{s=1}^S \Delta E_{i,s}$ across mice. This approach enabled identification of subgroups most likely to benefit from anthelmintic intervention whilst maintaining rigorous uncertainty bounds for all inferences.
+
+	\paragraph{Effect Size Calculation and Clinical Significance.} \label{supdata:EffectSizeCalculation} We calculated Cohen's d effect sizes for individual treatment effects using the pooled standard deviation approach:
+	$$d = \frac{E_{counterfactual} - E_{factual}}{\sqrt{(\sigma_{counterfactual}^2 + \sigma_{factual}^2)/2}}$$
+	Effect sizes were categorised as negligible ($|d| < 0.2$), small ($0.2 \leq |d| < 0.5$), moderate ($0.5 \leq |d| < 0.8$), or large ($|d| \geq 0.8$) following standard conventions.
+
+	\subsubsection{Computational Methods}\label{supdata:Computation}
+
+	All models were implemented in Julia v1.11~\cite{Bezanson2017} using Turing.jl~\cite{ge2018t} for Bayesian inference. Models were fit using Hamiltonian Monte Carlo with the No U-Turn Sampler implementation, with automatic differentiation via ReverseDiff for efficient gradient computation. We ran 4 chains for 3,000 iterations each after 1,000 warmup iterations, yielding 12,000 posterior samples. Models were run on multi-core systems with parallel chain execution.
+
+	Convergence was assessed using $\hat{R} < 1.01$ for all parameters, effective sample sizes > 400, and visual inspection of trace plots. Effective sample sizes exceeded 1,000 for all parameters of interest in the final models.
 
 	\section{Supplementary Figures}
 
