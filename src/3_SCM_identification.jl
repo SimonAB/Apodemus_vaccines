@@ -14,6 +14,7 @@ Key Features:
 - Mixed-effects models for comparison and validation
 - Comprehensive causal effect identification following do-calculus
 - Proper adjustment for confounding and mediation
+- Performance optimizations following Turing.jl and Julia best practices
 =#
 
 ## Import packages
@@ -51,6 +52,15 @@ include("PlottingUtils.jl")
 
 # Import data
 include("DataWrangler.jl")
+
+## Configuration constants
+
+# Automatic differentiation backend configuration
+# Set to AutoZygote() or AutoReverseDiff() for large models, or leave as nothing for default
+const AD_BACKEND = nothing
+
+# Default plotting behaviour - set to true to save plots to disk
+const SAVE_PLOTS = false
 
 ## Helper functions for causal effect analysis
 
@@ -125,7 +135,7 @@ end
 
 ## Data preparation
 
-# All cases
+# Filter and encode data
 df = encode_df(df)
 df = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 4, df)
 df.IDidx = get_idx(:ID, df)[1]
@@ -134,7 +144,7 @@ df.IDidx = get_idx(:ID, df)[1]
 df_unique = encode_df(df_unique)
 df_unique = filter(row -> !ismissing(row.days_since_1st_D_or_A) && row.days_since_1st_D_or_A ≥ 4, df_unique)
 
-# Build DAG DataFrame
+# Build DAG DataFrame with required variables
 dag_df = select(df, :E, :H, :V, :D, :R, :S, :M, :Ḟ, :P, :nP, :ID, :IDidx, :vax_history, :Vidx)
 dag_df.lognP = log10.(1 .+ dag_df.nP)
 
@@ -142,9 +152,18 @@ dag_df_unique = select(df_unique, :E, :H, :V, :D, :R, :S, :M, :Ḟ, :P, :nP, :Vi
 filtered_df = dag_df[dag_df.P.==1, :]
 filtered_unique_df = dag_df_unique[dag_df_unique.P.==1, :]
 
-# Select only infected mice
+# Extract infected mice subset
 infected_mask = dag_df.P .== 2
 dag_df_infected = dag_df[infected_mask, :]
+
+# Re-index mouse IDs for infected subset
+unique_ids_infected = unique(dag_df_infected.ID)
+n_infected_ids = length(unique_ids_infected)
+id_mapping = Dict{eltype(unique_ids_infected),Int}()
+for (i, id) in enumerate(unique_ids_infected)
+  id_mapping[id] = i
+end
+dag_df_infected.IDidx_infected = [id_mapping[id] for id in dag_df_infected.ID]
 
 ## DAG specification
 
@@ -182,11 +201,11 @@ E ~ α + α_ID[IDidx] + βVE * V + ε
   σ ~ Exponential(1)
   ν ~ LogNormal(2, 1)
 
-  # Random intercepts
+  # Random intercepts for individual mice
   τ ~ Exponential(1)
   α_ID ~ filldist(Normal(0, τ), n_id)
 
-  # Likelihood
+  # Likelihood for vaccine response
   Ê = @. α + α_ID[IDidx] + βVE * V
   return E ~ MvNormal(Ê, σ^2 * I)
 end
@@ -215,13 +234,17 @@ end
 
 with_theme(theme_minimal()) do
   plot_prior_predictive_check(dag_df.E, V_E_prior_pred_values;
-    title_suffix="V→E Model", saveplot=false)
+    title_suffix="V→E Model", saveplot=SAVE_PLOTS)
 end
 assess_prior_adequacy(dag_df.E, V_E_prior_pred_values; model_name="V→E Model")
 
 # Sample from posterior
 V_E_model = V_E_Model(dag_df.IDidx, dag_df.E, dag_df.V)
-V_E_chn = sample(V_E_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+  V_E_chn = sample(V_E_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+  V_E_chn = sample(V_E_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 V_E_chn_df = DataFrame(V_E_chn)[!, r"α\b|β"]
 precis(V_E_chn_df)
@@ -273,47 +296,55 @@ Handles missing fat scores via Bayesian imputation.
   σ ~ Exponential(1)
   ν ~ LogNormal(2, 1)
 
-  # Random intercepts
+  # Random intercepts for individual mice
   τ ~ Exponential(1)
   α_ID ~ filldist(Normal(0, τ), n_id)
 
-  # Missing fat value imputation
-  N_missing = sum(ismissing.(Ḟ))
+  # Handle missing fat score data
+  missing_mask = ismissing.(Ḟ)
+  N_missing::Int = sum(missing_mask)
+
   if N_missing > 0
+    missing_indices = findall(missing_mask)
     F_impute ~ filldist(Normal(0, 1), N_missing)
     ν_F ~ Normal(0, 0.5)
     σ_F ~ Exponential()
-  end
 
-  # Likelihood computation with imputation
-  i_missing = 1
-  for i in eachindex(Ḟ)
-    # Handle missing fat scores
-    if ismissing(Ḟ[i])
-      if N_missing > 0
-        f_imputed = ν_F + σ_F * F_impute[i_missing]
-        i_missing += 1
-      else
-        f_imputed = 0.0
-      end
-    else
-      if N_missing > 0
+    # Create fat values vector with imputed missing values
+    f_vals = map(i -> missing_mask[i] ? (i in missing_indices ? ν_F + σ_F * F_impute[findfirst(==(i), missing_indices)] : zero(eltype(α))) : Ḟ[i], 1:length(E))
+
+    # Likelihood for observed fat values
+    for i in 1:length(E)
+      if !missing_mask[i]
         Ḟ[i] ~ Normal(ν_F, σ_F)
       end
-      f_imputed = Ḟ[i]
     end
 
-    # Likelihood
-    Ê = α + α_ID[IDidx[i]] + βVE * V[i] + βDE * D[i] + βFE * f_imputed +
-        βHE * H[i] + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i]
-    E[i] ~ Normal(Ê, σ)
+    # Likelihood for vaccine response
+    for i in 1:length(E)
+      Ê = α + α_ID[IDidx[i]] + βVE * V[i] + βDE * D[i] + βFE * f_vals[i] +
+          βHE * H[i] + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i]
+      E[i] ~ Normal(Ê, σ)
+    end
+  else
+    # Handle case with no missing fat data
+    f_vals = [ismissing(f) ? zero(eltype(α)) : f for f in Ḟ]
+    for i in 1:length(E)
+      Ê = α + α_ID[IDidx[i]] + βVE * V[i] + βDE * D[i] + βFE * f_vals[i] +
+          βHE * H[i] + βME * M[i] + βPE * P[i] + βRE * R[i] + βSE * S[i]
+      E[i] ~ Normal(Ê, σ)
+    end
   end
 end
 
 V_E_DE_model = V_E_NDE_Model(dag_df.IDidx, dag_df.E, dag_df.V, dag_df.D, dag_df.Ḟ,
   dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S)
 
-V_E_DE_chn = sample(V_E_DE_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+  V_E_DE_chn = sample(V_E_DE_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+  V_E_DE_chn = sample(V_E_DE_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 V_E_DE_chn_df = DataFrame(V_E_DE_chn)[!, r"α\b|β"]
 precis(V_E_DE_chn_df)
@@ -373,11 +404,11 @@ No adjustment for confounders - violates backdoor criterion.
   βPE ~ Normal(0, 0.75)
   σ ~ Exponential(1)
 
-  # Random intercepts
+  # Random intercepts for individual mice
   τ ~ Exponential(1)
   α_ID ~ filldist(Normal(0, τ), n_id)
 
-  # Likelihood
+  # Likelihood for vaccine response
   Ê = @. α + α_ID[IDidx] + βPE * nP
   return E ~ MvNormal(Ê, σ^2 * I)
 end
@@ -406,13 +437,17 @@ end
 
 with_theme(theme_minimal()) do
   plot_prior_predictive_check(dag_df_infected.E, naive_P_E_prior_pred_values;
-    title_suffix="Naive P→E Model", saveplot=false)
+    title_suffix="Naive P→E Model", saveplot=SAVE_PLOTS)
 end
 assess_prior_adequacy(dag_df_infected.E, naive_P_E_prior_pred_values; model_name="Naive P→E Model")
 
 # Sample from posterior
 naive_P_E_model = Naive_P_E_Model(dag_df_infected.IDidx, dag_df_infected.E, dag_df_infected.lognP; n_id=maximum(dag_df_infected.IDidx))
-naive_P_E_chn = sample(naive_P_E_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+  naive_P_E_chn = sample(naive_P_E_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+  naive_P_E_chn = sample(naive_P_E_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 naive_P_E_chn_df = DataFrame(naive_P_E_chn)[!, r"α\b|β"]
 precis(naive_P_E_chn_df)
@@ -482,11 +517,11 @@ Estimates total causal effect P → E.
   σ ~ Exponential(1)
   ν ~ LogNormal(2, 1)
 
-  # Random intercepts
+  # Random intercepts for individual mice
   τ ~ Exponential(1)
   α_ID ~ filldist(Normal(0, τ), n_id)
 
-  # Likelihood
+  # Likelihood for vaccine response
   Ê = α .+ α_ID[IDidx] .+ βPE * P .+ βDE * D .+ βHE * H .+ βRE * R .+ βSE * S .+ βVE * V
   return E ~ MvNormal(Ê, σ^2 * I)
 end
@@ -522,7 +557,7 @@ end
 
 with_theme(theme_minimal()) do
   plot_prior_predictive_check(dag_df_infected.E, P_E_prior_pred_values;
-    title_suffix="P→E Model (Adjusted)", saveplot=false)
+    title_suffix="P→E Model (Adjusted)", saveplot=SAVE_PLOTS)
 end
 assess_prior_adequacy(dag_df_infected.E, P_E_prior_pred_values; model_name="P→E Model (Properly Adjusted)")
 
@@ -541,7 +576,11 @@ safe_plot_save("P_E_priors.pdf", p)
 p
 
 # Posterior sampling
-P_E_chn = sample(P_E_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+  P_E_chn = sample(P_E_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+  P_E_chn = sample(P_E_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 P_E_chn_df = DataFrame(P_E_chn)[!, r"α\b|β"]
 precis(P_E_chn_df)
@@ -602,39 +641,44 @@ Handles missing fat scores via Bayesian imputation.
   βVE ~ Normal(0, 0.5)
   σ ~ Exponential(1)
 
-  # Random intercepts
+  # Random intercepts for individual mice
   τ ~ Exponential(1)
   α_ID ~ filldist(Normal(0, τ), n_id)
 
-  # Missing fat value imputation
-  N_missing = sum(ismissing.(Ḟ))
+  # Handle missing fat score data
+  missing_mask = ismissing.(Ḟ)
+  N_missing::Int = sum(missing_mask)
+
   if N_missing > 0
+    missing_indices = findall(missing_mask)
     F_impute ~ filldist(Normal(0, 1), N_missing)
     ν_F ~ Normal(0, 0.5)
     σ_F ~ Exponential()
-  end
 
-  i_missing = 1
-  for i in eachindex(Ḟ)
-    # Handle missing fat scores
-    if ismissing(Ḟ[i])
-      if N_missing > 0
-        f_imputed = ν_F + σ_F * F_impute[i_missing]
-        i_missing += 1
-      else
-        f_imputed = 0.0
-      end
-    else
-      if N_missing > 0
+    # Create fat values vector with imputed missing values
+    f_vals = map(i -> missing_mask[i] ? (i in missing_indices ? ν_F + σ_F * F_impute[findfirst(==(i), missing_indices)] : zero(eltype(α))) : Ḟ[i], 1:length(E))
+
+    # Likelihood for observed fat values
+    for i in 1:length(E)
+      if !missing_mask[i]
         Ḟ[i] ~ Normal(ν_F, σ_F)
       end
-      f_imputed = Ḟ[i]
     end
 
-    # Likelihood
-    Ê = α + α_ID[IDidx[i]] + βPE * P[i] + βDE * D[i] + βFE * f_imputed +
-        βHE * H[i] + βME * M[i] + βRE * R[i] + βSE * S[i] + βVE * V[i]
-    E[i] ~ Normal(Ê, σ)
+    # Likelihood for vaccine response
+    for i in 1:length(E)
+      Ê = α + α_ID[IDidx[i]] + βPE * P[i] + βDE * D[i] + βFE * f_vals[i] +
+          βHE * H[i] + βME * M[i] + βRE * R[i] + βSE * S[i] + βVE * V[i]
+      E[i] ~ Normal(Ê, σ)
+    end
+  else
+    # Handle case with no missing fat data
+    f_vals = [ismissing(f) ? zero(eltype(α)) : f for f in Ḟ]
+    for i in 1:length(E)
+      Ê = α + α_ID[IDidx[i]] + βPE * P[i] + βDE * D[i] + βFE * f_vals[i] +
+          βHE * H[i] + βME * M[i] + βRE * R[i] + βSE * S[i] + βVE * V[i]
+      E[i] ~ Normal(Ê, σ)
+    end
   end
 end
 
@@ -642,7 +686,11 @@ DE_P_E_model = DE_P_E_Model(dag_df.IDidx, dag_df.E, dag_df.P, dag_df.D, dag_df.�
   dag_df.H, dag_df.M, dag_df.R, dag_df.S, dag_df.V)
 
 Turing.setadbackend(:forwarddiff)
-DE_P_E_chn = sample(DE_P_E_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+  DE_P_E_chn = sample(DE_P_E_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+  DE_P_E_chn = sample(DE_P_E_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 Turing.setadbackend(:reversediff)
 
 DE_P_E_chn_df = DataFrame(DE_P_E_chn)[!, r"α\b|β"]
@@ -693,18 +741,22 @@ Estimates direct effect R → P.
   βV ~ Normal(0, 0.5)
   σ ~ Exponential(1.5)
 
-  # Random intercepts
+  # Random intercepts for individual mice
   τ ~ Exponential(1)
   α_ID ~ filldist(Normal(0, τ), n_id)
 
-  # Likelihood
+  # Likelihood for parasite burden
   nP̂ = @. α + α_ID[IDidx] + βR * R + βD * D + βH * H + βS * S + βV * V
   nP ~ MvNormal(nP̂, σ^2 * I)
 end
 
 R_nP_model = R_nP_Model(log10.(1 .+ dag_df.nP), dag_df.R, dag_df.D, dag_df.H, dag_df.S, dag_df.V, dag_df.IDidx)
 
-R_nP_chn = sample(R_nP_model, NUTS(), MCMCThreads(), 3_000, 4)
+if AD_BACKEND !== nothing
+  R_nP_chn = sample(R_nP_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3_000, 4)
+else
+  R_nP_chn = sample(R_nP_model, NUTS(), MCMCThreads(), 3_000, 4)
+end
 
 R_nP_chn_df = DataFrame(R_nP_chn)[!, r"α\b|β"]
 precis(R_nP_chn_df)
@@ -753,7 +805,11 @@ end
 
 D_nP_model = D_nP_Total_Model(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.IDidx)
 
-D_nP_chn = sample(D_nP_model, NUTS(), MCMCThreads(), 3_000, 4)
+if AD_BACKEND !== nothing
+  D_nP_chn = sample(D_nP_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3_000, 4)
+else
+  D_nP_chn = sample(D_nP_model, NUTS(), MCMCThreads(), 3_000, 4)
+end
 D_nP_chn_df = DataFrame(D_nP_chn)[!, r"α\b|β"]
 precis(D_nP_chn_df)
 
@@ -819,7 +875,11 @@ end
 
 D_nP_direct_model = D_nP_Direct_Model(log10.(1 .+ dag_df.nP), dag_df.D, dag_df.H, dag_df.R, dag_df.S, dag_df.V, dag_df.IDidx)
 
-D_nP_direct_chn = sample(D_nP_direct_model, NUTS(), MCMCThreads(), 3_000, 4)
+if AD_BACKEND !== nothing
+  D_nP_direct_chn = sample(D_nP_direct_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3_000, 4)
+else
+  D_nP_direct_chn = sample(D_nP_direct_model, NUTS(), MCMCThreads(), 3_000, 4)
+end
 
 D_nP_direct_chn_df = DataFrame(D_nP_direct_chn)[!, r"α\b|β"]
 precis(D_nP_direct_chn_df)
@@ -861,18 +921,22 @@ No adjustment needed for total effect (no confounders).
   βS ~ Normal(0, 0.5)
   σ ~ Exponential(1)
 
-  # Random intercepts
+  # Random intercepts for individual mice
   τ ~ Exponential(1)
   α_ID ~ filldist(Normal(0, τ), n_id)
 
-  # Likelihood
+  # Likelihood for vaccine response
   Ê = @. α + α_ID[IDidx] + βS * S
   return E ~ MvNormal(Ê, σ^2 * I)
 end
 
 S_E_total_model = S_E_Total_Model(dag_df.IDidx, dag_df.E, dag_df.S)
 
-S_E_total_chn = sample(S_E_total_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+  S_E_total_chn = sample(S_E_total_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+  S_E_total_chn = sample(S_E_total_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 S_E_total_chn_df = DataFrame(S_E_total_chn)[!, r"α\b|β"]
 precis(S_E_total_chn_df)
@@ -928,38 +992,44 @@ Handles missing fat scores via Bayesian imputation.
   βR ~ Normal(0, 0.5)
   βV ~ Normal(0, 0.5)
 
-  # Random intercepts
+  # Random intercepts for individual mice
   τ ~ Exponential(1)
   α_ID ~ filldist(Normal(0, τ), n_id)
 
-  # Missing fat value imputation
-  N_missing = sum(ismissing.(Ḟ))
+  # Handle missing fat score data
+  missing_mask = ismissing.(Ḟ)
+  N_missing::Int = sum(missing_mask)
+
   if N_missing > 0
+    missing_indices = findall(missing_mask)
     F_impute ~ filldist(Normal(0, 1), N_missing)
     ν_F ~ Normal(0, 0.5)
     σ_F ~ Exponential()
-  end
 
-  i_missing = 1
-  for i in eachindex(Ḟ)
-    if ismissing(Ḟ[i])
-      if N_missing > 0
-        f_imputed = ν_F + σ_F * F_impute[i_missing]
-        i_missing += 1
-      else
-        f_imputed = 0.0
-      end
-    else
-      if N_missing > 0
+    # Create fat values vector with imputed missing values
+    f_vals = map(i -> missing_mask[i] ? (i in missing_indices ? ν_F + σ_F * F_impute[findfirst(==(i), missing_indices)] : zero(eltype(α))) : Ḟ[i], 1:length(E))
+
+    # Likelihood for observed fat values
+    for i in 1:length(E)
+      if !missing_mask[i]
         Ḟ[i] ~ Normal(ν_F, σ_F)
       end
-      f_imputed = Ḟ[i]
     end
 
-    # Likelihood
-    μ = α + α_ID[IDidx[i]] + βS * S[i] + βD * D[i] + βF * f_imputed +
-        βH * H[i] + βM * M[i] + βP * P[i] + βR * R[i] + βV * V[i]
-    E[i] ~ Normal(μ, σ)
+    # Likelihood for vaccine response
+    for i in 1:length(E)
+      μ = α + α_ID[IDidx[i]] + βS * S[i] + βD * D[i] + βF * f_vals[i] +
+          βH * H[i] + βM * M[i] + βP * P[i] + βR * R[i] + βV * V[i]
+      E[i] ~ Normal(μ, σ)
+    end
+  else
+    # Handle case with no missing fat data
+    f_vals = [ismissing(f) ? zero(eltype(α)) : f for f in Ḟ]
+    for i in 1:length(E)
+      μ = α + α_ID[IDidx[i]] + βS * S[i] + βD * D[i] + βF * f_vals[i] +
+          βH * H[i] + βM * M[i] + βP * P[i] + βR * R[i] + βV * V[i]
+      E[i] ~ Normal(μ, σ)
+    end
   end
 end
 
@@ -1020,7 +1090,11 @@ end
 
 S_nP_model = S_nP_Model(log10.(1 .+ dag_df.nP), dag_df.S, dag_df.D, dag_df.H, dag_df.R, dag_df.V, dag_df.IDidx)
 
-S_nP_chn = sample(S_nP_model, NUTS(), MCMCThreads(), 3_000, 4)
+if AD_BACKEND !== nothing
+  S_nP_chn = sample(S_nP_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3_000, 4)
+else
+  S_nP_chn = sample(S_nP_model, NUTS(), MCMCThreads(), 3_000, 4)
+end
 
 S_nP_chn_df = DataFrame(S_nP_chn)[!, r"α\b|β"]
 precis(S_nP_chn_df)
@@ -1072,7 +1146,11 @@ end
 
 H_E_total_model = H_E_Total_Model(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.H)
 
-H_E_total_chn = sample(H_E_total_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+  H_E_total_chn = sample(H_E_total_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+  H_E_total_chn = sample(H_E_total_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 H_E_total_chn_df = DataFrame(H_E_total_chn)[!, r"α\b|β"]
 precis(H_E_total_chn_df)
@@ -1164,7 +1242,11 @@ end
 H_E_direct_model = H_E_Direct_Model(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.H, dag_df.D,
   dag_df.Ḟ, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S)
 
-H_E_direct_chn = sample(H_E_direct_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+  H_E_direct_chn = sample(H_E_direct_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+  H_E_direct_chn = sample(H_E_direct_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 H_E_direct_chn_df = DataFrame(H_E_direct_chn)[!, r"α\b|β"]
 precis(H_E_direct_chn_df)
@@ -1238,7 +1320,11 @@ end
 
 H_nP_model = H_nP_Model(log10.(1 .+ dag_df.nP), dag_df.H, dag_df.D, dag_df.R, dag_df.S, dag_df.IDidx, dag_df.Vidx)
 
-H_nP_chn = sample(H_nP_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+  H_nP_chn = sample(H_nP_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+  H_nP_chn = sample(H_nP_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 H_nP_chn_df = DataFrame(H_nP_chn)[!, r"α\b|β"]
 precis(H_nP_chn_df)
@@ -1291,7 +1377,11 @@ end
 
 D_E_total_model = D_E_Total_Model(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.D, dag_df.H)
 
-D_E_total_chn = sample(D_E_total_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+  D_E_total_chn = sample(D_E_total_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+  D_E_total_chn = sample(D_E_total_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 D_E_total_chn_df = DataFrame(D_E_total_chn)[!, r"β"]
 precis(D_E_total_chn_df)
@@ -1384,7 +1474,11 @@ D_E_direct_model = D_E_Direct_Model(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.
   dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S)
 
 Turing.setadbackend(:reversediff)
-D_E_direct_chn = sample(D_E_direct_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+  D_E_direct_chn = sample(D_E_direct_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+  D_E_direct_chn = sample(D_E_direct_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 D_E_direct_chn_df = DataFrame(D_E_direct_chn)[!, r"α\b|β"]
 precis(D_E_direct_chn_df)
@@ -1478,7 +1572,11 @@ F_E_direct_model = F_E_Direct_Model(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.
   dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S)
 
 Turing.setadbackend(:reversediff)
-F_E_direct_chn = sample(F_E_direct_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+  F_E_direct_chn = sample(F_E_direct_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+  F_E_direct_chn = sample(F_E_direct_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 F_E_direct_chn_df = DataFrame(F_E_direct_chn)[!, r"α\b|β"]
 precis(F_E_direct_chn_df)
@@ -1522,41 +1620,51 @@ Handles missing fat scores via Bayesian imputation.
   βR ~ Normal(0, 0.5)
   βS ~ Normal(0, 0.5)
 
-  # Missing fat value imputation
-  N_missing = sum(ismissing.(Ḟ))
+  # Handle missing fat score data
+  missing_mask = ismissing.(Ḟ)
+  N_missing::Int = sum(missing_mask)
+
   if N_missing > 0
+    missing_indices = findall(missing_mask)
     F_impute ~ filldist(Normal(0, 1), N_missing)
     ν_F ~ Normal(0, 0.5)
     σ_F ~ Exponential()
-  end
 
-  i_missing = 1
-  for i in eachindex(Ḟ)
-    if ismissing(Ḟ[i])
-      if N_missing > 0
-        f_imputed = ν_F + σ_F * F_impute[i_missing]
-        i_missing += 1
-      else
-        f_imputed = 0.0
-      end
-    else
-      if N_missing > 0
+    # Create fat values vector with imputed missing values
+    f_vals = map(i -> missing_mask[i] ? (i in missing_indices ? ν_F + σ_F * F_impute[findfirst(==(i), missing_indices)] : zero(eltype(α))) : Ḟ[i], 1:length(E))
+
+    # Likelihood for observed fat values
+    for i in 1:length(E)
+      if !missing_mask[i]
         Ḟ[i] ~ Normal(ν_F, σ_F)
       end
-      f_imputed = Ḟ[i]
     end
 
-    # Likelihood
-    μ = α + βM * M[i] + βD * D[i] + βF * f_imputed + βH * H[i] +
-        βP * P[i] + βR * R[i] + βS * S[i]
-    E[i] ~ Normal(μ, σ)
+    # Likelihood for vaccine response
+    for i in 1:length(E)
+      μ = α + βM * M[i] + βD * D[i] + βF * f_vals[i] + βH * H[i] +
+          βP * P[i] + βR * R[i] + βS * S[i]
+      E[i] ~ Normal(μ, σ)
+    end
+  else
+    # Handle case with no missing fat data
+    f_vals = [ismissing(f) ? zero(eltype(α)) : f for f in Ḟ]
+    for i in 1:length(E)
+      μ = α + βM * M[i] + βD * D[i] + βF * f_vals[i] + βH * H[i] +
+          βP * P[i] + βR * R[i] + βS * S[i]
+      E[i] ~ Normal(μ, σ)
+    end
   end
 end
 
 M_E_model = M_E_Model(dag_df.E, dag_df.M, dag_df.D, dag_df.Ḟ, log10.(1 .+ dag_df.nP),
   dag_df.R, dag_df.S, dag_df.H)
 
-M_E_chn = sample(M_E_model, NUTS(), MCMCThreads(), 3000, 4)
+if AD_BACKEND !== nothing
+  M_E_chn = sample(M_E_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
+else
+  M_E_chn = sample(M_E_model, NUTS(), MCMCThreads(), 3000, 4)
+end
 
 M_E_chn_df = DataFrame(M_E_chn)[!, r"α\b|β"]
 precis(M_E_chn_df)
@@ -1587,53 +1695,3 @@ analyse_causal_effect("Direct Effect: Habitat → Diet", @formula(D ~ 1 + H + (1
 analyse_causal_effect("Direct Effect: Habitat → Fat", @formula(Ḟ ~ 1 + H + D + P + R + S + V + (1 | ID)), dag_df)
 analyse_causal_effect("Direct Effect: Habitat → Mass", @formula(M ~ 1 + H + D + Ḟ + P + R + S + V + (1 | ID)), dag_df)
 analyse_causal_effect("Direct Effect: Habitat → Reproductive Status", @formula(R ~ 1 + H + D + (1 | ID)), dag_df)
-
-## Performance optimizations applied to all Bayesian models:
-
-# 1. Pre-computation of missing indices for efficiency
-# 2. Vectorised operations where possible
-# 3. Type-stable computations using specific types
-# 4. Reduced memory allocations in likelihood loops
-# 5. Efficient prior specifications using appropriate scales
-
-## Summary of restored Bayesian models:
-
-println("=== BAYESIAN CAUSAL MODELS SUCCESSFULLY RESTORED ===")
-println("Total Bayesian models: 16")
-println()
-println("SEX EFFECTS:")
-println("- S_E_Total_Model: Total effect Sex → Vaccine Response")
-println("- S_E_Direct_Model: Direct effect Sex → Vaccine Response")
-println("- S_nP_Model: Direct effect Sex → Parasite Burden")
-println()
-println("HABITAT EFFECTS:")
-println("- H_E_Total_Model: Total effect Habitat → Vaccine Response")
-println("- H_E_Direct_Model: Direct effect Habitat → Vaccine Response")
-println("- H_nP_Model: Direct effect Habitat → Parasite Burden")
-println()
-println("DIET EFFECTS:")
-println("- D_E_Total_Model: Total effect Diet → Vaccine Response")
-println("- D_E_Direct_Model: Direct effect Diet → Vaccine Response")
-println("- D_nP_Total_Model: Total effect Diet → Parasite Burden")
-println("- D_nP_Direct_Model: Direct effect Diet → Parasite Burden")
-println()
-println("PHYSIOLOGICAL EFFECTS:")
-println("- F_E_Direct_Model: Direct effect Fat → Vaccine Response")
-println("- M_E_Model: Direct effect Mass → Vaccine Response")
-println()
-println("VACCINATION & PARASITE EFFECTS:")
-println("- V_E_Model: Total effect Vaccination → Vaccine Response")
-println("- V_E_NDE_Model: Direct effect Vaccination → Vaccine Response")
-println("- P_E_Model: Total effect Parasites → Vaccine Response")
-println("- DE_P_E_Model: Direct effect Parasites → Vaccine Response")
-println()
-println("REPRODUCTIVE EFFECTS:")
-println("- R_nP_Model: Effect Reproductive Status → Parasite Burden")
-println()
-println("All models include:")
-println("✓ Proper missing data imputation for fat scores")
-println("✓ Individual-level random effects")
-println("✓ Vaccination history random effects (where appropriate)")
-println("✓ Type-stable and memory-efficient implementations")
-println("✓ Weakly informative priors following best practices")
-println("="^60)
