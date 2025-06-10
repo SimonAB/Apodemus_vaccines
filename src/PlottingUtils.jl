@@ -626,15 +626,7 @@ function plot_sex_reproductive_interaction_detailed(df; saveplot::Bool=false)
     hlines!(ax, [-0.2, -0.5, -0.8], color=:red, linestyle=:dash, alpha=0.4)
     hlines!(ax, [0], color=:black, linestyle=:solid, alpha=0.8)
 
-    # Add reference line labels
-    text!(ax, 4.5, 0.2, text="Small effect", fontsize=10, color=:green)
-    text!(ax, 4.5, 0.5, text="Moderate effect", fontsize=10, color=:green)
-    text!(ax, 4.5, 0.8, text="Large effect", fontsize=10, color=:green)
-    text!(ax, 4.5, -0.2, text="Small effect", fontsize=10, color=:red)
-    text!(ax, 4.5, -0.5, text="Moderate effect", fontsize=10, color=:red)
-    text!(ax, 4.5, -0.8, text="Large effect", fontsize=10, color=:red)
-
-    # Configure axes
+    # Configure axes first to set proper limits
     ax.xticks = (x_positions, x_labels)
     ax.xlabel = "Sex × Reproductive Status"
     ax.ylabel = "Effect size (Cohen's d)"
@@ -643,6 +635,23 @@ function plot_sex_reproductive_interaction_detailed(df; saveplot::Bool=false)
     ax.xlabelfont = :bold
     ax.ylabelfont = :bold
     ax.title = "Parasite Elimination Effect by Sex and Reproductive Status"
+
+    # Set explicit axis limits to show data properly while allowing space for labels
+    xlims!(ax, 0.5, 4.4)
+
+    # Add reference line labels positioned to the right of the data with left alignment
+    text!(ax, 4.1, 0.2, text="Small", fontsize=10, color=:green,
+        space=:data, align=(:left, :bottom))
+    text!(ax, 3.95, 0.5, text="Moderate", fontsize=10, color=:green,
+        space=:data, align=(:left, :bottom))
+    text!(ax, 4.1, 0.8, text="Large", fontsize=10, color=:green,
+        space=:data, align=(:left, :bottom))
+    text!(ax, 4.1, -0.2, text="Small", fontsize=10, color=:red,
+        space=:data, align=(:left, :bottom))
+    text!(ax, 3.95, -0.5, text="Moderate", fontsize=10, color=:red,
+        space=:data, align=(:left, :bottom))
+    text!(ax, 4.1, -0.8, text="Large", fontsize=10, color=:red,
+        space=:data, align=(:left, :bottom))
 
     # Create custom legend
     legend_elements = []
