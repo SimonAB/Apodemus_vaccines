@@ -286,8 +286,7 @@ However, this model does not explain how habitat and diet are driving poor vacci
 	\label{fig:DAGtikz}
 \end{figure}
 
-We tested the validity of the causal hypotheses represented in the DAG $\mathbb{G}_{VE}$ using the observed data (Fig~\ref{fig:DAGtikz}; see methods section ``\nameref{sec:construction}''). For example, $\mathbb{G}_{VE}$ (Figure~\ref{fig:DAGtikz}A) indicates that parasite infection should be independent of vaccination if adjusted for diet, reproductive status, sex, and habitat ($P \upmodels V \mid D, R, S, H$); therefore, assuming linearity, we fitted a binomial generalised linear mixed model $P \sim \alpha + \beta_V V + \beta_D D + \beta_R R + \beta_S S + \beta_H H + (1 | ID)$, and confirmed that the posterior distribution of $\beta_V$ was not significantly different from zero. This process was repeated for all implied independencies derived from the causal graph $\mathbb{G}_{VE}$ (see ``\nameref{sec:structure}''
- methods), and $\mathbb{G}_{VE}$ was updated until all causal paths were both supported by the observed data and consistent with biological expectations. The final DAG $\mathbb{G}_{VE}$ and structural equations $\mathbb{C}_{VE}$ are shown in figure \ref{fig:DAGtikz}.
+We tested the validity of the causal hypotheses represented in the DAG $\mathbb{G}_{VE}$ using the observed data (Fig~\ref{fig:DAGtikz}; see methods section ``\nameref{sec:construction}''). For example, $\mathbb{G}_{VE}$ (Figure~\ref{fig:DAGtikz}A) indicates that parasite infection should be independent of vaccination if adjusted for diet, reproductive status, sex, and habitat ($P \upmodels V \mid D, R, S, H$); therefore, assuming linearity, we fitted a binomial generalised linear mixed model $P \sim \alpha + \beta_V V + \beta_D D + \beta_R R + \beta_S S + \beta_H H + (1 | ID)$, and confirmed that the posterior distribution of $\beta_V$ was not significantly different from zero. This process was repeated for all implied independencies derived from the causal graph $\mathbb{G}_{VE}$ (see ``\nameref{sec:structure}'' methods), and $\mathbb{G}_{VE}$ was updated until all causal paths were both supported by the observed data and consistent with biological expectations. The final DAG $\mathbb{G}_{VE}$ and corresponding structural equations $\mathbb{C}_{VE}$ are shown in figure \ref{fig:DAGtikz}.
 
 \subsection{Causal analysis demonstrates that diet and habitat strongly impact vaccine responsiveness}
 
@@ -301,7 +300,7 @@ We tested the validity of the causal hypotheses represented in the DAG $\mathbb{
 	\label{fig:DAGtikzParam}
 \end{figure}
 
-Using the resulting, validated, DAG $\mathbb{G}_{VE}$, we fit the set of structural equations $\mathbb{C}_{VE}$ (Model \ref{eq:SCM}) as Bayesian hierarchical linear models to estimate the total and direct causal effects indicated by the edges in $\mathbb{G}_{VE}$ (Fig.~\ref{fig:DAGtikzParam}).
+Using the resulting validated DAG $\mathbb{G}_{VE}$, we fit the set of structural equations $\mathbb{C}_{VE}$ (Model \ref{eq:SCM_fig}) as Bayesian hierarchical linear models to estimate the total and direct causal effects indicated by the edges in $\mathbb{G}_{VE}$ (Fig.~\ref{fig:DAGtikzParam}).
 All Bayesian models showed excellent convergence with well-behaved MCMC chains and $\hat{R} < 1.01$ for all parameters (Supplementary Fig.~\ref{supfig:mcmc_diagnostics}). The posterior distributions of causal parameters (regression coefficients) indicated that vaccination had an average causal effect of 1.50 ± 0.13 ($log10 + 1$)-transformed OD units relative to unvaccinated animal and that vaccine responsiveness was strongly affected by both wild habitat and dietary supplementation. However, while body fat $F$, body mass $M$, and reproductive status $R$ were strongly impacted by Diet and Habitat, they did not mediate those effects onto vaccine responsiveness.
 
 \subsection{Habitat had wide-ranging effects on wood mice and their response to vaccination}
@@ -696,10 +695,10 @@ Contributed reagents/materials/analysis tools: ABP, SAB \\ All the authors revie
 		\hfill
 		\begin{subfigure}[t]{0.48\textwidth}
 			\centering
-			\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/H_E_chn.pdf}
+			\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/H_E_total_chn.pdf}
 			\put(-210, 150){\sffamily \textbf{B}}
 		\end{subfigure}
-		\caption{\textbf{MCMC convergence diagnostics for key structural causal models.} \textbf{A}, Posterior distributions from the parasite burden effect model (P→E), showing parameter estimates for the direct causal effect of parasite infection on vaccine responsiveness. The plot displays both MCMC trace plots (left) and posterior density plots (right) for all model parameters, with multiple chains (different colours) demonstrating good mixing and convergence. \textbf{B}, Posterior distributions from the habitat effect model (H→E), showing parameter estimates for the direct causal effect of wild habitat on vaccine responsiveness after adjusting for confounding variables. Both models show well-behaved MCMC chains with $\hat{R} < 1.01$ for all parameters, confirming reliable parameter estimation for the key causal inferences in our structural causal model.}
+		\caption{\textbf{MCMC convergence diagnostics for key structural causal models.} \textbf{A}, Posterior distributions from the parasite burden effect model (P→E), showing parameter estimates for the direct causal effect of parasite infection on vaccine responsiveness. The plot displays both MCMC trace plots (left) and posterior density plots (right) for all model parameters, with multiple chains (different colours) demonstrating good mixing and convergence. \textbf{B}, Posterior distributions from the habitat effect model (H→E), showing parameter estimates for the total causal effect of wild habitat on vaccine responsiveness. Both models show well-behaved MCMC chains with $\hat{R} < 1.01$ for all parameters, confirming reliable parameter estimation for the key causal inferences in our structural causal model.}
 		\label{supfig:mcmc_diagnostics}
 	\end{figure}
 
