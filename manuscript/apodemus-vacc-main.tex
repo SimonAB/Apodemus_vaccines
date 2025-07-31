@@ -341,28 +341,50 @@ We aimed to (i) quantify the population-wide improvement in vaccine responsivene
 		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/counterfactual_effects_clinical_significance.pdf}
 		\put(-210, 130){\sffamily \textbf{B}}
 	\end{subfigure}
-	\begin{subfigure}[b]{0.5\textwidth}
-		\centering
-		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/S_R_interaction_factual_counterfactual.pdf}
-		\put(-210, 130){\sffamily \textbf{C}} % Adjust coordinates as needed
-	\end{subfigure}%
-	\begin{subfigure}[b]{0.5\textwidth}
-		\centering
-		\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/sex_reproductive_interaction_detailed.pdf}
-		\put(-210, 130){\sffamily \textbf{D}}
-	\end{subfigure}
+	% \begin{subfigure}[b]{0.5\textwidth}
+	% 	\centering
+	% 	\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/S_R_interaction_factual_counterfactual.pdf}
+	% 	\put(-210, 130){\sffamily \textbf{C}} % Adjust coordinates as needed
+	% \end{subfigure}%
+	% \begin{subfigure}[b]{0.5\textwidth}
+	% 	\centering
+	% 	\includegraphics[width=\textwidth, keepaspectratio=true]{./Figures/plots/sex_reproductive_interaction_detailed.pdf}
+	% 	\put(-210, 130){\sffamily \textbf{D}}
+	% \end{subfigure}
 	\caption{\textbf{Effect of simulated population-wide anthelmintic drug treatment on vaccine responsiveness.}
 		\textbf{A}, Population-wide distributions of vaccine responsiveness under observed vs. parasite-free conditions. Density plots comparing vaccine responsiveness in the observed data (with parasites; light grey) versus the counterfactual data (parasite elimination scenario; orange). The rightward shift of the distribution predicts a population-wide improvement in vaccine responsiveness when parasite burdens are eliminated by drug treatment.
 		\textbf{B}, Individual-level vaccine response changes following parasite elimination. Each wood mouse's predicted vaccine responsiveness in factual (circles) versus counterfactual (triangles) scenarios in males (blue outlines) and females (red outlines), plotted against initial parasite burden. Connected lines show individual-level changes, with effect size (Cohen's d) indicated by the colour of the line.
-		\textbf{C}, Sex and reproductive status effects on vaccine response improvement under parasite elimination. Mean predicted change in vaccine responsiveness ($E_{counterfactual} - E_{factual}$) following hypothetical parasite elimination, stratified by sex and reproductive status. Positive values indicate enhanced vaccine responsiveness when parasites are absent compared to the observed (parasite-present) conditions. Error bars represent standard errors.
-		\textbf{D}, Cohen's d values for each individual, stratified by sex and reproductive status, showing the distribution of individual responses within each demographic group and highlighting the heterogeneity in the benefit of anthelmintic treatment across different wood mice groups.
+		% \textbf{C}, Sex and reproductive status effects on vaccine response improvement under parasite elimination. Mean predicted change in vaccine responsiveness ($E_{counterfactual} - E_{factual}$) following hypothetical parasite elimination, stratified by sex and reproductive status. Positive values indicate enhanced vaccine responsiveness when parasites are absent compared to the observed (parasite-present) conditions. Error bars represent standard errors.
+		% \textbf{D}, Cohen's d values for each individual, stratified by sex and reproductive status, showing the distribution of individual responses within each demographic group and highlighting the heterogeneity in the benefit of anthelmintic treatment across different wood mice groups.
 	}
 	\label{fig:counterfactual}
 \end{figure}
 
-Our Bayesian models predicted two distinct but complementary effects of parasite elimination prior to vaccination. At the population level, the overall vaccination coefficient would have improved by 4.3\% (Fig. \ref{fig:counterfactual}A), representing the enhancement in vaccine efficacy across the entire population. However, when examining individual-level vaccine responses, parasite elimination would have produced much larger relative improvements, with a mean increase of 108.1\% in vaccine responsiveness per mouse compared to their individual baseline responses with parasites present. The individual-level benefits varied considerably, ranging from 13.2\% to 298.8\% improvement (Cohen's d mean = 0.20 ± 0.03). (See \nameref{sec:parameterisation} for further details.) Importantly, all wood mice benefitted from hypothetical parasite elimination, with no individuals experiencing detrimental effects.
 
-The magnitude of the predicted improvement in vaccine responsiveness was not simply proportional to the observed parasite burdens (Fig. \ref{fig:counterfactual}B), indicating that the immunosuppressive effects of parasites interact with other host characteristics. Instead, the strongest predictors of benefits from anthelmintic treatment were individual reproductive status and sex, with non-reproductive males showing the greatest predicted improvements in vaccine responsiveness following parasite elimination (Fig. \ref{fig:counterfactual}C). This suggests that the immune costs of parasite infection are most pronounced in individuals already experiencing metabolic stress from reproduction, particularly in females.
+Our Bayesian models predicted two distinct but complementary effects of parasite elimination prior to vaccination. At the population level, the overall vaccination coefficient would have improved by 74.3\% relative to the population mean among infected individuals (Fig. \ref{fig:counterfactual}A), representing the enhancement in vaccine efficacy across the entire population. At the individual level, parasite elimination would have produced a predicted mean increase of 108.1\% in vaccine responsiveness per mouse compared to their own individual baseline responses (i.e., with their actual parasite counts). These individual-level benefits varied considerably, ranging from 13.2\% to 298.8\% improvement (Cohen's d mean = 0.20 ± 0.03). Importantly, all wood mice would have benefitted from the elimination of their parasites, with no individuals experiencing detrimental effects.
+
+The magnitude of the predicted improvement in vaccine responsiveness was not strictly proportional to the observed parasite burdens (Fig. \ref{fig:counterfactual}B), with sex and reproductive status contrubuting to the effect of parasite elimination on vaccine responsiveness (Table~\ref{tbl:cohens_d_interaction}).
+
+
+\begin{table}[htbp]
+	\centering
+	\caption{Summary of the linear mixed model estimating the individual-level effect sizes (Cohen's d) of anthelmintic treatment on vaccine responsiveness. The model includes fixed effects for Diet \((D)\), Reproductive status \((R)\), Sex \((S)\), Vaccination status \((V)\), Body mass \((M)\), Fat scores \((\dot{F})\), and the interaction between Sex and Reproductive status \((S \times R)\). Coefficients \((\text{Coef.})\), standard errors, z-values, and p-values \((\text{Pr}(>|z|))\) are reported for each effect. This table quantifies the predictors of variation in vaccine response improvements following parasite elimination, highlighting significant contributions of reproductive status, vaccination, body mass, and a marginal interaction between sex and reproductive status.}
+	\begin{tabular}{|l|r|r|r|r|}
+		\hline
+		\textbf{Effect} & \textbf{Coef.} & \textbf{Std. Error} & \textbf{z-value} & \textbf{Pr(>|z|)} \\
+		\hline
+		D               & 0.01899        & 0.01063             & 1.79             & 0.0742            \\
+		R               & 0.06754        & 0.02191             & 3.08             & 0.0021            \\
+		S               & 0.05167        & 0.03221             & 1.60             & 0.1087            \\
+		V               & 0.03123        & 0.01448             & 2.16             & 0.0310            \\
+		M               & -0.01906       & 0.00848             & -2.25            & 0.0247            \\
+		$\dot{F}$       & 0.00747        & 0.00702             & 1.07             & 0.2868            \\
+		S $\times$ R    & -0.03216       & 0.01771             & -1.82            & 0.0695            \\
+		\hline
+	\end{tabular}
+	\label{tbl:cohens_d_interaction}
+\end{table}
+% Instead, the strongest predictors of benefits from anthelmintic treatment were individual reproductive status and sex, with non-reproductive females showing the greatest predicted improvements in vaccine responsiveness following parasite elimination (Fig. \ref{fig:counterfactual}C). This suggests that the immune costs of parasite infection are most pronounced in individuals already experiencing metabolic stress from reproduction, particularly in reproductive females.
 
 \section{Discussion}
 

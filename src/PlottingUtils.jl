@@ -22,6 +22,10 @@ using Colors
 # Import safe_plot_save from TuringPlots for convenience
 include("TuringPlots.jl")
 
+# Clinical significance thresholds and colors for reference lines
+thresholds = [0.2, 0.5, 0.8]
+colors = Dict(0.2=>:black, 0.5=>:black, 0.8=>:black)
+
 """
     plot_E_factual_counterfactual(df; saveplot=false)
 
@@ -663,8 +667,8 @@ function plot_sex_reproductive_interaction_detailed(df; saveplot::Bool=false)
         push!(legend_labels, combo.label)
     end
 
-    Legend(fig[1, 2], legend_elements, legend_labels, "Groups",
-        framevisible=false, labelsize=12)
+    # Legend(fig[1, 2], legend_elements, legend_labels, "Groups",
+    # framevisible=false, labelsize=12)
 
     if saveplot
         safe_plot_save("sex_reproductive_interaction_detailed.pdf", fig)
@@ -743,6 +747,105 @@ function plot_sex_reproductive_heatmap(df; saveplot::Bool=false)
     fig
 end
 
+"""
+    plot_cohens_d_no_interaction(df; saveplot=false)
+
+Bar plot of Cohen's d for main effects only (no interactions).
+
+# Arguments
+- `df::DataFrame`: must contain columns `D, R, S, V, M, Ḟ, E_cohens_d`
+- `saveplot::Bool=false`: save as PDF if true
+
+# Returns
+- `Figure`
+"""
+function plot_cohens_d_no_interaction(df; saveplot::Bool=false)
+    fig = Figure(size=(647, 400))
+    ax = Axis(fig[1, 1])
+    
+    # Define the factor terms to analyze
+    factors = [:D, :R, :S, :V, :M, :Ḟ]
+    
+    # Initialize arrays to store results
+    values = Float64[]
+    sems = Float64[]
+    labels = String[]
+    
+    # Compute Cohen's d estimates for each factor
+    for factor in factors
+        # Create mask for factor level 1
+        mask = df[:, factor] .== 1
+        n_masked = sum(mask)
+        
+        if n_masked > 0
+            # Extract Cohen's d values for this subset
+            E_cohens_d_masked = df[mask, :E_cohens_d]
+            
+            # Compute mean and SEM
+            mean_d = mean(E_cohens_d_masked)
+            sem_d = std(E_cohens_d_masked) / sqrt(n_masked)
+            
+            # Store results
+            push!(values, mean_d)
+            push!(sems, sem_d)
+            push!(labels, string(factor))
+        else
+            # Store NaN values for missing data
+            push!(values, NaN)
+            push!(sems, NaN)
+            push!(labels, string(factor))
+        end
+    end
+    
+    # Filter out NaN values for plotting
+    valid_indices = .!isnan.(values)
+    plot_values = values[valid_indices]
+    plot_sems = sems[valid_indices]
+    plot_labels = labels[valid_indices]
+    
+    if length(plot_values) > 0
+        # Create bar plot
+        n_terms = length(plot_values)
+        barplot!(ax, 1:n_terms, plot_values, color=:steelblue)
+        
+        # Add error bars
+        for i in 1:n_terms
+            errorbars!(ax, [i], [plot_values[i]], [plot_sems[i]], color=:black, linewidth=2)
+        end
+        
+        # Add clinical significance reference lines using defined thresholds
+        for threshold in thresholds
+            hlines!(ax, [threshold], color=colors[threshold], linestyle=:dash, alpha=0.5)
+            hlines!(ax, [-threshold], color=colors[threshold], linestyle=:dash, alpha=0.5)
+        end
+        hlines!(ax, [0], color=:black, linestyle=:solid, alpha=0.8)
+        
+        # Configure axes
+        ax.xticks = (1:n_terms, plot_labels)
+        ax.xlabel = "Main Effects"
+        ax.ylabel = "Effect size (Cohen's d)"
+        ax.xlabelsize = 16
+        ax.ylabelsize = 16
+        ax.xlabelfont = :bold
+        ax.ylabelfont = :bold
+        ax.title = "Main Effects: Cohen's d Estimates"
+        
+        # Add reference line labels
+        y_max = maximum([maximum(plot_values .+ plot_sems), maximum(thresholds)])
+        text!(ax, length(plot_values) + 0.3, 0.2, text="Small", fontsize=10, color=:grey)
+        text!(ax, length(plot_values) + 0.2, 0.5, text="Moderate", fontsize=10, color=:grey)
+        text!(ax, length(plot_values) + 0.3, 0.8, text="Large", fontsize=10, color=:grey)
+    else
+        # Handle case with no valid data
+        text!(ax, 0.5, 0.5, text="No valid data to plot", align=(:center, :center))
+    end
+    
+    if saveplot
+        safe_plot_save("cohens_d_no_interaction.pdf", fig)
+    end
+    fig
+end
+
 # Export all plotting functions
 export plot_E_factual_counterfactual,
     plot_counterfactual_effects,
@@ -751,4 +854,5 @@ export plot_E_factual_counterfactual,
     plot_clinical_significance_summary,
     plot_S_R_interaction_factual_counterfactual,
     plot_sex_reproductive_interaction_detailed,
-    plot_sex_reproductive_heatmap
+    plot_sex_reproductive_heatmap,
+    plot_cohens_d_no_interaction
