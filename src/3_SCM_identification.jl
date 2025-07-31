@@ -5,9 +5,7 @@ SCM Identification
 =#
 
 #=
-This script implements statistical identification of the Structural Causal Model (SCM)
-for vaccine efficacy analysis in wood mice, using adjustment sets derived from the
-causal DAG to estimate direct and total causal effects.
+This script implements statistical identification of the Structural Causal Model (SCM) for vaccine efficacy analysis in wood mice, using adjustment sets derived from the causal DAG to estimate direct and total causal effects.
 
 Key Features:
 - Bayesian models with weakly informative priors for standardised outcomes
@@ -246,10 +244,10 @@ else
   V_E_chn = sample(V_E_model, NUTS(), MCMCThreads(), 3000, 4)
 end
 
-V_E_chn_df = DataFrame(V_E_chn)[!, r"α\b|β"]
+V_E_chn_df = DataFrame(V_E_chn)[!, r"α\b|β|σ"]
 precis(V_E_chn_df)
 
-plot_chains_df(V_E_chn)
+plot_chains_df(V_E_chn; show_intercept=true, show_traces=false)
 
 ## Direct effect of V on E
 
@@ -346,8 +344,11 @@ else
   V_E_DE_chn = sample(V_E_DE_model, NUTS(), MCMCThreads(), 3000, 4)
 end
 
-V_E_DE_chn_df = DataFrame(V_E_DE_chn)[!, r"α\b|β"]
+V_E_DE_chn_df = DataFrame(V_E_DE_chn)[!, r"α\b|β|σ"]
 precis(V_E_DE_chn_df)
+
+p = plot_chains_df(V_E_DE_chn; show_intercept=true, show_traces=false)
+safe_plot_save("V_E_DE_chn_df.pdf", p)
 
 ## Mixed model comparison for V→E direct effect
 glmm_V_E_NDE = fit(MixedModel, @formula(E ~ 1 + V + D + Ḟ + H + M + P + R + S + (1 | ID)), dag_df)
@@ -449,7 +450,7 @@ else
   naive_P_E_chn = sample(naive_P_E_model, NUTS(), MCMCThreads(), 3000, 4)
 end
 
-naive_P_E_chn_df = DataFrame(naive_P_E_chn)[!, r"α\b|β"]
+naive_P_E_chn_df = DataFrame(naive_P_E_chn)[!, r"α\b|β|σ"]
 precis(naive_P_E_chn_df)
 
 p = plot_chains_df(naive_P_E_chn; show_intercept=true, show_traces=false)
@@ -568,7 +569,7 @@ P_E_model = P_E_Model(dag_df_infected.IDidx, dag_df_infected.E, log10.(1 .+ dag_
 P_E_priors = sample(P_E_model, Prior(), MCMCThreads(), 3000, 4)
 summarize(P_E_priors)
 
-P_E_priors_df = DataFrame(P_E_priors)[!, r"α\b|β"]
+P_E_priors_df = DataFrame(P_E_priors)[!, r"α\b|β|σ"]
 precis(P_E_priors_df)
 
 p = plot_chains_df(P_E_priors; show_intercept=true)
@@ -582,7 +583,7 @@ else
   P_E_chn = sample(P_E_model, NUTS(), MCMCThreads(), 3000, 4)
 end
 
-P_E_chn_df = DataFrame(P_E_chn)[!, r"α\b|β"]
+P_E_chn_df = DataFrame(P_E_chn)[!, r"α\b|β|σ"]
 precis(P_E_chn_df)
 
 p = plot_chains_df(P_E_chn)
@@ -691,9 +692,9 @@ if AD_BACKEND !== nothing
 else
   DE_P_E_chn = sample(DE_P_E_model, NUTS(), MCMCThreads(), 3000, 4)
 end
-Turing.setadbackend(:reversediff)
+# Turing.setadbackend(:reversediff)
 
-DE_P_E_chn_df = DataFrame(DE_P_E_chn)[!, r"α\b|β"]
+DE_P_E_chn_df = DataFrame(DE_P_E_chn)[!, r"α\b|β|σ"]
 precis(DE_P_E_chn_df)
 
 p1 = plot_chains_df(DE_P_E_chn; show_traces=true)
@@ -758,7 +759,7 @@ else
   R_nP_chn = sample(R_nP_model, NUTS(), MCMCThreads(), 3_000, 4)
 end
 
-R_nP_chn_df = DataFrame(R_nP_chn)[!, r"α\b|β"]
+R_nP_chn_df = DataFrame(R_nP_chn)[!, r"α\b|β|σ"]
 precis(R_nP_chn_df)
 
 p = plot_chains_df(R_nP_chn; show_intercept=true)
@@ -810,7 +811,7 @@ if AD_BACKEND !== nothing
 else
   D_nP_chn = sample(D_nP_model, NUTS(), MCMCThreads(), 3_000, 4)
 end
-D_nP_chn_df = DataFrame(D_nP_chn)[!, r"α\b|β"]
+D_nP_chn_df = DataFrame(D_nP_chn)[!, r"α\b|β|σ"]
 precis(D_nP_chn_df)
 
 # Mixed-effects model for total effect among infected
@@ -881,7 +882,7 @@ else
   D_nP_direct_chn = sample(D_nP_direct_model, NUTS(), MCMCThreads(), 3_000, 4)
 end
 
-D_nP_direct_chn_df = DataFrame(D_nP_direct_chn)[!, r"α\b|β"]
+D_nP_direct_chn_df = DataFrame(D_nP_direct_chn)[!, r"α\b|β|σ"]
 precis(D_nP_direct_chn_df)
 
 p = plot_chains_df(D_nP_direct_chn; show_intercept=true, show_traces=false)
@@ -938,7 +939,7 @@ else
   S_E_total_chn = sample(S_E_total_model, NUTS(), MCMCThreads(), 3000, 4)
 end
 
-S_E_total_chn_df = DataFrame(S_E_total_chn)[!, r"α\b|β"]
+S_E_total_chn_df = DataFrame(S_E_total_chn)[!, r"α\b|β|σ"]
 precis(S_E_total_chn_df)
 
 ## Direct effect of S on E
@@ -1036,11 +1037,9 @@ end
 S_E_direct_model = S_E_Direct_Model(dag_df.E, dag_df.S, dag_df.D, dag_df.Ḟ, dag_df.H,
   dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.V, dag_df.IDidx)
 
-Turing.setadbackend(:forwarddiff)
 S_E_direct_chn = sample(S_E_direct_model, NUTS(), MCMCThreads(), 3000, 4)
-Turing.setadbackend(:reversediff)
 
-S_E_direct_chn_df = DataFrame(S_E_direct_chn)[!, r"α\b|β"]
+S_E_direct_chn_df = DataFrame(S_E_direct_chn)[!, r"α\b|β|σ"]
 precis(S_E_direct_chn_df)
 
 ## Direct effect of S on nP
@@ -1096,7 +1095,7 @@ else
   S_nP_chn = sample(S_nP_model, NUTS(), MCMCThreads(), 3_000, 4)
 end
 
-S_nP_chn_df = DataFrame(S_nP_chn)[!, r"α\b|β"]
+S_nP_chn_df = DataFrame(S_nP_chn)[!, r"α\b|β|σ"]
 precis(S_nP_chn_df)
 
 p = plot_chains_df(S_nP_chn; show_intercept=true, show_traces=false)
@@ -1152,7 +1151,7 @@ else
   H_E_total_chn = sample(H_E_total_model, NUTS(), MCMCThreads(), 3000, 4)
 end
 
-H_E_total_chn_df = DataFrame(H_E_total_chn)[!, r"α\b|β"]
+H_E_total_chn_df = DataFrame(H_E_total_chn)[!, r"α\b|β|σ"]
 precis(H_E_total_chn_df)
 
 p = plot_chains_df(H_E_total_chn; show_intercept=true)
@@ -1248,7 +1247,7 @@ else
   H_E_direct_chn = sample(H_E_direct_model, NUTS(), MCMCThreads(), 3000, 4)
 end
 
-H_E_direct_chn_df = DataFrame(H_E_direct_chn)[!, r"α\b|β"]
+H_E_direct_chn_df = DataFrame(H_E_direct_chn)[!, r"α\b|β|σ"]
 precis(H_E_direct_chn_df)
 
 p1 = plot_chains_df(H_E_direct_chn; show_traces=true)
@@ -1326,7 +1325,7 @@ else
   H_nP_chn = sample(H_nP_model, NUTS(), MCMCThreads(), 3000, 4)
 end
 
-H_nP_chn_df = DataFrame(H_nP_chn)[!, r"α\b|β"]
+H_nP_chn_df = DataFrame(H_nP_chn)[!, r"α\b|β|σ"]
 precis(H_nP_chn_df)
 
 p = plot_chains_df(H_nP_chn; show_intercept=true)
@@ -1383,7 +1382,7 @@ else
   D_E_total_chn = sample(D_E_total_model, NUTS(), MCMCThreads(), 3000, 4)
 end
 
-D_E_total_chn_df = DataFrame(D_E_total_chn)[!, r"β"]
+D_E_total_chn_df = DataFrame(D_E_total_chn)[!, r"α\b|β|σ"]
 precis(D_E_total_chn_df)
 
 p = plot_chains_df(D_E_total_chn)
@@ -1473,14 +1472,13 @@ end
 D_E_direct_model = D_E_Direct_Model(dag_df.IDidx, dag_df.Vidx, dag_df.E, dag_df.D, dag_df.Ḟ,
   dag_df.H, dag_df.M, log10.(1 .+ dag_df.nP), dag_df.R, dag_df.S)
 
-Turing.setadbackend(:reversediff)
 if AD_BACKEND !== nothing
   D_E_direct_chn = sample(D_E_direct_model, NUTS(adtype=AD_BACKEND), MCMCThreads(), 3000, 4)
 else
   D_E_direct_chn = sample(D_E_direct_model, NUTS(), MCMCThreads(), 3000, 4)
 end
 
-D_E_direct_chn_df = DataFrame(D_E_direct_chn)[!, r"α\b|β"]
+D_E_direct_chn_df = DataFrame(D_E_direct_chn)[!, r"α\b|β|σ"]
 precis(D_E_direct_chn_df)
 
 p1 = plot_chains_df(D_E_direct_chn; show_traces=true)
@@ -1578,7 +1576,7 @@ else
   F_E_direct_chn = sample(F_E_direct_model, NUTS(), MCMCThreads(), 3000, 4)
 end
 
-F_E_direct_chn_df = DataFrame(F_E_direct_chn)[!, r"α\b|β"]
+F_E_direct_chn_df = DataFrame(F_E_direct_chn)[!, r"α\b|β|σ"]
 precis(F_E_direct_chn_df)
 
 ## Direct effect of M on E
@@ -1666,7 +1664,7 @@ else
   M_E_chn = sample(M_E_model, NUTS(), MCMCThreads(), 3000, 4)
 end
 
-M_E_chn_df = DataFrame(M_E_chn)[!, r"α\b|β"]
+M_E_chn_df = DataFrame(M_E_chn)[!, r"α\b|β|σ"]
 precis(M_E_chn_df)
 
 p = plot_chains_df(M_E_chn; show_intercept=true)
