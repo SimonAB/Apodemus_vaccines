@@ -399,7 +399,7 @@ else
     post_intervention_chain = sample(counterfactual_model, NUTS(), MCMCThreads(), 3000, 4)
 end
 
-## Generate counterfactuals using posterior predictive approach (RECOMMENDED METHOD)
+## Generate counterfactuals using posterior predictive approach
 
 
 """
@@ -567,7 +567,30 @@ provides interpretations based on effect sizes, and creates visualizations.
 Named tuple with effect estimates and interpretations for both S and R.
 """
 function interpret_main_effects(chain, df_infected; saveplot::Bool=false)
-    println("=== MAIN EFFECTS INTERPRETATION: SEX AND REPRODUCTIVE STATUS ===")
+println("=== MAIN EFFECTS INTERPRETATION: SEX AND REPRODUCTIVE STATUS ===")
+
+    # Prepare to store Cohen's d estimates
+    factors = [:D, :R, :S, :V, :M, :Ḟ]
+    mean_d_values = []
+    sem_d_values = []
+    labels = []
+    
+    # Compute Cohen's d estimates for each factor
+    for factor in factors
+        mask = dag_df_infected[:, factor] .== 1
+        E_cohens_d_masked = dag_df_infected[mask, :E_cohens_d]
+        
+        # Compute mean and SEM
+        mean_d = mean(E_cohens_d_masked)
+        sem_d = std(E_cohens_d_masked) / sqrt(length(E_cohens_d_masked))
+        
+        # Store results
+        push!(mean_d_values, mean_d)
+        push!(sem_d_values, sem_d)
+        push!(labels, string(factor))
+    end
+
+    println("Computed Cohen's d estimates for factors: ", labels)
 
     # Extract parameter samples
     chain_df = DataFrame(chain)
@@ -795,6 +818,10 @@ function create_main_effects_plot(βS_samples, βR_samples, df_infected)
 end
 
 
+## Compute Cohen's d estimates for each main effect
+include("compute_cohens_d_main_effects.jl")
+cohens_d_main_effects = compute_cohens_d_main_effects(dag_df_infected)
+
 ## Interpret main effects of Sex and Reproductive Status
 main_effects_results = interpret_main_effects(pre_intervention_chain, dag_df_infected; saveplot=SAVE_PLOTS)
 
@@ -991,6 +1018,7 @@ end
 ## Interaction analysis with Cohen's d
 
 # Fit model using Cohen's d as outcome
+glmm_cohens_d_no_interaction = fit(MixedModel, @formula(E_cohens_d ~ -1 + D + R + S + V + M + Ḟ + (1 | ID)), dag_df_infected)
 glmm_cohens_d_interaction = fit(MixedModel, @formula(E_cohens_d ~ -1 + D + R + S + V + M + Ḟ + S & R + (1 | ID)), dag_df_infected)
 
 # Generate Cohen's d interaction plots
@@ -1015,6 +1043,10 @@ end
 boot_cohens_d = parametricbootstrap(MersenneTwister(1234), 10_000, glmm_cohens_d_interaction)
 coefplot(boot_cohens_d)
 
+# Generate Cohen's d plots without interaction
+with_theme(theme_minimal()) do
+    plot_cohens_d_no_interaction(dag_df_infected, saveplot=SAVE_PLOTS)
+end
 
 
 ## Calculate percentage improvements using different methods

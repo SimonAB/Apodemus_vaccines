@@ -12,7 +12,7 @@ vaccine efficacy in factual (with parasites) vs counterfactual (without parasite
 scenarios using Bayesian generative models that account for differential effects across
 sex-reproductive status combinations.
 
-NOT USED IN THE MANUSCRIPT DUE TO SAMPLE SIZE LIMITATIONS.
+!!! NOT USED IN THE MANUSCRIPT DUE TO SAMPLE SIZE LIMITATIONS.
 =#
 
 ## Import packages
