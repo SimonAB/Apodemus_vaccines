@@ -66,6 +66,14 @@ julia --project=. scripts/render_arm_level_igg1_summary_table.jl
 julia --project=. scripts/render_mcmc_diagnostics_table.jl
 ```
 
+## Citation
+
+Please cite the article:
+
+> Babayan SA, Venkatesan S, Hall JL, Smith EW, Sweeny AR, Pedersen AB (2026) Environmental drivers of low vaccine responsiveness in a lab-to-wild rodent model. *PLOS Pathogens* 22(7): e1013647. https://doi.org/10.1371/journal.ppat.1013647
+
+A machine-readable citation file is in [`CITATION.cff`](CITATION.cff). A Zenodo archive DOI will be added here after the first release.
+
 ## Licence
 
 See [`LICENSE`](LICENSE).

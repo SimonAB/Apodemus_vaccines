@@ -1,0 +1,53 @@
+{
+  "title": "Apodemus_vaccines: analysis code and data for environmental drivers of vaccine responsiveness",
+  "description": "Julia analysis code and data accompanying Babayan et al. (2026), PLOS Pathogens. Reproduces the multilevel models and structural causal modelling reported in the article.",
+  "upload_type": "software",
+  "license": "gpl-3.0",
+  "creators": [
+    {
+      "name": "Babayan, Simon A.",
+      "affiliation": "School of Biodiversity, One Health & Veterinary Medicine, University of Glasgow",
+      "orcid": "0000-0002-4949-1117"
+    },
+    {
+      "name": "Venkatesan, Saudamini",
+      "affiliation": "Institute of Ecology and Evolution, School of Biological Sciences, University of Edinburgh"
+    },
+    {
+      "name": "Hall, Jessica L."
+    },
+    {
+      "name": "Smith, Ewan W.",
+      "affiliation": "School of Biodiversity, One Health & Veterinary Medicine, University of Glasgow"
+    },
+    {
+      "name": "Sweeny, Amy R.",
+      "affiliation": "Institute of Ecology and Evolution, School of Biological Sciences, University of Edinburgh"
+    },
+    {
+      "name": "Pedersen, Amy B.",
+      "affiliation": "Institute of Ecology and Evolution, School of Biological Sciences, University of Edinburgh"
+    }
+  ],
+  "keywords": [
+    "vaccine responsiveness",
+    "Apodemus sylvaticus",
+    "structural causal model",
+    "Julia",
+    "wood mouse"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1371/journal.ppat.1013647",
+      "relation": "isSupplementTo",
+      "scheme": "doi",
+      "resource_type": "publication-article"
+    },
+    {
+      "identifier": "https://github.com/SimonAB/Apodemus_vaccines",
+      "relation": "isSupplementTo",
+      "scheme": "url",
+      "resource_type": "software"
+    }
+  ]
+}
