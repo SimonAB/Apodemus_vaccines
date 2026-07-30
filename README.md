@@ -1,5 +1,19 @@
 # Environmental drivers of low vaccine responsiveness in a lab-to-wild rodent model
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21703395.svg)](https://doi.org/10.5281/zenodo.21703395)
+
+## Citation
+
+Please cite the article:
+
+> Babayan SA, Venkatesan S, Hall JL, Smith EW, Sweeny AR, Pedersen AB (2026) Environmental drivers of low vaccine responsiveness in a lab-to-wild rodent model. *PLOS Pathogens* 22(7): e1013647. https://doi.org/10.1371/journal.ppat.1013647
+
+And the software archive (concept DOI resolves to the latest version):
+
+> Babayan SA, Venkatesan S, Hall JL, Smith EW, Sweeny AR, Pedersen AB (2026) Apodemus_vaccines: analysis code and data for environmental drivers of vaccine responsiveness (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.21703395
+
+Machine-readable citation metadata: [`CITATION.cff`](CITATION.cff).
+
 **Short title:** Lab-to-wild vaccine responsiveness
 
 ## Authors
@@ -65,20 +79,6 @@ julia --project=. scripts/assay_floor_nonresponder_summary.jl
 julia --project=. scripts/render_arm_level_igg1_summary_table.jl
 julia --project=. scripts/render_mcmc_diagnostics_table.jl
 ```
-
-## Citation
-
-Please cite the article:
-
-> Babayan SA, Venkatesan S, Hall JL, Smith EW, Sweeny AR, Pedersen AB (2026) Environmental drivers of low vaccine responsiveness in a lab-to-wild rodent model. *PLOS Pathogens* 22(7): e1013647. https://doi.org/10.1371/journal.ppat.1013647
-
-And the software archive (concept DOI resolves to the latest version):
-
-> Babayan SA, Venkatesan S, Hall JL, Smith EW, Sweeny AR, Pedersen AB (2026) Apodemus_vaccines: analysis code and data for environmental drivers of vaccine responsiveness (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.21703395
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21703395.svg)](https://doi.org/10.5281/zenodo.21703395)
-
-Machine-readable citation metadata: [`CITATION.cff`](CITATION.cff).
 
 ## Licence
 
