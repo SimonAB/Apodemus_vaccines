@@ -6,7 +6,14 @@ version: "1.0.0"
 date-released: "2026-07-30"
 license: GPL-3.0-or-later
 repository-code: "https://github.com/SimonAB/Apodemus_vaccines"
-url: "https://github.com/SimonAB/Apodemus_vaccines"
+url: "https://doi.org/10.5281/zenodo.21703395"
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21703396
+    description: "This version (v1.0.0)"
+  - type: doi
+    value: 10.5281/zenodo.21703395
+    description: "Concept DOI (all versions)"
 authors:
   - family-names: Babayan
     given-names: Simon A.
